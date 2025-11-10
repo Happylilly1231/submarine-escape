@@ -21,8 +21,14 @@ public class PlayerMove : MonoBehaviour
     float xRotation = 0f; // 카메라 상하 회전 제한용
 
     // 달리기
-    bool isRunning; // 달리기 중인지 여부
+    bool isRunning = false; // 달리기 중인지 여부
     float runSpeed = 5f; // 달리기 속도
+    bool isGrounded = false; // 바닥에 닿아있는지 여부
+
+    // 점프
+    bool jumpInput = false; // 점프 입력
+    bool isJumping = false; // 점프 중인지 여부
+    [SerializeField] float jumpForce = 5f; // 점프 힘
 
 
     void Awake()
@@ -51,6 +57,11 @@ public class PlayerMove : MonoBehaviour
         isRunning = context.performed;
     }
 
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        jumpInput = context.performed;
+    }
+
     void Update()
     {
         Rotate(); // 회전
@@ -59,6 +70,7 @@ public class PlayerMove : MonoBehaviour
     void FixedUpdate()
     {
         Move(); // 이동
+        Jump(); // 점프
     }
 
     // 회전
@@ -99,6 +111,31 @@ public class PlayerMove : MonoBehaviour
 
             // 이동
             rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
+        }
+    }
+
+    // 점프
+    void Jump()
+    {
+        // 바닥에 닿아있는지 검사
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.1f);
+        Debug.Log(isGrounded + " / " + jumpInput + " / " + isJumping);
+
+        anim.SetBool("isGrounded", isGrounded);
+
+        // 바닥에 닿아있을 때
+        if (isGrounded)
+        {
+            if (jumpInput && !isJumping) // 점프 입력을 받았고, 점프 중이 아니라면 -> 점프 가능
+            {
+                isJumping = true; // 점프 중으로 설정
+                anim.SetTrigger("Jump"); // 점프 애니메이션
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // 점프
+            }
+            else if (isJumping) // 바닥에 닿아있을 때 점프 중이라면 -> 점프 중 아님으로 설정
+            {
+                isJumping = false; // 점프 중 아님으로 설정
+            }
         }
     }
 }
