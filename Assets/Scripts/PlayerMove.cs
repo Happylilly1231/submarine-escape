@@ -30,6 +30,8 @@ public class PlayerMove : MonoBehaviour
     bool isJumping = false; // 점프 중인지 여부
     [SerializeField] float jumpForce = 5f; // 점프 힘
 
+    // 정지
+    bool isPausing = false; // 정지 중인지 여부
 
     void Awake()
     {
@@ -40,6 +42,8 @@ public class PlayerMove : MonoBehaviour
     void Start()
     {
         moveSpeed = walkSpeed;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -60,6 +64,26 @@ public class PlayerMove : MonoBehaviour
     public void OnJump(InputAction.CallbackContext context)
     {
         jumpInput = context.performed;
+    }
+
+    public void OnPause(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            if (isPausing) // 정지 중
+            {
+                // 정지 해제
+                isPausing = false;
+                Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+            }
+            else // 플레이 중
+            {
+                // 정지
+                isPausing = true;
+                Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
+            }
+            Cursor.visible = !isPausing;
+        }
     }
 
     void Update()
