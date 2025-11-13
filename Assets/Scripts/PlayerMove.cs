@@ -11,8 +11,8 @@ public class PlayerMove : MonoBehaviour
 
     // 이동
     Vector2 moveInput; // 이동 입력
-    [SerializeField] float moveSpeed = 2f; // 이동 속도
-    float walkSpeed = 2f; // 걷기 속도
+    [SerializeField] float moveSpeed; // 이동 속도
+    float walkSpeed = 3f; // 걷기 속도
 
     // 시야 회전
     Vector2 lookInput; // 시야 입력
@@ -22,13 +22,13 @@ public class PlayerMove : MonoBehaviour
 
     // 달리기
     bool isRunning = false; // 달리기 중인지 여부
-    float runSpeed = 5f; // 달리기 속도
+    float runSpeed = 7f; // 달리기 속도
     bool isGrounded = false; // 바닥에 닿아있는지 여부
 
     // 점프
     bool jumpInput = false; // 점프 입력
     bool isJumping = false; // 점프 중인지 여부
-    [SerializeField] float jumpForce = 5f; // 점프 힘
+    float jumpForce = 3f; // 점프 힘
 
     // 정지
     bool isPausing = false; // 정지 중인지 여부
@@ -68,33 +68,41 @@ public class PlayerMove : MonoBehaviour
 
     public void OnPause(InputAction.CallbackContext context)
     {
+        // 정지 버튼(ESC) 눌렀을 때
         if (context.performed)
         {
             if (isPausing) // 정지 중
             {
                 // 정지 해제
                 isPausing = false;
+                Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+                Time.timeScale = 1.0f; // 시간 흐르게
             }
             else // 플레이 중
             {
                 // 정지
                 isPausing = true;
+                Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
+                Time.timeScale = 0f; // 시간 정지
             }
-            Cursor.visible = !isPausing;
         }
     }
 
     void Update()
     {
-        Rotate(); // 회전
+        if (!isPausing)
+            Rotate(); // 회전
     }
 
     void FixedUpdate()
     {
-        Move(); // 이동
-        Jump(); // 점프
+        if (!isPausing)
+        {
+            Move(); // 이동
+            Jump(); // 점프
+        }
     }
 
     // 회전
@@ -109,7 +117,7 @@ public class PlayerMove : MonoBehaviour
 
         // 시야 상하 회전
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f); // 시야 상하 회전 범위 제한
+        xRotation = Mathf.Clamp(xRotation, -90f, 55f); // 시야 상하 회전 범위 제한
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
@@ -143,7 +151,6 @@ public class PlayerMove : MonoBehaviour
     {
         // 바닥에 닿아있는지 검사
         isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.1f);
-        Debug.Log(isGrounded + " / " + jumpInput + " / " + isJumping);
 
         anim.SetBool("isGrounded", isGrounded);
 
