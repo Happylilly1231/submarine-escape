@@ -144,6 +144,10 @@ public class PlayerMove : MonoBehaviour
             // 이동
             rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
         }
+        else
+        {
+            rb.velocity = Vector3.zero; // 계단에서 튕기고 밀리는 버그 때문에 임시로 집어넣음!
+        }
     }
 
     // 점프
