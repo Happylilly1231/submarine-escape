@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerMove : MonoBehaviour
 {
-    Rigidbody rb;
+    CharacterController controller;
     CapsuleCollider col;
     Animator anim;
 
@@ -13,29 +13,26 @@ public class PlayerMove : MonoBehaviour
     Vector2 moveInput; // 이동 입력
     [SerializeField] float moveSpeed; // 이동 속도
     float walkSpeed = 3f; // 걷기 속도
+    float runSpeed = 7f; // 달리기 속도
 
     // 시야 회전
     Vector2 lookInput; // 시야 입력
-    [SerializeField] Transform cameraTransform; // 1인칭 카메라의 Transform
+    public float mouseX;
+    public float mouseY;
     [SerializeField] float mouseSensitivity = 1f; // 마우스 감도
-    float xRotation = 0f; // 카메라 상하 회전 제한용
 
-    // 달리기
-    bool isRunning = false; // 달리기 중인지 여부
-    float runSpeed = 7f; // 달리기 속도
-    bool isGrounded = false; // 바닥에 닿아있는지 여부
-
-    // 점프
+    // 점프 & 중력
     bool jumpInput = false; // 점프 입력
-    bool isJumping = false; // 점프 중인지 여부
-    float jumpForce = 3f; // 점프 힘
+    float jumpSpeed = 3f; // 점프 속도
+    float ySpeed = 0f; // y 속도
+    float gravity = -9.81f; // 중력
 
     // 정지
-    bool isPausing = false; // 정지 중인지 여부
+    public bool isPausing = false; // 정지 중인지 여부
 
     void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
     }
 
@@ -58,12 +55,18 @@ public class PlayerMove : MonoBehaviour
 
     public void OnRun(InputAction.CallbackContext context)
     {
-        isRunning = context.performed;
+        if (context.performed)
+            moveSpeed = runSpeed;
+        else if (context.canceled)
+            moveSpeed = walkSpeed;
     }
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        jumpInput = context.performed;
+        if (context.performed && controller.isGrounded)
+        {
+            jumpInput = true;
+        }
     }
 
     public void OnPause(InputAction.CallbackContext context)
@@ -93,15 +96,9 @@ public class PlayerMove : MonoBehaviour
     void Update()
     {
         if (!isPausing)
-            Rotate(); // 회전
-    }
-
-    void FixedUpdate()
-    {
-        if (!isPausing)
         {
+            Rotate(); // 회전
             Move(); // 이동
-            Jump(); // 점프
         }
     }
 
@@ -109,16 +106,11 @@ public class PlayerMove : MonoBehaviour
     void Rotate()
     {
         // 마우스 입력
-        float mouseX = lookInput.x * mouseSensitivity;
-        float mouseY = lookInput.y * mouseSensitivity;
+        mouseX = lookInput.x * mouseSensitivity;
+        mouseY = lookInput.y * mouseSensitivity;
 
         // 플레이어 좌우 회전
         transform.Rotate(Vector3.up * mouseX);
-
-        // 시야 상하 회전
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 55f); // 시야 상하 회전 범위 제한
-        cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     // 이동
@@ -129,48 +121,33 @@ public class PlayerMove : MonoBehaviour
         moveDir.Normalize(); // 정규화
 
         // 애니메이션 파라미터 설정
-        anim.SetFloat("Speed", moveDir.magnitude); // Idle / 이동(달리기, 걷기)
-        anim.SetBool("isRunning", isRunning); // 달리기 애니메이션
+        anim.SetFloat("Speed", moveDir.magnitude); // Idle or 이동(달리기 & 걷기)
+        anim.SetBool("isRunning", moveSpeed == runSpeed); // 달리기 애니메이션
 
-        // 이동
-        if (moveDir.magnitude > 0.1f) // 이동 중일 때
+        // 중력 적용
+        if (controller.isGrounded) // 바닥에 닿아있으면
         {
-            // 속도 설정
-            if (isRunning) // 달리기 상태
-                moveSpeed = runSpeed; // 달리기 속도
-            else // 걷기 상태
-                moveSpeed = walkSpeed; // 걷기 속도
+            if (ySpeed < 0f)
+                ySpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
 
-            // 이동
-            rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
-        }
-        else
-        {
-            rb.velocity = Vector3.zero; // 계단에서 튕기고 밀리는 버그 때문에 임시로 집어넣음!
-        }
-    }
-
-    // 점프
-    void Jump()
-    {
-        // 바닥에 닿아있는지 검사
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.1f);
-
-        anim.SetBool("isGrounded", isGrounded);
-
-        // 바닥에 닿아있을 때
-        if (isGrounded)
-        {
-            if (jumpInput && !isJumping) // 점프 입력을 받았고, 점프 중이 아니라면 -> 점프 가능
+            // 점프
+            if (jumpInput) // 점프 입력이 들어왔을 때
             {
-                isJumping = true; // 점프 중으로 설정
-                anim.SetTrigger("Jump"); // 점프 애니메이션
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // 점프
-            }
-            else if (isJumping) // 바닥에 닿아있을 때 점프 중이라면 -> 점프 중 아님으로 설정
-            {
-                isJumping = false; // 점프 중 아님으로 설정
+                ySpeed = jumpSpeed; // y 속도를 점프 속도로 초기화
+                anim.SetTrigger("Jump"); // 점프 애니메이션 재생
+                jumpInput = false; // 점프 입력을 false로 설정(중복 실행 안되도록)
             }
         }
+        else // 공중
+        {
+            ySpeed += gravity * Time.deltaTime; // 중력에 따른 y 속도 계산
+        }
+
+        // 이동 + 점프
+        Vector3 velocity = moveDir * moveSpeed + Vector3.up * ySpeed;
+        controller.Move(velocity * Time.deltaTime);
+
+        // 바닥에 닿아있는지 여부 애니메이터에 넘기기(모든 y 계산이 다 끝난 뒤에 실행)
+        anim.SetBool("isGrounded", controller.isGrounded);
     }
 }
