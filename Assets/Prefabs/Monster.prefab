@@ -41,7 +41,7 @@ PrefabInstance:
     - target: {fileID: 290884568573959264, guid: 6ec18304030011c47aaa07296ea319e0,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 290884568573959264, guid: 6ec18304030011c47aaa07296ea319e0,
         type: 3}
@@ -130,7 +130,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.3
+  m_Radius: 0.4
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
@@ -147,6 +147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
+  stopDistance: 2
 --- !u!195 &1595222008090448713
 NavMeshAgent:
   m_ObjectHideFlags: 0

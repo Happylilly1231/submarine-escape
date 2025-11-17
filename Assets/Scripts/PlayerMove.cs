@@ -17,9 +17,9 @@ public class PlayerMove : MonoBehaviour
 
     // 시야 회전
     Vector2 lookInput; // 시야 입력
-    [SerializeField] Transform cameraTransform; // 1인칭 카메라의 Transform
+    public float mouseX;
+    public float mouseY;
     [SerializeField] float mouseSensitivity = 1f; // 마우스 감도
-    float xRotation = 0f; // 카메라 상하 회전 제한용
 
     // 점프 & 중력
     bool jumpInput = false; // 점프 입력
@@ -28,7 +28,7 @@ public class PlayerMove : MonoBehaviour
     float gravity = -9.81f; // 중력
 
     // 정지
-    bool isPausing = false; // 정지 중인지 여부
+    public bool isPausing = false; // 정지 중인지 여부
 
     void Awake()
     {
@@ -106,16 +106,11 @@ public class PlayerMove : MonoBehaviour
     void Rotate()
     {
         // 마우스 입력
-        float mouseX = lookInput.x * mouseSensitivity;
-        float mouseY = lookInput.y * mouseSensitivity;
+        mouseX = lookInput.x * mouseSensitivity;
+        mouseY = lookInput.y * mouseSensitivity;
 
         // 플레이어 좌우 회전
         transform.Rotate(Vector3.up * mouseX);
-
-        // 시야 상하 회전
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 55f); // 시야 상하 회전 범위 제한
-        cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     // 이동
