@@ -50,6 +50,69 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleInventory",
+                    "type": "Button",
+                    "id": "14eac37a-29e2-49ca-a39d-c8cf936b7147",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "THold",
+                    "type": "Button",
+                    "id": "87d58dc9-8948-42ff-aef6-6c051cfca324",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SlotKeyPress",
+                    "type": "Button",
+                    "id": "a640e25c-4a58-4d22-8561-d99148393bb0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ItemPickUp",
+                    "type": "Button",
+                    "id": "1fe9a900-a9ea-4bbf-96a9-ea23f555992f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ItemUse",
+                    "type": "Button",
+                    "id": "cdfd729f-2482-421f-9df0-647dc913e240",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ItemDrop",
+                    "type": "Button",
+                    "id": "879bccf5-c97c-4cfb-a786-3333c3c3ea4e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ReturnToSlot",
+                    "type": "Button",
+                    "id": "9ada9d3f-109f-408a-b714-4c6623d12173",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -151,202 +214,136 @@
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "Inventory",
-            "id": "6ad5f67c-4c9e-4511-bc0d-ed76dbdd02c3",
-            "actions": [
-                {
-                    "name": "ToggleInventory",
-                    "type": "Button",
-                    "id": "0298f3db-ae53-4b7d-8b27-113a9568846f",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 },
-                {
-                    "name": "SelectSlot",
-                    "type": "Button",
-                    "id": "df49e978-d728-4579-85cf-767a3c09a7c5",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "THold",
-                    "type": "Button",
-                    "id": "24814b68-033d-4053-bcb3-8330dc798206",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "Hold",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "NumberPress",
-                    "type": "Button",
-                    "id": "da7ff98d-6eb1-4e99-94ce-4bea0932a608",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
                 {
                     "name": "",
-                    "id": "41178262-9289-4cd3-8d3e-9cbf4f4e2ab4",
+                    "id": "b7c120a2-4736-4ec4-86a7-92343065231b",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ItemPickUp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "eb6f913d-3433-45f2-a073-5d48fd83094c",
                     "path": "<Keyboard>/i",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";PC",
                     "action": "ToggleInventory",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "61dfb517-b16b-460f-8dba-303590bd6447",
-                    "path": "<Keyboard>/1",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "0a53bd3c-a533-4e08-9921-27ed9e280ade",
-                    "path": "<Keyboard>/2",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "4c8e810e-4e67-4eb8-bfc2-9c592f44c8c2",
-                    "path": "<Keyboard>/3",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "8b00c2ae-6de0-41ee-9a67-0d0bb1ccf7de",
-                    "path": "<Keyboard>/4",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "84e0a5d3-3c40-47f2-8f9a-9e1234775926",
-                    "path": "<Keyboard>/5",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a5f1f284-e7f6-4f03-96fd-ca010b3f0eb5",
-                    "path": "<Keyboard>/6",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "SelectSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "3978b311-1800-43c0-8e9c-1973a02b2f68",
+                    "id": "27c30fc9-283c-4474-afa1-13ee123c67fa",
                     "path": "<Keyboard>/t",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";PC",
                     "action": "THold",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "8f95f6ea-7fa8-4971-9257-6c02874287a7",
+                    "id": "c754ad5e-01c3-4e07-ac8b-31b1e614b076",
                     "path": "<Keyboard>/1",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "796d791e-59e8-47eb-aa40-461111d7747e",
+                    "id": "4400d8a5-f4a3-4caa-9cf3-80bdb0b4d8d2",
                     "path": "<Keyboard>/2",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "30fa3f19-ee55-43d1-9d25-9dffb5235e5e",
+                    "id": "550dccbd-d540-475c-bc8b-e8d4e066b7af",
                     "path": "<Keyboard>/3",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "04eab54d-be6b-4327-96bc-b2d4fe8d3ac1",
+                    "id": "0c397e8b-36f2-4d03-86cb-47d853161c46",
                     "path": "<Keyboard>/4",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "a189660f-4e64-418e-833b-676586cff70f",
+                    "id": "b0db4581-eff8-4aa6-9419-7130098ff141",
                     "path": "<Keyboard>/5",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "f9582d28-53d4-43d3-9bec-561399df4870",
+                    "id": "2769762c-b22d-4415-b6df-f00f13d121b7",
                     "path": "<Keyboard>/6",
-                    "interactions": "Press",
+                    "interactions": "",
                     "processors": "",
-                    "groups": "",
-                    "action": "NumberPress",
+                    "groups": ";PC",
+                    "action": "SlotKeyPress",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5347e2bd-0551-410b-8882-0e1780e2cf67",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ItemUse",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "85dc064c-cf9b-407a-86a4-9700b75d03fe",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ItemDrop",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3cb76d72-241b-492c-9914-6bff4d23cb7d",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ReturnToSlot",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -4,10 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 인벤토리 슬롯 하나를 관리
-/// <para> - 슬롯에 아이템 추가 및 개수 업데이트 </para>
-/// <para> - 슬롯 초기화 </para>
+/// <summary> 인벤토리 슬롯 하나를 관리하고 UI 제어
+/// <para> - 슬롯에 아이템 객체와 개수를 저장하고 접근을 제공 </para>
+/// <para> - 슬롯에 아이템 이미지&개수 업데이트, 슬롯 교체, 슬롯 초기화 기능을 제어 </para>
 /// </summary>
 public class InventorySlot : MonoBehaviour
 {
@@ -28,34 +27,25 @@ public class InventorySlot : MonoBehaviour
     {
         mItem = newItem;
         mItemCount = count;
-        mItemImage.sprite = mItem.itemImage;
 
-        // 아이템 이미지 보이도록 설정
-        var color = mItemImage.color;
-        color.a = 1f;
-        mItemImage.color = color;
-
-        // 아이템이 중첩 가능한 경우에만 아이템 개수 표시
-        if (mItem.canOverlap)
-        {
-            mItemCountText.text = mItemCount.ToString();
-        }
-        else
-        {
-            mItemCountText.text = "";
-        }
+        UpdateSlotUI();
     }
 
     /// <summary>
-    /// 중첩 가능한 아이템을 또 획득했다면 새로운 슬롯에 추가하지 않고 개수만 업데이트
+    /// 아이템의 개수만 업데이트
+    /// <para> - 중첩 가능한 아이템을 추가하는 경우 개수 업데이트 </para>
+    /// <para> - 아이템 개수가 0개 이하가 된 경우 슬롯 초기화 </para>
     /// </summary>
     public void UpdateItemCount(int newCount)
     {
         mItemCount = newCount;
-        mItemCountText.text = mItemCount.ToString();
         if (mItemCount <= 0)
         {
             ClearSlot();
+        }
+        else
+        {
+            mItemCountText.text = mItemCount.ToString();
         }
     }
 
@@ -69,9 +59,39 @@ public class InventorySlot : MonoBehaviour
 
         if (mItem != null)
         {
-            mItemImage.sprite = mItem.itemImage;
+            UpdateSlotUI();
+        }
+        else
+        {
+            ClearSlot();
+        }
 
-            // 아이템이 중첩 가능한 경우에만 아이템 개수 표시
+    }
+
+    /// <summary>
+    /// 슬롯 데이터 및 UI 초기화
+    /// </summary>
+    public void ClearSlot()
+    {
+        mItem = null;
+        mItemCount = 0;
+
+        ClearSlotUI();
+    }
+
+    /// <summary>
+    /// 슬롯 데이터를 기반으로 슬롯 이미지와 개수 텍스트 UI 업데이트
+    /// <para> - 해당 슬롯에 아이템이 없다면 UI 초기화 </para>
+    /// </summary>
+    private void UpdateSlotUI()
+    {
+        if (mItem != null)
+        {
+            mItemImage.sprite = mItem.itemImage;
+            var color = mItemImage.color;
+            color.a = 1f;
+            mItemImage.color = color;
+
             if (mItem.canOverlap)
             {
                 mItemCountText.text = mItemCount.ToString();
@@ -83,27 +103,19 @@ public class InventorySlot : MonoBehaviour
         }
         else
         {
-            mItemImage.sprite = null;
-            mItemCount = 0;
-            mItemCountText.text = "";
+            ClearSlotUI();
         }
-
     }
 
     /// <summary>
-    /// 슬롯 초기화
+    /// 슬롯의 UI 초기화
     /// </summary>
-    public void ClearSlot()
+    private void ClearSlotUI()
     {
-        mItem = null;
-        mItemCount = 0;
         mItemImage.sprite = null;
-
-        // 아이템 이미지 안보이도록 설정
         var color = mItemImage.color;
         color.a = 0f;
         mItemImage.color = color;
-
         mItemCountText.text = "";
     }
 }
