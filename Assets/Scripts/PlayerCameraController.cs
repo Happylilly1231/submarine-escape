@@ -13,7 +13,7 @@ public class PlayerCameraController : MonoBehaviour
 
     void Update()
     {
-        if (!playerMove.isPausing)
+        if (!GameManager.instance.IsPausing)
         {
             // 상하 회전
             xRotation -= playerMove.mouseY;
@@ -25,7 +25,7 @@ public class PlayerCameraController : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!playerMove.isPausing)
+        if (!GameManager.instance.IsPausing)
             transform.position = playerHead.TransformPoint(cameraOffset);
     }
 }

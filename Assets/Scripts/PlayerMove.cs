@@ -8,12 +8,15 @@ public class PlayerMove : MonoBehaviour
     CharacterController controller;
     CapsuleCollider col;
     Animator anim;
+    PlayerStat playerStat;
 
     // 이동
     Vector2 moveInput; // 이동 입력
+    Vector3 moveDir; // 이동 방향
     [SerializeField] float moveSpeed; // 이동 속도
     float walkSpeed = 3f; // 걷기 속도
     float runSpeed = 7f; // 달리기 속도
+    [SerializeField] float dodgeSpeed = 5f; // 회피 속도
 
     // 시야 회전
     Vector2 lookInput; // 시야 입력
@@ -27,13 +30,16 @@ public class PlayerMove : MonoBehaviour
     float ySpeed = 0f; // y 속도
     float gravity = -9.81f; // 중력
 
-    // 정지
-    public bool isPausing = false; // 정지 중인지 여부
+    // 회피
+    bool isDodging = false;
+    float currentDodgeTime = 0f;
+    float dodgeTime = 1.5f;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
+        playerStat = GetComponent<PlayerStat>();
     }
 
     void Start()
@@ -74,10 +80,11 @@ public class PlayerMove : MonoBehaviour
         // 정지 버튼(ESC) 눌렀을 때
         if (context.performed)
         {
-            if (isPausing) // 정지 중
+
+            if (GameManager.instance.IsPausing) // 정지 중
             {
                 // 정지 해제
-                isPausing = false;
+                GameManager.instance.IsPausing = false;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
                 Time.timeScale = 1.0f; // 시간 흐르게
@@ -85,7 +92,7 @@ public class PlayerMove : MonoBehaviour
             else // 플레이 중
             {
                 // 정지
-                isPausing = true;
+                GameManager.instance.IsPausing = true;
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
                 Time.timeScale = 0f; // 시간 정지
@@ -93,12 +100,40 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
+    public void OnDodge(InputAction.CallbackContext context)
+    {
+        if (context.performed && playerStat.UseStamina())
+        {
+            isDodging = true;
+            currentDodgeTime = dodgeTime;
+            anim.SetTrigger("Dodge");
+        }
+    }
+
     void Update()
     {
-        if (!isPausing)
+        if (!GameManager.instance.IsPausing)
         {
             Rotate(); // 회전
-            Move(); // 이동
+
+            if (isDodging)
+            {
+                // 회피
+                Vector3 velocity = transform.forward * dodgeSpeed;
+                controller.Move(velocity * Time.deltaTime);
+
+                currentDodgeTime -= Time.deltaTime;
+
+                if (currentDodgeTime <= 0)
+                {
+                    currentDodgeTime = 0f;
+                    isDodging = false;
+                }
+            }
+            else
+            {
+                Move(); // 이동
+            }
         }
     }
 
@@ -117,7 +152,7 @@ public class PlayerMove : MonoBehaviour
     void Move()
     {
         // 이동 방향
-        Vector3 moveDir = transform.right * moveInput.x + transform.forward * moveInput.y;
+        moveDir = transform.right * moveInput.x + transform.forward * moveInput.y;
         moveDir.Normalize(); // 정규화
 
         // 애니메이션 파라미터 설정
