@@ -3,32 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 몬스터 이동
+/// </summary>
 public class MonsterMove : MonoBehaviour
 {
-    [SerializeField] private Transform target;
-    [SerializeField] private float stopDistance = 2f; // 멈출 거리
+    [SerializeField] private Transform mTarget;
+    [SerializeField] private float mStopDistance = 2f; // 멈출 거리
 
-    private NavMeshAgent nav;
+    private NavMeshAgent mNav;
 
     void Start()
     {
-        nav = GetComponent<NavMeshAgent>();
+        mNav = GetComponent<NavMeshAgent>();
     }
 
     void Update()
     {
-        float distance = Vector3.Distance(transform.position, target.position);
+        float distance = Vector3.Distance(transform.position, mTarget.position);
 
-        if (distance > stopDistance)
+        if (distance > mStopDistance)
         {
             // 목표가 멀리 있으면 이동
-            nav.isStopped = false;
-            nav.SetDestination(target.position);
+            mNav.isStopped = false;
+            mNav.SetDestination(mTarget.position);
         }
         else
         {
             // 목표가 가까워지면 멈춤
-            nav.isStopped = true;
+            mNav.isStopped = true;
         }
     }
 }
