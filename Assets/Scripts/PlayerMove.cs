@@ -102,7 +102,7 @@ public class PlayerMove : MonoBehaviour
 
     public void OnDodge(InputAction.CallbackContext context)
     {
-        if (context.performed && playerStat.UseStamina())
+        if (context.performed && playerStat.UseStamina()) // 스태미나 사용했을 때
         {
             isDodging = true;
             currentDodgeTime = dodgeTime;
@@ -116,19 +116,9 @@ public class PlayerMove : MonoBehaviour
         {
             Rotate(); // 회전
 
-            if (isDodging)
+            if (isDodging) // 회피 중이면
             {
-                // 회피
-                Vector3 velocity = transform.forward * dodgeSpeed;
-                controller.Move(velocity * Time.deltaTime);
-
-                currentDodgeTime -= Time.deltaTime;
-
-                if (currentDodgeTime <= 0)
-                {
-                    currentDodgeTime = 0f;
-                    isDodging = false;
-                }
+                Dodge(); // 회피
             }
             else
             {
@@ -184,5 +174,31 @@ public class PlayerMove : MonoBehaviour
 
         // 바닥에 닿아있는지 여부 애니메이터에 넘기기(모든 y 계산이 다 끝난 뒤에 실행)
         anim.SetBool("isGrounded", controller.isGrounded);
+    }
+
+    // 회피
+    void Dodge()
+    {
+        // 중력 적용
+        if (controller.isGrounded) // 바닥에 닿아있으면
+        {
+            if (ySpeed < 0f)
+                ySpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
+        }
+        else // 공중
+        {
+            ySpeed += gravity * Time.deltaTime; // 중력에 따른 y 속도 계산
+        }
+
+        Vector3 velocity = moveDir * dodgeSpeed + Vector3.up * ySpeed;
+        controller.Move(velocity * Time.deltaTime);
+
+        currentDodgeTime -= Time.deltaTime;
+
+        if (currentDodgeTime <= 0)
+        {
+            currentDodgeTime = 0f;
+            isDodging = false;
+        }
     }
 }
