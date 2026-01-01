@@ -83,6 +83,36 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 290884568576773440, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
+    - target: {fileID: 290884568576773442, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
+    - target: {fileID: 290884568576773444, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
+    - target: {fileID: 290884568576773446, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
+    - target: {fileID: 290884568576773448, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
+    - target: {fileID: 290884568576773450, guid: 6ec18304030011c47aaa07296ea319e0,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
     - target: {fileID: 290884568580928384, guid: 6ec18304030011c47aaa07296ea319e0,
         type: 3}
       propertyPath: m_Controller
@@ -146,8 +176,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad232a72e6378fe439cdcc4a8a86ead6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  stopDistance: 2
+  _playerTransform: {fileID: 0}
+  wayPointsParent: {fileID: 0}
+  currentIndex: 0
+  currentAttackType: 0
+  canNextAttack: 0
 --- !u!195 &1595222008090448713
 NavMeshAgent:
   m_ObjectHideFlags: 0
