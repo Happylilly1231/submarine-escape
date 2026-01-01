@@ -8,48 +8,53 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
-    private CharacterController mController;
-    private CapsuleCollider mCollider;
-    private Animator mAnimator;
-    private PlayerStat mPlayerStat;
+    private CharacterController _controller;
+    private Animator _animator;
+    private PlayerStat _playerStat;
+    private PlayerStatus _playerStatus;
 
     // 이동
-    private Vector2 mMoveInput; // 이동 입력
-    private Vector3 mMoveDir; // 이동 방향
-    [SerializeField] private float mMoveSpeed; // 이동 속도
-    private float mWalkSpeed = 3f; // 걷기 속도
-    private float mRunSpeed = 7f; // 달리기 속도
-    private float mDodgeSpeed = 5f; // 회피 속도
+    private Vector2 _moveInput; // 이동 입력
+    private Vector3 _moveDir; // 이동 방향
+    [SerializeField] private float moveSpeed; // 이동 속도
+    private float _walkSpeed = 1.5f; // 걷기 속도
+    private float _runSpeed = 4f; // 달리기 속도
 
     // 회전
-    private Vector2 mLookInput; // 시야 입력
-    private float mMouseX; // 마우스 x좌표
-    public float MouseX => mMouseX;
-    private float mMouseY; // 마우스 y좌표
-    public float MouseY => mMouseY;
-    [SerializeField] float mMouseSensitivity = 1f; // 마우스 감도
+    private Vector2 _lookInput; // 시야 입력
+    private float _mouseX; // 마우스 x좌표
+    public float MouseX => _mouseX;
+    private float _mouseY; // 마우스 y좌표
+    public float MouseY => _mouseY;
+    [SerializeField] float mouseSensitivity = 1f; // 마우스 감도
 
     // 점프 & 중력
-    private bool mJumpInput = false; // 점프 입력
-    private float mJumpSpeed = 3f; // 점프 속도
-    private float mYSpeed = 0f; // y 속도
-    private float mGravity = -9.81f; // 중력
+    private float _jumpSpeed = 3f; // 점프 속도
+    private bool _jumpInput = false; // 점프 입력
+    private float _ySpeed = 0f; // y 속도
+    private float _gravity = -9.81f; // 중력
+    private bool _isJumping; // 점프 중 여부
+    public bool IsJumping => _isJumping;
 
     // 회피
-    private bool mIsDodging = false; // 회피 중인지 여부
-    private float mCurrentDodgeTime = 0f; // 현재 회피 진행 시간(회피 시간으로 초기화돼서 0까지 감소)
-    private float mDodgeTime = 1.5f; // 회피 시간
+    private float _dodgeSpeed = 2.5f; // 회피 속도
+    private bool _isDodging = false; // 회피 중인지 여부
+    public bool IsDodging => _isDodging;
+
+    private float _currentDodgeTime = 0f; // 현재 회피 진행 시간(회피 시간으로 초기화돼서 0까지 감소)
+    private float _dodgeTime = 1.2f; // 회피 시간
 
     void Awake()
     {
-        mController = GetComponent<CharacterController>();
-        mAnimator = GetComponent<Animator>();
-        mPlayerStat = GetComponent<PlayerStat>();
+        _controller = GetComponent<CharacterController>();
+        _animator = GetComponent<Animator>();
+        _playerStat = GetComponent<PlayerStat>();
+        _playerStatus = GetComponent<PlayerStatus>();
     }
 
     void Start()
     {
-        mMoveSpeed = mWalkSpeed; // 걷기 속도를 기본 속도로 설정
+        moveSpeed = _walkSpeed; // 걷기 속도를 기본 속도로 설정
         Cursor.visible = false; // 마우스 커서 안 보이게 하기
         Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
     }
@@ -59,7 +64,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnMove(InputAction.CallbackContext context)
     {
-        mMoveInput = context.ReadValue<Vector2>();
+        _moveInput = context.ReadValue<Vector2>();
     }
 
     /// <summary>
@@ -67,7 +72,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnLook(InputAction.CallbackContext context)
     {
-        mLookInput = context.ReadValue<Vector2>();
+        _lookInput = context.ReadValue<Vector2>();
     }
 
     /// <summary>
@@ -76,9 +81,9 @@ public class PlayerMove : MonoBehaviour
     public void OnRun(InputAction.CallbackContext context)
     {
         if (context.performed)
-            mMoveSpeed = mRunSpeed;
+            moveSpeed = _runSpeed * _playerStatus.SpeedScale;
         else if (context.canceled)
-            mMoveSpeed = mWalkSpeed;
+            moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
     }
 
     /// <summary>
@@ -86,9 +91,9 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.performed && mController.isGrounded)
+        if (context.performed && _controller.isGrounded)
         {
-            mJumpInput = true;
+            _jumpInput = true;
         }
     }
 
@@ -102,19 +107,11 @@ public class PlayerMove : MonoBehaviour
         {
             if (GameManager.instance.IsPausing) // 정지 중이면
             {
-                // 정지 해제(플레이)
-                GameManager.instance.IsPausing = false;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
-                Time.timeScale = 1.0f; // 시간 흐르게
+                GameManager.instance.Resume(); // 정지 해제(플레이)
             }
             else // 플레이 중이면
             {
-                // 정지
-                GameManager.instance.IsPausing = true;
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
-                Time.timeScale = 0f; // 시간 정지
+                GameManager.instance.Pause(); // 정지
             }
         }
     }
@@ -124,11 +121,11 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnDodge(InputAction.CallbackContext context)
     {
-        if (context.performed && mPlayerStat.UseStamina()) // 스태미나 사용했을 때
+        if (context.performed && _playerStat.UseStamina()) // 스태미나 사용했을 때
         {
-            mIsDodging = true; // 회피 중 true
-            mCurrentDodgeTime = mDodgeTime; // 현재 회피 진행 시간을 회피 시간으로 초기화
-            mAnimator.SetTrigger("Dodge"); // 회피 애니메이션 재생
+            _isDodging = true; // 회피 중 true
+            _currentDodgeTime = _dodgeTime; // 현재 회피 진행 시간을 회피 시간으로 초기화
+            _animator.SetTrigger("Dodge"); // 회피 애니메이션 재생
         }
     }
 
@@ -137,11 +134,11 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     void Update()
     {
-        if (!GameManager.instance.IsPausing) // 정지 중이 아닐 때
+        if (!GameManager.instance.IsPausing && !_playerStatus.IsStunned) // 정지 중이 아닐 때 & 플레이어 상태가 스턴이 아닐 때
         {
             Rotate(); // 회전
 
-            if (mIsDodging) // 회피 중이면
+            if (_isDodging) // 회피 중이면
             {
                 Dodge(); // 회피
             }
@@ -158,8 +155,8 @@ public class PlayerMove : MonoBehaviour
     void Rotate()
     {
         // 마우스 입력
-        mMouseX = mLookInput.x * mMouseSensitivity;
-        mMouseY = mLookInput.y * mMouseSensitivity;
+        _mouseX = _lookInput.x * mouseSensitivity;
+        _mouseY = _lookInput.y * mouseSensitivity;
 
         // 플레이어 좌우 회전
         transform.Rotate(Vector3.up * MouseX);
@@ -171,38 +168,43 @@ public class PlayerMove : MonoBehaviour
     void Move()
     {
         // 이동 방향
-        mMoveDir = transform.right * mMoveInput.x + transform.forward * mMoveInput.y;
-        mMoveDir.Normalize(); // 정규화
+        _moveDir = transform.right * _moveInput.x + transform.forward * _moveInput.y;
+        _moveDir.Normalize(); // 정규화
 
         // 애니메이션 파라미터 설정
-        mAnimator.SetFloat("Speed", mMoveDir.magnitude); // Idle or 이동(달리기 & 걷기)
-        mAnimator.SetBool("isRunning", mMoveSpeed == mRunSpeed); // 달리기 애니메이션
+        _animator.SetFloat("Speed", _moveDir.magnitude); // Idle or 이동(달리기 & 걷기)
+        _animator.SetBool("isRunning", moveSpeed == _runSpeed * _playerStatus.SpeedScale); // 달리기 애니메이션
 
         // 중력 적용
-        if (mController.isGrounded) // 바닥에 닿아있으면
+        if (_controller.isGrounded) // 바닥에 닿아있으면
         {
-            if (mYSpeed < 0f)
-                mYSpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
+            if (_ySpeed < 0f)
+                _ySpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
+
+            // // 점프 중 아님으로 초기화
+            // if (_isJumping)
+            //     _isJumping = false;
 
             // 점프
-            if (mJumpInput) // 점프 입력이 들어왔을 때
+            if (_jumpInput) // 점프 입력이 들어왔을 때
             {
-                mYSpeed = mJumpSpeed; // y 속도를 점프 속도로 초기화
-                mAnimator.SetTrigger("Jump"); // 점프 애니메이션 재생
-                mJumpInput = false; // 점프 입력을 false로 설정(중복 실행 안되도록)
+                _isJumping = true;
+                _ySpeed = _jumpSpeed; // y 속도를 점프 속도로 초기화
+                _animator.SetTrigger("Jump"); // 점프 애니메이션 재생
+                _jumpInput = false; // 점프 입력을 false로 설정(중복 실행 안되도록)
             }
         }
         else // 공중
         {
-            mYSpeed += mGravity * Time.deltaTime; // 중력에 따른 y 속도 계산
+            _ySpeed += _gravity * Time.deltaTime; // 중력에 따른 y 속도 계산
         }
 
         // 이동 + 점프
-        Vector3 velocity = mMoveDir * mMoveSpeed + Vector3.up * mYSpeed;
-        mController.Move(velocity * Time.deltaTime);
+        Vector3 velocity = _moveDir * moveSpeed + Vector3.up * _ySpeed;
+        _controller.Move(velocity * Time.deltaTime);
 
         // 바닥에 닿아있는지 여부 애니메이터에 넘기기(모든 y 계산이 다 끝난 뒤에 실행)
-        mAnimator.SetBool("isGrounded", mController.isGrounded);
+        _animator.SetBool("isGrounded", _controller.isGrounded);
     }
 
     /// <summary>
@@ -211,25 +213,26 @@ public class PlayerMove : MonoBehaviour
     void Dodge()
     {
         // 중력 적용
-        if (mController.isGrounded) // 바닥에 닿아있으면
+        if (_controller.isGrounded) // 바닥에 닿아있으면
         {
-            if (mYSpeed < 0f)
-                mYSpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
+            if (_ySpeed < 0f)
+                _ySpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
         }
         else // 공중
         {
-            mYSpeed += mGravity * Time.deltaTime; // 중력에 따른 y 속도 계산
+            _ySpeed += _gravity * Time.deltaTime; // 중력에 따른 y 속도 계산
         }
 
-        Vector3 velocity = mMoveDir * mDodgeSpeed + Vector3.up * mYSpeed;
-        mController.Move(velocity * Time.deltaTime);
+        Vector3 velocity = _moveDir * _dodgeSpeed + Vector3.up * _ySpeed;
+        _controller.Move(velocity * Time.deltaTime);
 
-        mCurrentDodgeTime -= Time.deltaTime;
+        _currentDodgeTime -= Time.deltaTime;
 
-        if (mCurrentDodgeTime <= 0)
+        if (_currentDodgeTime <= 0)
         {
-            mCurrentDodgeTime = 0f;
-            mIsDodging = false;
+            _currentDodgeTime = 0f;
+            _isDodging = false;
+            Debug.Log("회피 끝");
         }
     }
 }

@@ -8,43 +8,52 @@ using UnityEngine.UI;
 /// 플레이어 스탯 관리
 /// <para> - 스탯: 체력(hp), 스태미나(stamina), 체온(temperature) </para> 
 /// <para> - 스탯 계산 함수 </para> 
-/// <para> - 스탯 UI 관리 </para> 
+/// <para> - 스탯 UI 관리 </para>
 /// </summary>
 public class PlayerStat : MonoBehaviour
 {
+    private PlayerStatus _playerStatus;
+
     // 체력
-    private float mHp; // 현재 체력
-    public float Hp => mHp;
-    private float mMaxHp = 100f; // 최대 체력
+    private float _hp; // 현재 체력
+    public float Hp => _hp;
+    private float _maxHp = 100f; // 최대 체력
 
     // 스태미나(회피용, 1칸씩 사용)
-    private float mStamina; // 현재 스태미나
-    public float Stamina => mStamina;
-    private float mMaxStamina = 3f; // 최대 스태미나
-    private Coroutine mCurrentRechargeCoroutine; // 현재 진행 중인 스태미나 회복 코루틴
+    private float _stamina; // 현재 스태미나
+    public float Stamina => _stamina;
+    private float _maxStamina = 3f; // 최대 스태미나
+    private Coroutine _currentRechargeCoroutine; // 현재 진행 중인 스태미나 회복 코루틴
 
     // 체온
-    private float mTemperature; // 체온
-    public float Temperature => mTemperature;
-    private float mMaxTemperature = 36.5f; // 최대 체온
+    private float _temperature; // 체온
+    public float Temperature => _temperature;
+    private float _maxTemperature = 36.5f; // 최대 체온
 
     // 스탯 UI
-    [SerializeField] private Slider mHpSlider; // 체력 바
-    [SerializeField] private TextMeshProUGUI mHpText; // 체력 텍스트(ex) 100/100)
-    [SerializeField] private Slider mStaminaSlider; // 스태미나 바
-    [SerializeField] private Slider mStaminaGlowSlider; // 스태미나 각 칸이 완전히 채워졌을 때 표시되는 발광 부분
+    [SerializeField] private Slider hpSlider; // 체력 바
+    [SerializeField] private TextMeshProUGUI hpText; // 체력 텍스트(ex) 100/100)
+    [SerializeField] private Slider staminaSlider; // 스태미나 바
+    [SerializeField] private Slider staminaGlowSlider; // 스태미나 각 칸이 완전히 채워졌을 때 표시되는 발광 부분
+
+    void Awake()
+    {
+        _playerStatus = GetComponent<PlayerStatus>();
+    }
 
     /// <summary>
     /// 스탯을 최대 수치로 초기화, 스탯 UI 업데이트
     /// </summary>
     void Start()
     {
-        mHp = mMaxHp;
-        mStamina = mMaxStamina;
-        mTemperature = mMaxTemperature;
+        _hp = _maxHp;
+        _stamina = _maxStamina;
+        _temperature = _maxTemperature;
 
         UpdateHpSlider();
         UpdateStaminaSlider();
+
+
     }
 
     /// <summary>
@@ -53,14 +62,32 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void Damage(float value)
     {
-        mHp -= value;
+        _hp -= value;
         Debug.Log("Damage: -" + value);
-        if (mHp <= 0)
+        if (_hp <= 0)
         {
-            mHp = 0;
-            Debug.Log("Die");
+            _hp = 0;
+            Die();
         }
         UpdateHpSlider();
+        StartCoroutine(DamageEffect());
+        StartCoroutine(_playerStatus.SlowEffect());
+    }
+
+    IEnumerator DamageEffect()
+    {
+        FXManager.instance.VignetteOn(Color.red);
+        Color originalColor = hpText.color;
+        hpText.color = Color.red;
+        yield return new WaitForSeconds(2f);
+        FXManager.instance.VignetteOff();
+        hpText.color = originalColor;
+    }
+
+    public void Die()
+    {
+        Debug.Log("플레이어 사망");
+        GameManager.instance.GameOver();
     }
 
     /// <summary>
@@ -68,7 +95,7 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void Heal(float value)
     {
-        mHp += value;
+        _hp += value;
         UpdateHpSlider();
         Debug.Log("Heal: +" + value);
     }
@@ -79,18 +106,18 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public bool UseStamina(int cnt = 1)
     {
-        if (mStamina < cnt)
+        if (_stamina < cnt)
         {
             Debug.Log("현재 스태미나를 사용할 수 없습니다.");
             return false;
         }
 
-        if (mCurrentRechargeCoroutine != null)
-            StopCoroutine(mCurrentRechargeCoroutine);
-        mStamina -= cnt;
+        if (_currentRechargeCoroutine != null)
+            StopCoroutine(_currentRechargeCoroutine);
+        _stamina -= cnt;
         Debug.Log("Stamina: -" + cnt);
         UpdateStaminaSlider();
-        mCurrentRechargeCoroutine = StartCoroutine(RechargeStamina());
+        _currentRechargeCoroutine = StartCoroutine(RechargeStamina());
         return true;
     }
 
@@ -100,13 +127,13 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     IEnumerator RechargeStamina()
     {
-        while (mStamina < mMaxStamina)
+        while (_stamina < _maxStamina)
         {
-            mStamina += 0.01f;
+            _stamina += 0.01f;
             UpdateStaminaSlider();
             yield return new WaitForSeconds(0.1f);
         }
-        mCurrentRechargeCoroutine = null;
+        _currentRechargeCoroutine = null;
     }
 
     /// <summary>
@@ -114,8 +141,8 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void UpdateHpSlider()
     {
-        mHpSlider.value = mHp / mMaxHp;
-        mHpText.text = mHp + "/" + mMaxHp;
+        hpSlider.value = _hp / _maxHp;
+        hpText.text = _hp + "/" + _maxHp;
     }
 
     /// <summary>
@@ -123,7 +150,7 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void UpdateStaminaSlider()
     {
-        mStaminaSlider.value = mStamina / mMaxStamina;
-        mStaminaGlowSlider.value = (int)mStamina / mMaxStamina; // 각 칸이 회복되면 발광
+        staminaSlider.value = _stamina / _maxStamina;
+        staminaGlowSlider.value = (int)_stamina / _maxStamina; // 각 칸이 회복되면 발광
     }
 }

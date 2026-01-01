@@ -7,12 +7,13 @@ using UnityEngine;
 /// </summary>
 public class PlayerCameraController : MonoBehaviour
 {
-    [SerializeField] private PlayerMove mPlayerMove; // 플레이어 이동 스크립트(마우스 좌표 가져와야 함)
-    [SerializeField] private Transform mPlayerHead; // 플레이어 머리 위치
-    [SerializeField] private Vector3 mCameraOffset = new Vector3(0f, 0.08f, 0.05f); // 눈높이
+    [SerializeField] private PlayerMove playerMove; // 플레이어 이동 스크립트(마우스 좌표 가져와야 함)
+    [SerializeField] private Transform playerHead; // 플레이어 머리 위치
+    [SerializeField] private Transform cameraPos; // 카메라 위치
+    [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 0.08f, 0.05f); // 눈높이
 
-    private float mXRotation = 0f; // 카메라 상하 회전값
-    private float mYRotation = 0f; // 카메라 좌우 회전값
+    private float _xRotation = 0f; // 카메라 상하 회전값
+    // private float _yRotation = 0f; // 카메라 좌우 회전값
 
     /// <summary>
     /// 정지 중이 아닐 때 마우스 좌표에 따른 카메라 회전
@@ -21,10 +22,10 @@ public class PlayerCameraController : MonoBehaviour
     {
         if (!GameManager.instance.IsPausing) // 정지 중이 아닐 때
         {
-            mXRotation -= mPlayerMove.MouseY; // 상하 회전값
-            mYRotation += mPlayerMove.MouseX; // 좌우 회전값
-            mXRotation = Mathf.Clamp(mXRotation, -90f, 50f); // 시야 상하 회전 범위 제한
-            transform.localRotation = Quaternion.Euler(mXRotation, mYRotation, 0f);
+            _xRotation -= playerMove.MouseY; // 상하 회전값
+            // _yRotation += playerMove.MouseX; // 좌우 회전값
+            _xRotation = Mathf.Clamp(_xRotation, -90f, 50f); // 시야 상하 회전 범위 제한
+            transform.localRotation = Quaternion.Euler(_xRotation, playerMove.transform.eulerAngles.y, 0f);
         }
     }
 
@@ -34,6 +35,11 @@ public class PlayerCameraController : MonoBehaviour
     void LateUpdate()
     {
         if (!GameManager.instance.IsPausing)
-            transform.position = mPlayerHead.TransformPoint(mCameraOffset);
+        {
+            if (playerMove.IsDodging)
+                transform.position = playerHead.TransformPoint(cameraOffset);
+            else
+                transform.position = cameraPos.position;
+        }
     }
 }
