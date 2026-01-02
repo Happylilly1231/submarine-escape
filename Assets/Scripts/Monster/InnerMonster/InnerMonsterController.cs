@@ -116,14 +116,14 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         // 이벤트 구독
         LightingManager.instance.OnLightChanged += ChangeStatValue; // 전등 상태 변경 -> 몬스터 스탯 수치 변경
-        GameManager.instance.OnAlertStarted += RageStart; // 경보 발생 시작 -> 폭주 시작
+        SubmarineInGameManager.instance.OnAlertStarted += RageStart; // 경보 발생 시작 -> 폭주 시작
     }
 
     private void OnDisable()
     {
         // 이벤트 구독 해제
         LightingManager.instance.OnLightChanged -= ChangeStatValue;
-        GameManager.instance.OnAlertStarted -= RageStart;
+        SubmarineInGameManager.instance.OnAlertStarted -= RageStart;
     }
 
     private void Awake()
@@ -157,7 +157,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private void Update()
     {
         // 경보 발생 중이 아닐 때(= 폭주 중 X)
-        if (!GameManager.instance.IsAlerting)
+        if (!SubmarineInGameManager.instance.IsAlerting)
         {
             // 추적 종료 딜레이 중 -> 추적 종료 딜레이 타이머 계산
             if (_isChaseEndDelay)
@@ -185,7 +185,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     // 상태 전환
     public void ChangeState(IState<InnerMonsterController> newState)
     {
-        if (GameManager.instance.IsAlerting) // 경보 발생 중(= 폭주 중)
+        if (SubmarineInGameManager.instance.IsAlerting) // 경보 발생 중(= 폭주 중)
         {
             _currentFsm = _rageFsm;
             _fsm.ExitState();
@@ -387,7 +387,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool CanAttack()
     {
         // Debug.Log(CanDetect() + " " + (_distToPlayer <= _rangeAttackDistance) + " " + !_isAttackCoolDown + " " + _distToPlayer);
-        if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || GameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
+        if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
         {
             return true;
         }

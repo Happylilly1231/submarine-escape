@@ -25,11 +25,6 @@ public class LightingManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
         }
     }
 
@@ -54,6 +49,7 @@ public class LightingManager : MonoBehaviour
 
         // 초기 설정
         LightToggle(false); // 조명 끄기
+        Debug.Log("조명을 껐습니다.");
     }
 
     /// <summary>

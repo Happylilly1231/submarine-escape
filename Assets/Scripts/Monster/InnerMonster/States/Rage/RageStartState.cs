@@ -24,7 +24,7 @@ namespace InnerMonsterStates
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
 
             // 모든 문 NavMeshObstacle 비활성화
-            foreach (Door door in GameManager.instance.Doors)
+            foreach (Door door in SubmarineInGameManager.instance.Doors)
             {
                 if (door.gameObject.activeSelf)
                     door.gameObject.GetComponent<NavMeshObstacle>().enabled = false;
