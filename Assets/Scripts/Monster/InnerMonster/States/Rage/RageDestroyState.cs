@@ -86,8 +86,8 @@ namespace InnerMonsterStates
                     break;
 
                 case EDestroyObjType.CurrentDestroyEquipment: // 현재 파괴될 장비를 파괴한 경우
-                    GameManager.instance.currentDestroyEquipmentIndex += 1; // 현재 파괴될 장비 인덱스 1 증가
-                    GameManager.instance.AlertOff(); // 경보 해제
+                    SubmarineInGameManager.instance.currentDestroyEquipmentIndex += 1; // 현재 파괴될 장비 인덱스 1 증가
+                    SubmarineInGameManager.instance.AlertOff(); // 경보 해제
                     monster.monsterEyeRenderer.material = monster.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
 
                     // 모든 문 NavMeshObstacle 다시 활성화하고, 한 프레임 대기 후(버그 해결 목적) 순찰 상태로 전환
@@ -114,7 +114,7 @@ namespace InnerMonsterStates
         IEnumerator DoorObstaclesOnAndGoPatrolState(InnerMonsterController monster)
         {
             // 모든 문 NavMeshObstacle 다시 활성화
-            foreach (Door door in GameManager.instance.Doors)
+            foreach (Door door in SubmarineInGameManager.instance.Doors)
             {
                 if (door.gameObject.activeSelf)
                     door.gameObject.GetComponent<NavMeshObstacle>().enabled = true;

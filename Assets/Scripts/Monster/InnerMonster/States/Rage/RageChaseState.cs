@@ -24,14 +24,14 @@ namespace InnerMonsterStates
         {
             owner.CanMove(true); // 이동
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
-            owner.Nav.SetDestination(GameManager.instance.CurrentAlertPos.position); // 경보 발생지를 향해 이동
+            owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentAlertPos.position); // 경보 발생지를 향해 이동
             owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
 
             // 경로 상의 문 리스트 얻기
             owner.StartCoroutine(GetDoorsOnPathList(owner));
 
             // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
-            _isChasingEscapeRoom = GameManager.instance.hasEverOpenedEscapeDoor;
+            _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
         }
 
         public void Update(InnerMonsterController owner)
@@ -80,11 +80,11 @@ namespace InnerMonsterStates
             if (Physics.Raycast(eyePos, owner.transform.forward, out RaycastHit hit, _detectDestroyObjDistance))
             {
                 // 현재 파괴해야 할 장비에 닿으면 -> 폭주 파괴 상태로 전환
-                if (hit.collider.gameObject == GameManager.instance.CurrentDestroyEquipment)
+                if (hit.collider.gameObject == SubmarineInGameManager.instance.CurrentDestroyEquipment)
                 {
                     // 현재 파괴해야 할 오브젝트로 설정
                     owner.currentDestroyObj = hit.collider.gameObject;
-                    owner.Nav.Warp(GameManager.instance.CurrentDestroyEquipment.transform.GetChild(0).transform.position); // 정확한 파괴 위치로 순간 이동
+                    owner.Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyEquipment.transform.GetChild(0).transform.position); // 정확한 파괴 위치로 순간 이동
                     owner.currentDestroyObjType = EDestroyObjType.CurrentDestroyEquipment; // 현재 파괴해야 할 오브젝트 타입 -> 현재 파괴해야 할 장비로 설정
                     owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환
                     return;
