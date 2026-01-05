@@ -10,23 +10,23 @@ using UnityEngine.EventSystems;
 /// </summary>
 public class InventorySlot : MonoBehaviour
 {
-    private Item mItem; // 슬롯에 들어있는 아이템
-    public Item item => mItem;
+    private Item _item; // 슬롯에 들어있는 아이템
+    public Item Item => _item;
 
-    private int mItemCount; // 슬롯에 들어있는 아이템 개수
-    public int itemCount => mItemCount;
+    private int _itemCount; // 슬롯에 들어있는 아이템 개수
+    public int ItemCount => _itemCount;
 
     [Header("아이템 슬롯에 있는 UI 오브젝트")]
-    [SerializeField] private Image mItemImage; // 아이템 이미지 UI
-    [SerializeField] private TMPro.TextMeshProUGUI mItemCountText; // 아이템 개수 텍스트 UI
+    [SerializeField] private Image itemImage; // 아이템 이미지 UI
+    [SerializeField] private TMPro.TextMeshProUGUI itemCountText; // 아이템 개수 텍스트 UI
 
     /// <summary>
     /// 아이템과 개수를 해당 슬롯에 추가
     /// </summary>
     public void AddItem(Item newItem, int count)
     {
-        mItem = newItem;
-        mItemCount = count;
+        _item = newItem;
+        _itemCount = count;
 
         UpdateSlotUI();
     }
@@ -38,14 +38,14 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     public void UpdateItemCount(int newCount)
     {
-        mItemCount = newCount;
-        if (mItemCount <= 0)
+        _itemCount = newCount;
+        if (_itemCount <= 0)
         {
             ClearSlot();
         }
         else
         {
-            mItemCountText.text = mItemCount.ToString();
+            itemCountText.text = _itemCount.ToString();
         }
     }
 
@@ -54,10 +54,10 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     public void SetSlot(Item newItem, int count)
     {
-        mItem = newItem;
-        mItemCount = count;
+        _item = newItem;
+        _itemCount = count;
 
-        if (mItem != null)
+        if (_item != null)
         {
             UpdateSlotUI();
         }
@@ -73,8 +73,8 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     public void ClearSlot()
     {
-        mItem = null;
-        mItemCount = 0;
+        _item = null;
+        _itemCount = 0;
 
         ClearSlotUI();
     }
@@ -85,20 +85,20 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     private void UpdateSlotUI()
     {
-        if (mItem != null)
+        if (_item != null)
         {
-            mItemImage.sprite = mItem.itemImage;
-            var color = mItemImage.color;
+            itemImage.sprite = _item.ItemImage;
+            var color = itemImage.color;
             color.a = 1f;
-            mItemImage.color = color;
+            itemImage.color = color;
 
-            if (mItem.canOverlap)
+            if (_item.CanOverlap)
             {
-                mItemCountText.text = mItemCount.ToString();
+                itemCountText.text = _itemCount.ToString();
             }
             else
             {
-                mItemCountText.text = "";
+                itemCountText.text = "";
             }
         }
         else
@@ -112,10 +112,10 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     private void ClearSlotUI()
     {
-        mItemImage.sprite = null;
-        var color = mItemImage.color;
+        itemImage.sprite = null;
+        var color = itemImage.color;
         color.a = 0f;
-        mItemImage.color = color;
-        mItemCountText.text = "";
+        itemImage.color = color;
+        itemCountText.text = "";
     }
 }

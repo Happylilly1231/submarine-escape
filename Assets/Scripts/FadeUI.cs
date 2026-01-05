@@ -8,14 +8,16 @@ using UnityEngine;
 /// </summary>
 public class FadeUI : MonoBehaviour
 {
-    public CanvasGroup mCanvasGroup;
-    private Coroutine mFadeCoroutine; // 현재 진행 중인 페이드 코루틴
+    private CanvasGroup _canvasGroup;
+    public CanvasGroup CanvasGroup => _canvasGroup;
 
-    [SerializeField] private float mFadeDuration = 0.7f; // UI 페이드 지속 시간
+    private Coroutine _fadeCoroutine; // 현재 진행 중인 페이드 코루틴
+
+    [SerializeField] private float fadeDuration = 0.7f; // UI 페이드 지속 시간
 
     void Awake()
     {
-        mCanvasGroup = GetComponent<CanvasGroup>();
+        _canvasGroup = GetComponent<CanvasGroup>();
     }
 
     public void FadeIn()
@@ -30,26 +32,26 @@ public class FadeUI : MonoBehaviour
 
     private void StartFade(float targetAlpha)
     {
-        if (mFadeCoroutine != null)
+        if (_fadeCoroutine != null)
         {
-            StopCoroutine(mFadeCoroutine);
+            StopCoroutine(_fadeCoroutine);
         }
-        mFadeCoroutine = StartCoroutine(FadeCoroutine(targetAlpha));
+        _fadeCoroutine = StartCoroutine(FadeCoroutine(targetAlpha));
     }
 
     private IEnumerator FadeCoroutine(float targetAlpha)
     {
-        float startAlpha = mCanvasGroup.alpha;
+        float startAlpha = _canvasGroup.alpha;
         float elapsedTime = 0f;
 
-        while (elapsedTime < mFadeDuration)
+        while (elapsedTime < fadeDuration)
         {
             elapsedTime += Time.deltaTime;
-            mCanvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / mFadeDuration);
+            _canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / fadeDuration);
             yield return null;
         }
 
-        mCanvasGroup.alpha = targetAlpha;
-        mFadeCoroutine = null;
+        _canvasGroup.alpha = targetAlpha;
+        _fadeCoroutine = null;
     }
 }
