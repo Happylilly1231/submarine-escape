@@ -8,6 +8,6 @@ using UnityEngine;
 /// </summary>
 public class ItemPickUp : MonoBehaviour
 {
-    [SerializeField] private Item mItem;
-    public Item item => mItem;
+    [SerializeField] private Item item;
+    public Item Item => item;
 }
