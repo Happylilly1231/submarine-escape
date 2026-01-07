@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -11,34 +12,37 @@ using UnityEngine.UIElements;
 /// </summary>
 public class InventoryManager : MonoBehaviour
 {
-    [SerializeField] private GameObject mInventoryUI; // 인벤토리 전체 UI 오브젝트
-    [SerializeField] private GameObject mInventorySlotsParent; // 인벤토리 슬롯 부모 오브젝트
-    [SerializeField] private Sprite mSlotSprite; // 슬롯 기본 스프라이트
-    [SerializeField] private Sprite mSelectedSlotSprite; // 슬롯 선택 스프라이트
+    [SerializeField] private GameObject inventoryUI; // 인벤토리 전체 UI 오브젝트
+    [SerializeField] private GameObject inventorySlotsParent; // 인벤토리 슬롯 부모 오브젝트
+    [SerializeField] private Sprite slotSprite; // 슬롯 기본 스프라이트
+    [SerializeField] private Sprite selectedSlotSprite; // 슬롯 선택 스프라이트
+    [SerializeField] private Transform rightHandTransform; // 플레이어 오른손 위치 (아이템 버리기 위치 계산에 사용)
 
-    [SerializeField] private Transform mRightHandTransform; // 아이템을 들고 있는 오른손 위치
-    [SerializeField] private Transform mItemHoldTransform; // 아이템을 들고 있는 위치
-    [SerializeField] public GameObject heldItemObject; // 현재 들고 있는 아이템 오브젝트
-
-    private InventorySlot[] mInventorySlots; // 인벤토리 슬롯 배열
-
-    private int mSelectedSlotIndex = -1; // 선택된 슬롯 인덱스
-    private static bool mbIsInventoryOpen = false; // 인벤토리 활성화 상태
-    private bool mbIsSwapMode = false; // T키 눌림 상태
-    private HandController mHandController; // 플레이어 손 컨트롤러
+    private InventorySlot[] _inventorySlots; // 인벤토리 슬롯 배열
+    public InventorySlot[] InventorySlots => _inventorySlots;
+    private int _selectedSlotIndex = -1; // 선택된 슬롯 인덱스
+    public int SelectedSlotIndex => _selectedSlotIndex;
+    private static bool _isInventoryOpen = false; // 인벤토리 활성화 상태
+    public bool IsInventoryOpen => _isInventoryOpen;
+    private bool _isSwapMode = false; // T키 눌림 상태
+    private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
+    private int _heldItemSlotIndex = -1; // 손에 들고 있는 아이템의 슬롯 인덱스
+    public int HeldItemSlotIndex => _heldItemSlotIndex;
+    private PlayerInteractor _playerInteractor; // 플레이어 상호작용 컴포넌트
 
     /// <summary>
     /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
     /// </summary>
     void Awake()
     {
-        if (mInventoryUI.activeSelf)
+        if (inventoryUI.activeSelf)
         {
-            mInventoryUI.SetActive(false);
+            inventoryUI.SetActive(false);
         }
 
-        mInventorySlots = mInventorySlotsParent.GetComponentsInChildren<InventorySlot>();
-        mHandController = GetComponent<HandController>();
+        _inventorySlots = inventorySlotsParent.GetComponentsInChildren<InventorySlot>();
+        _itemEquipController = FindObjectOfType<ItemEquipController>();
+        _playerInteractor = FindObjectOfType<PlayerInteractor>();
     }
 
     /// <summary>
@@ -48,7 +52,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (!context.performed) return;
 
-        if (!mbIsInventoryOpen)
+        if (!_isInventoryOpen)
         {
             OpenInventory();
         }
@@ -63,8 +67,8 @@ public class InventoryManager : MonoBehaviour
     /// </summary>
     private void OpenInventory()
     {
-        mInventoryUI.SetActive(true);
-        mbIsInventoryOpen = true;
+        inventoryUI.SetActive(true);
+        _isInventoryOpen = true;
     }
 
     /// <summary>
@@ -72,8 +76,9 @@ public class InventoryManager : MonoBehaviour
     /// </summary>
     private void CloseInventory()
     {
-        mInventoryUI.SetActive(false);
-        mbIsInventoryOpen = false;
+        inventoryUI.SetActive(false);
+        _isInventoryOpen = false;
+        SelectSlot(-1);
     }
 
     /// <summary>
@@ -83,11 +88,11 @@ public class InventoryManager : MonoBehaviour
     {
         if (context.performed)
         {
-            mbIsSwapMode = true;
+            _isSwapMode = true;
         }
         else if (context.canceled)
         {
-            mbIsSwapMode = false;
+            _isSwapMode = false;
         }
     }
 
@@ -99,14 +104,14 @@ public class InventoryManager : MonoBehaviour
     public void OnSlotKeyPress(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (!mbIsInventoryOpen) return;
+        if (!_isInventoryOpen) return;
 
         int slotIndex = context.control.name[0] - '1';
 
-        if (mSelectedSlotIndex == slotIndex) return;
-        if (mbIsSwapMode && mSelectedSlotIndex >= 0)
+        if (_selectedSlotIndex == slotIndex) return;
+        if (_isSwapMode && _selectedSlotIndex >= 0)
         {
-            SwapSlots(mSelectedSlotIndex, slotIndex);
+            SwapSlots(_selectedSlotIndex, slotIndex);
         }
         else
         {
@@ -119,18 +124,18 @@ public class InventoryManager : MonoBehaviour
     /// </summary>
     private void SelectSlot(int slotIndex)
     {
-        mSelectedSlotIndex = slotIndex;
+        _selectedSlotIndex = slotIndex;
 
-        for (int i = 0; i < mInventorySlots.Length; i++)
+        for (int i = 0; i < _inventorySlots.Length; i++)
         {
-            var slotImage = mInventorySlots[i].GetComponent<UnityEngine.UI.Image>();
-            if (i == mSelectedSlotIndex)
+            var slotImage = _inventorySlots[i].GetComponent<UnityEngine.UI.Image>();
+            if (i == _selectedSlotIndex)
             {
-                slotImage.sprite = mSelectedSlotSprite;
+                slotImage.sprite = selectedSlotSprite;
             }
             else
             {
-                slotImage.sprite = mSlotSprite;
+                slotImage.sprite = slotSprite;
             }
         }
     }
@@ -141,13 +146,13 @@ public class InventoryManager : MonoBehaviour
     private void SwapSlots(int selectedSlotIndex, int swapSlotIndex)
     {
         Debug.Log($"슬롯 {selectedSlotIndex + 1} 과 슬롯 {swapSlotIndex + 1} 교체");
-        var selectedSlot = mInventorySlots[selectedSlotIndex];
-        var swapSlot = mInventorySlots[swapSlotIndex];
+        var selectedSlot = _inventorySlots[selectedSlotIndex];
+        var swapSlot = _inventorySlots[swapSlotIndex];
 
-        var tempItem = selectedSlot.item;
-        var tempCount = selectedSlot.itemCount;
+        var tempItem = selectedSlot.Item;
+        var tempCount = selectedSlot.ItemCount;
 
-        selectedSlot.SetSlot(swapSlot.item, swapSlot.itemCount);
+        selectedSlot.SetSlot(swapSlot.Item, swapSlot.ItemCount);
         swapSlot.SetSlot(tempItem, tempCount);
     }
 
@@ -159,21 +164,21 @@ public class InventoryManager : MonoBehaviour
     /// <returns>인벤토리에 아이템 추가 성공 여부</returns>
     public bool AddItemToInventory(Item newItem, int count = 1)
     {
-        if (newItem.canOverlap)
+        if (newItem.CanOverlap)
         {
-            foreach (var slot in mInventorySlots)
+            foreach (var slot in _inventorySlots)
             {
-                if (slot.item != null && slot.item.itemID == newItem.itemID)
+                if (slot.Item != null && slot.Item.ItemName == newItem.ItemName)
                 {
-                    slot.UpdateItemCount(slot.itemCount + count);
+                    slot.UpdateItemCount(slot.ItemCount + count);
                     return true;
                 }
             }
         }
 
-        foreach (var slot in mInventorySlots)
+        foreach (var slot in _inventorySlots)
         {
-            if (slot.item == null)
+            if (slot.Item == null)
             {
                 slot.AddItem(newItem, count);
                 return true;
@@ -184,19 +189,53 @@ public class InventoryManager : MonoBehaviour
         return false;
     }
 
+    /// <summary> 1회용 아이템 소비
+    /// <para> - 아이템 개수 1개 감소 </para>
+    /// <para> - 아이템 장착 해제 </para>
+    public void ConsumeItemInSlot(Item item)
+    {
+        if (item == null) return;
+
+        for (int i = 0; i < _inventorySlots.Length; i++)
+        {
+            if (_inventorySlots[i].Item == item)
+            {
+                var targetSlot = _inventorySlots[i];
+                targetSlot.UpdateItemCount(targetSlot.ItemCount - 1);
+                if (_heldItemSlotIndex == i)
+                {
+                    _itemEquipController.UnequipItem();
+                    _heldItemSlotIndex = -1;
+                }
+                return;
+            }
+        }
+    }
+
     /// <summary>
     /// E키 입력으로 아이템 사용/장착
     /// </summary>
     public void OnItemUse(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (!mbIsInventoryOpen || mSelectedSlotIndex < 0) return;
+        if (!_isInventoryOpen || _selectedSlotIndex < 0) return;
 
-        var selectedSlot = mInventorySlots[mSelectedSlotIndex];
-        if (selectedSlot.item == null) return;
-        if (selectedSlot.item.itemPrefab == null) return;
+        var selectedSlot = _inventorySlots[_selectedSlotIndex];
+        if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
+        // if (_playerInteractor != null && _playerInteractor.IsMatchingItemFocused(selectedSlot.Item))
+        // {
+        //     // 선택된 아이템이 현재 상호작용 중인 가구와 상호작용에 사용 중이라면 장착하지 않음
+        //     return;
+        // }
+        // if (selectedSlot.Item.ItemType == EItemType.Puzzle)
+        // {
+        //     // 퍼즐형 아이템은 장착하지 않음
+        //     return;
+        // }
 
-        mHandController.HoldItem(selectedSlot.item.itemPrefab);
+        _heldItemSlotIndex = _selectedSlotIndex;
+        _itemEquipController.EquipItem(selectedSlot.Item);
+        CloseInventory();
     }
 
     /// <summary>
@@ -207,24 +246,34 @@ public class InventoryManager : MonoBehaviour
     public void OnItemDrop(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (!mbIsInventoryOpen || mSelectedSlotIndex < 0) return;
+        if (GameManager.instance.IsPausing) return;
 
-        var selectedSlot = mInventorySlots[mSelectedSlotIndex];
-        if (selectedSlot.item == null) return;
-        if (selectedSlot.item.itemPrefab == null) return;
+        InventorySlot targetSlot = null;
 
-        Vector3 dropPosition = mRightHandTransform.position + mRightHandTransform.forward * 1f;
-        GameObject dropItem = Instantiate(selectedSlot.item.itemPrefab, dropPosition, Quaternion.identity);
-
-        StartCoroutine(ApplyRigidbody(dropItem, 1f));
-        selectedSlot.UpdateItemCount(selectedSlot.itemCount - 1);
-
-        if (heldItemObject != null)
+        if (IsInventoryOpen)
         {
-            Destroy(heldItemObject);
-            heldItemObject = null;
-            mHandController.ClearHand();
+            if (_selectedSlotIndex < 0) return;
+            targetSlot = _inventorySlots[_selectedSlotIndex];
         }
+        else
+        {
+            if (_heldItemSlotIndex < 0) return;
+            targetSlot = _inventorySlots[_heldItemSlotIndex];
+        }
+
+        if (targetSlot == null || targetSlot.Item == null) return;
+
+        Vector3 dropPosition = rightHandTransform.position + rightHandTransform.forward * 0.5f;
+        GameObject droppedItemObject = Instantiate(targetSlot.Item.ItemPrefab, dropPosition, Quaternion.identity);
+        StartCoroutine(ApplyRigidbody(droppedItemObject, 2f));
+
+        if ((!IsInventoryOpen && _itemEquipController.HasItem) || (IsInventoryOpen && _heldItemSlotIndex == _selectedSlotIndex))
+        {
+            _itemEquipController.UnequipItem();
+            _heldItemSlotIndex = -1;
+        }
+
+        targetSlot.UpdateItemCount(targetSlot.ItemCount - 1);
     }
 
     /// <summary>
@@ -253,8 +302,9 @@ public class InventoryManager : MonoBehaviour
     public void OnReturnToSlot(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (heldItemObject == null) return;
+        if (!_itemEquipController.HasItem) return;
 
-        mHandController.ClearHand();
+        _heldItemSlotIndex = -1;
+        _itemEquipController.UnequipItem();
     }
 }

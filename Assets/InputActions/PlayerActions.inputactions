@@ -122,6 +122,51 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "FurnitureInteractor",
+                    "type": "Button",
+                    "id": "37d5485f-70be-4e26-bdd9-d2409b3cdf79",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleFlashlight",
+                    "type": "Button",
+                    "id": "a97800d3-5c25-4d9a-b23c-c7f8619fc3d2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SelectScrew",
+                    "type": "Button",
+                    "id": "7434ddfa-749c-4a49-99db-d31a1fe78de8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RemoveScrew",
+                    "type": "Button",
+                    "id": "0da4c175-6e20-4126-bbde-9f91b70aa15c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ExitKeyPad",
+                    "type": "Button",
+                    "id": "597483f4-dbfd-4e6d-b938-fd73f3ba7cf3",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -364,6 +409,61 @@
                     "processors": "",
                     "groups": ";PC",
                     "action": "Dodge",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f0ff1fe9-bd94-47c4-8e60-8a2e931f0795",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "FurnitureInteractor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "899efce5-b849-46d1-a2de-8f815f553902",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleFlashlight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "61698b71-98d2-49c9-becb-42ee63f2d584",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectScrew",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c91ce9f5-fb27-479e-87ce-f9880a0dc871",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RemoveScrew",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a9daa086-08dd-4a1e-8f3c-de1027260fb0",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ExitKeyPad",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
