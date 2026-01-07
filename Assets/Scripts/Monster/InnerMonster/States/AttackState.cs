@@ -16,6 +16,8 @@ namespace InnerMonsterStates
     /// </summary>
     public class AttackState : IState<InnerMonsterController>
     {
+        private float _stopDistance = 2f; // 멈춤 거리
+
         public void Enter(InnerMonsterController owner)
         {
             owner.CanMove(false); // 이동 정지
@@ -33,6 +35,11 @@ namespace InnerMonsterStates
             // 점프 중 -> 플레이어를 향해 이동
             if (owner.IsJumping)
             {
+                if (owner.DistToPlayer <= _stopDistance)
+                    owner.CanMove(false);
+                else
+                    owner.CanMove(true);
+
                 owner.Nav.SetDestination(owner.PlayerTransform.position);
             }
         }

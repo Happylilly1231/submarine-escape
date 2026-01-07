@@ -36,7 +36,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private StateMachine<InnerMonsterController> _currentFsm; // 현재 상태 머신
 
     // 컴포넌트, 필요 변수
-    [SerializeField] private Transform playerTransform; // 플레이어 트랜스폼
+    private Transform playerTransform; // 플레이어 트랜스폼
     public Transform PlayerTransform => playerTransform;
     [SerializeField] private Transform monsterHeadTransform; // 머리 위치
     [SerializeField] private Transform throwObjPos; // 투사체 위치
@@ -63,7 +63,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private float _detectDistance = 20f; // 감지 거리
     private float _rangeAttackDistance = 5f; // 원거리 공격 거리
     public float RangeAttackDistance => _rangeAttackDistance;
-    private float _meleeAttackDistance = 2f; // 근접 공격 거리
+    private float _meleeAttackDistance = 2.5f; // 근접 공격 거리
     public float MeleeAttackDistance => _meleeAttackDistance;
     private float _rageAttackDistance = 3f; // 폭주 공격 거리
     public float RageAttackDistance => _rageAttackDistance;
@@ -84,7 +84,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     // 공격
     public EAttackType currentAttackType;
-    private float attackCooldownTime = 3f;
+    private float attackCooldownTime = 2f;
     private bool _isAttackCoolDown = false;
     private float _attackCoolDownTimer = 0f;
     private bool _isJumping = false; // 점프 애니메이션에서 실제 점프 중(점프 애니메이션 실행 중 X)
@@ -137,12 +137,17 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 현재 상태머신을 기본 상태머신으로 초기화
         _currentFsm = _fsm;
 
+        // 플레이어 트랜스폼 가져오기
+        playerTransform = SubmarineInGameManager.instance.player.transform;
+
         // 컴포넌트 초기화
         _playerStat = playerTransform.GetComponent<PlayerStat>();
         _playerStatus = playerTransform.GetComponent<PlayerStatus>();
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
         _collider = GetComponent<CapsuleCollider>();
+
+
 
         // 웨이포인트 배열 가져오기
         _wayPoints = wayPointsParent.GetComponentsInChildren<Transform>().Where(t => t != wayPointsParent).ToArray();
@@ -156,6 +161,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     private void Update()
     {
+        // 플레이어와의 거리 계산
+        _distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+
         // 경보 발생 중이 아닐 때(= 폭주 중 X)
         if (!SubmarineInGameManager.instance.IsAlerting)
         {
@@ -317,6 +325,12 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             centerPos.z = 0.5f;
             _collider.center = centerPos;
         }
+        else
+        {
+            Vector3 centerPos = _collider.center;
+            centerPos.z = 0f;
+            _collider.center = centerPos;
+        }
     }
 
     /// <summary>
@@ -386,7 +400,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// </summary>
     public bool CanAttack()
     {
-        // Debug.Log(CanDetect() + " " + (_distToPlayer <= _rangeAttackDistance) + " " + !_isAttackCoolDown + " " + _distToPlayer);
         if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
         {
             return true;
@@ -608,7 +621,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("점프 종료");
         _isJumping = false; // 점프 중 아님으로 설정
         CanMove(false); // 이동 정지
-        if (_distToPlayer <= 3f) // 원거리 공격 거리 내이면(실제 공격은 근접 공격 거리 내여야함) -> 스턴
+        if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
         {
             // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)
 
