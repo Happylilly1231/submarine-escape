@@ -45,6 +45,7 @@ namespace InnerMonsterStates
             if (!owner.IsChaseEndDelay) // 추적 종료 딜레이 중이 아닐 때(= 이전까지 플레이어 감지되었음)
             {
                 owner.LookAtTarget(owner.PlayerTransform.position); // 현재 플레이어 위치를 바라보도록 회전
+                owner.Nav.SetDestination(owner.PlayerTransform.position); // 플레이어를 향해 이동
 
                 // 플레이어가 감지 범위를 벗어났을 때 -> 추적 종료 딜레이 시작
                 if (!owner.CanDetect())
@@ -56,7 +57,7 @@ namespace InnerMonsterStates
             }
             else
             {
-                owner.LookAtTarget(owner.Nav.destination); // 플레이어 마지막 위치를 바라보도록 회전
+                owner.LookAtTarget(_playerLastPos); // 플레이어 마지막 위치를 바라보도록 회전
             }
 
             // 플레이어와의 거리에 따른 애니메이션 설정
@@ -70,9 +71,6 @@ namespace InnerMonsterStates
                 owner.CanMove(true);
                 owner.Animator.SetBool("isChaseWaiting", false);
             }
-
-            // 플레이어를 향해 이동
-            owner.Nav.SetDestination(owner.PlayerTransform.position);
         }
 
         public void Exit(InnerMonsterController owner)

@@ -25,6 +25,12 @@ public class SubmarineInGameManager : MonoBehaviour
     private Door[] _doors;
     public Door[] Doors { get => _doors; set => _doors = value; }
 
+    // 내부 괴물
+    public Transform innerMonsterTransform;
+    private LayerMask monsterLayer;
+    public LayerMask MonsterLayer => monsterLayer;
+
+    // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
 
     // 싱글톤 변수
@@ -45,6 +51,9 @@ public class SubmarineInGameManager : MonoBehaviour
     {
         // 문 가져오기(후에 doorManager를 추가해 옮길 수 있음)
         _doors = FindObjectsOfType<Door>();
+
+        // 내부 괴물 레이어 가져오기
+        monsterLayer = LayerMask.GetMask("Monster");
     }
 
     /// <summary>
