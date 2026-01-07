@@ -68,7 +68,6 @@ namespace InnerMonsterStates
 
         public void Exit(InnerMonsterController owner)
         {
-            Debug.Log("PatrolState 종료");
             owner.Animator.SetBool("isPatrolling", false); // 애니메이션 순찰 중 아님으로 설정
 
             // 이벤트 구독 해제
@@ -85,15 +84,15 @@ namespace InnerMonsterStates
                 {
                     monster.currentIndex = idx; // 해당 웨이포인트를 현재 웨이포인트로 설정
                     monster.Nav.SetDestination(monster.WayPoints[idx].position); // 해당 웨이포인트를 목적지로 설정
-                    Debug.Log("다음으로 갈 수 있는 웨이포인트 발견: 현재 웨이포인트를 인덱스 " + monster.currentIndex + "(으)로 설정합니다!");
+                    // Debug.Log("다음으로 갈 수 있는 웨이포인트 발견: 현재 웨이포인트를 인덱스 " + monster.currentIndex + "(으)로 설정합니다!");
                     return; // 종료
                 }
-                Debug.Log("웨이포인트(인덱스: " + idx + ")는 갈 수 없습니다.");
+                // Debug.Log("웨이포인트(인덱스: " + idx + ")는 갈 수 없습니다.");
                 idx = (idx + 1) % monster.WayPoints.Length;
             }
 
             // 찾지 못한 경우 -> 갈 수 있는 웨이포인트 없음 true로 설정, Idle 상태로 전환
-            Debug.Log("갈 수 있는 웨이포인트가 존재하지 않으므로 무기한 Idle 상태로 전환됩니다.");
+            // Debug.Log("갈 수 있는 웨이포인트가 존재하지 않으므로 무기한 Idle 상태로 전환됩니다.");
             monster.IsNoWaypointCanGo = true;
             monster.ChangeState(new IdleState());
         }
@@ -104,12 +103,12 @@ namespace InnerMonsterStates
             Vector3 currentWaypointPos = monster.WayPoints[monster.currentIndex].position;
             if (IsPathValid(currentWaypointPos)) // 현재 웨이포인트를 갈 수 있으면
             {
-                Debug.Log("현재 웨이포인트(인덱스: " + monster.currentIndex + ")로 갈 수 있습니다!");
+                // Debug.Log("현재 웨이포인트(인덱스: " + monster.currentIndex + ")로 갈 수 있습니다!");
                 monster.Nav.SetDestination(currentWaypointPos); // 목적지로 설정
             }
             else // 갈 수 없으면(경로가 유효하지 않음)
             {
-                Debug.Log("현재 웨이포인트(인덱스: " + monster.currentIndex + ")로 갈 수 없습니다.");
+                // Debug.Log("현재 웨이포인트(인덱스: " + monster.currentIndex + ")로 갈 수 없습니다.");
                 // 다음으로 갈 수 있는 웨이포인트 탐색
                 FindNextWaypoint();
             }
@@ -123,7 +122,6 @@ namespace InnerMonsterStates
             NavMeshPath path = new NavMeshPath();
             if (monster.Nav.CalculatePath(targetPos, path))
             {
-                Debug.Log(targetPos + " " + monster.Nav.destination + " " + (targetPos == monster.Nav.destination));
                 return path.status == NavMeshPathStatus.PathComplete; // 경로가 완전한지 여부 반환
             }
             // 경로 계산을 못하면

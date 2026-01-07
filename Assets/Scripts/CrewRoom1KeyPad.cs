@@ -7,7 +7,6 @@ using Unity.VisualScripting;
 
 public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 {
-    [SerializeField] private GameObject player;
     [SerializeField] private KeyPadBatterySlot[] batterySlots;
     [SerializeField] private Item[] batteryItems;
     [SerializeField] private Transform DoorPivot;
@@ -42,8 +41,8 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _playerInteractor = FindObjectOfType<PlayerInteractor>();
-        _playerStat = FindObjectOfType<PlayerStat>();
-        _playerInput = FindObjectOfType<PlayerInput>();
+        _playerStat = SubmarineInGameManager.instance.player.GetComponent<PlayerStat>();
+        _playerInput = SubmarineInGameManager.instance.player.GetComponent<PlayerInput>();
         if (_playerInput != null)
         {
             _exitKeyPadAction = _playerInput.actions["ExitKeyPad"];
@@ -100,7 +99,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
     {
         _isFocused = true;
 
-        player.SetActive(false);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(false);
         _playerCameraController.enabled = false;
         _playerInteractor.IsPuzzleActive = true;
         _playerInteractor.ClearDetectionText();
@@ -154,7 +153,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
         _playerCameraController.enabled = true;
         _playerInteractor.IsPuzzleActive = false;
-        player.SetActive(true);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(true);
         _playerInput.currentActionMap.Enable();
 
         Cursor.visible = false;

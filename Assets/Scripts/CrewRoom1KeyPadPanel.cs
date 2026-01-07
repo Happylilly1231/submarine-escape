@@ -8,7 +8,6 @@ using UnityEngine.InputSystem;
 
 public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
 {
-    [SerializeField] private GameObject player;
     [SerializeField] private GameObject keyPadPanel;
     [SerializeField] private KeyPadScrew[] screws;
     [SerializeField] private Item screwdriver;
@@ -35,7 +34,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
     void Awake()
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
-        _playerInput = FindFirstObjectByType<PlayerInput>();
+        _playerInput = SubmarineInGameManager.instance.player.GetComponent<PlayerInput>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerCameraController = FindObjectOfType<PlayerCameraController>();
         _crewRoom1KeyPad = FindObjectOfType<CrewRoom1KeyPad>();
@@ -85,9 +84,10 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
     {
         _isFocused = true;
 
-        player.SetActive(false);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(false);
         _playerCameraController.enabled = false;
 
+        Debug.Log(_playerInput.currentActionMap);
         _playerInput.currentActionMap.Disable();
         string[] allowedActions = { "ToggleInventory", "THold", "SlotKeyPress", "ItemUse", "ReturnToSlot", "SelectScrew", "RemoveScrew", "ExitKeyPad" };
         foreach (string action in allowedActions)
@@ -262,7 +262,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
         }
 
         _playerCameraController.enabled = true;
-        player.SetActive(true);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(true);
         _playerInput.currentActionMap.Enable();
 
         Cursor.visible = false;

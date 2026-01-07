@@ -36,7 +36,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private StateMachine<InnerMonsterController> _currentFsm; // 현재 상태 머신
 
     // 컴포넌트, 필요 변수
-    [SerializeField] private Transform playerTransform; // 플레이어 트랜스폼
+    private Transform playerTransform; // 플레이어 트랜스폼
     public Transform PlayerTransform => playerTransform;
     [SerializeField] private Transform monsterHeadTransform; // 머리 위치
     [SerializeField] private Transform throwObjPos; // 투사체 위치
@@ -137,12 +137,17 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 현재 상태머신을 기본 상태머신으로 초기화
         _currentFsm = _fsm;
 
+        // 플레이어 트랜스폼 가져오기
+        playerTransform = SubmarineInGameManager.instance.player.transform;
+
         // 컴포넌트 초기화
         _playerStat = playerTransform.GetComponent<PlayerStat>();
         _playerStatus = playerTransform.GetComponent<PlayerStatus>();
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
         _collider = GetComponent<CapsuleCollider>();
+
+
 
         // 웨이포인트 배열 가져오기
         _wayPoints = wayPointsParent.GetComponentsInChildren<Transform>().Where(t => t != wayPointsParent).ToArray();

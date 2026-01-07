@@ -203,8 +203,6 @@ public class PlayerMove : MonoBehaviour
     {
         if (_controller.isGrounded) // 바닥에 닿아있으면
         {
-            Debug.Log(_ySpeed + " / " + fallDamageSpeed + " / " + _isJumping);
-
             // 높은 곳에서 착지 시(점프 중 아닐 때) -> 고정 낙하 대미지
             if (_ySpeed < fallDamageSpeed)
             {

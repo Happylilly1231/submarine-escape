@@ -25,6 +25,10 @@ public class SubmarineInGameManager : MonoBehaviour
     private Door[] _doors;
     public Door[] Doors { get => _doors; set => _doors = value; }
 
+    // 플레이어
+    public GameObject player;
+    private GameObject playerGeo;
+
     // 내부 괴물
     public Transform innerMonsterTransform;
     private LayerMask monsterLayer;
@@ -54,6 +58,9 @@ public class SubmarineInGameManager : MonoBehaviour
 
         // 내부 괴물 레이어 가져오기
         monsterLayer = LayerMask.GetMask("Monster");
+
+        // 플레이어 Geo(외형) 가져오기
+        playerGeo = player.transform.GetChild(0).gameObject; // Player의 첫번째 자식
     }
 
     /// <summary>
@@ -105,5 +112,11 @@ public class SubmarineInGameManager : MonoBehaviour
         ColorBlock colorBlock = alertButton.colors;
         colorBlock.normalColor = Color.white;
         alertButton.colors = colorBlock;
+    }
+
+    // 플레이어 활성화 / 비활성화
+    public void SetPlayerGeoActive(bool isActive)
+    {
+        playerGeo.SetActive(isActive);
     }
 }
