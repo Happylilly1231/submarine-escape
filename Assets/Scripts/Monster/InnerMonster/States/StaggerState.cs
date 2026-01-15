@@ -16,6 +16,7 @@ namespace InnerMonsterStates
             owner.ColliderCenterChange(false); // 컨트롤러 중심 기본으로 돌림
 
             owner.Animator.SetTrigger("Stagger"); // 휘청임 애니메이션 재생
+            AudioManager.Instance.PlaySFX(owner.staggerSound);
         }
 
         public void Update(InnerMonsterController owner)
@@ -25,7 +26,7 @@ namespace InnerMonsterStates
 
         public void Exit(InnerMonsterController owner)
         {
-
+            owner.StopPlaying();
         }
     }
 }

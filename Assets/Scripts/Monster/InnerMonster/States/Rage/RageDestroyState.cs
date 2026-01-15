@@ -27,6 +27,7 @@ namespace InnerMonsterStates
 
             owner.currentAttackType = EAttackType.RageDestroyAttack; // 현재 공격 타입 -> 폭주 파괴 공격
             owner.Animator.SetBool("isRageDestroying", true); // 폭주 파괴 애니메이션 재생
+            AudioManager.Instance.PlaySFX(owner.destroyRageSound);
             _timer = 0f; // 타이머 초기화
 
             // 파괴하는데 걸리는 시간 설정
@@ -42,6 +43,9 @@ namespace InnerMonsterStates
                     _destroyTime = 3.5f;
                     break;
             }
+
+            // 이벤트 구독
+            InnerMonsterController.OnRageStartAnimationEnded += PlayDestroyingSound; // 폭주 시작 애니메이션 종료 -> 파괴 중 사운드 재생
         }
 
         public void Update(InnerMonsterController owner)
@@ -61,8 +65,17 @@ namespace InnerMonsterStates
         public void Exit(InnerMonsterController owner)
         {
             owner.Animator.SetBool("isRageDestroying", false);
+            owner.StopPlaying();
             owner.currentDestroyObjType = 0; // 현재 파괴해야할 오브젝트 타입 0으로 초기화
             owner.Nav.updateRotation = true; // 회전 자동으로 변경
+
+            // 이벤트 구독 해제
+            InnerMonsterController.OnRageStartAnimationEnded -= PlayDestroyingSound;
+        }
+
+        private void PlayDestroyingSound(InnerMonsterController monster)
+        {
+            AudioManager.Instance.PlaySoundSafe(monster.audioSource, monster.destroyingSound);
         }
 
         /// <summary>
@@ -70,22 +83,38 @@ namespace InnerMonsterStates
         /// </summary>
         private void RageDestroy(InnerMonsterController monster)
         {
-            // 현재 파괴해야 할 오브젝트 파괴
-            DestroyCurrentDestroyObj(monster);
-
+            AudioManager.Instance.PlaySFX(monster.destroyCompleteSound);
             // 타입에 따른 후처리
             switch (monster.currentDestroyObjType)
             {
                 case EDestroyObjType.Door: // 일반 문을 파괴한 경우
+                    monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
+                    ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
                     monster.ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환(아직 경보 발생 중이기 때문)
                     break;
 
                 case EDestroyObjType.EscapeRoomDoor: // 탈출실 문을 파괴한 경우
+                    monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
+                    ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
                     // 경보 끌 수 없으므로 끄지 않음
                     // 이후 탈출실에서 플레이어가 괴물에게 죽는 장면이 연출 처리될 것
                     break;
 
                 case EDestroyObjType.CurrentDestroyEquipment: // 현재 파괴될 장비를 파괴한 경우
+                    switch (SubmarineInGameManager.instance.currentDestroyEquipmentIndex)
+                    {
+                        case 0: // 레이더 조작 패널
+                            // 파괴 효과 연출 필요
+                            monster.currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
+                            break;
+                        case 1: // 어뢰 자동 탑재 스위치
+                            // 스위치 off 필요
+                            break;
+                        case 2: // 산소 자동 제어 스위치
+                            // 스위치 off 필요
+                            break;
+                    }
+                    ResetCurrentDestroyObj(monster);
                     SubmarineInGameManager.instance.currentDestroyEquipmentIndex += 1; // 현재 파괴될 장비 인덱스 1 증가
                     SubmarineInGameManager.instance.AlertOff(); // 경보 해제
                     monster.monsterEyeRenderer.material = monster.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
@@ -98,12 +127,11 @@ namespace InnerMonsterStates
         }
 
         /// <summary>
-        /// 현재 파괴해야 할 오브젝트 파괴
+        /// 현재 파괴해야 할 오브젝트 리셋
         /// </summary>
-        private void DestroyCurrentDestroyObj(InnerMonsterController monster)
+        private void ResetCurrentDestroyObj(InnerMonsterController monster)
         {
             Debug.Log(monster.currentDestroyObj + "을(를) 파괴했습니다.");
-            monster.currentDestroyObj.SetActive(false); // 임시 - 비활성화
             monster.currentDestroyObj = null; // 현재 파괴해야 할 오브젝트 없음으로 설정
             monster.Animator.SetBool("isRageDestroying", false);
         }

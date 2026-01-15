@@ -32,6 +32,9 @@ namespace InnerMonsterStates
 
             // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
             _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
+
+            AudioManager.Instance.PlaySFX(owner.detectSound);
+            AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
         }
 
         public void Update(InnerMonsterController owner)
@@ -48,6 +51,7 @@ namespace InnerMonsterStates
                         owner.CanMove(true); // 이동
                         _reachedEscapeRoom = false; // 탈출실에 도착하지 않음으로 설정
                         owner.Animator.SetBool("isRageIdle", false); // 애니메이션을 RageChase로 변경
+                        AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
                         owner.Nav.updateRotation = true; // 회전 자동으로 변경
                     }
 
@@ -62,6 +66,7 @@ namespace InnerMonsterStates
                         owner.CanMove(false); // 이동 정지
                         _reachedEscapeRoom = true; // 탈출실에 도착했음으로 설정
                         owner.Animator.SetBool("isRageIdle", true); // 애니메이션을 가만히 있는 걸로 변경
+                        AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.idleGrowlSound);
                         owner.Nav.updateRotation = false; // 회전 수동으로 변경
                     }
                 }
@@ -126,6 +131,7 @@ namespace InnerMonsterStates
         public void Exit(InnerMonsterController owner)
         {
             owner.Animator.SetBool("isRageChasing", false); // 폭주 추적 애니메이션 종료
+            owner.StopPlaying();
         }
 
         /// <summary>

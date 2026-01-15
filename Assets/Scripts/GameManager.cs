@@ -15,8 +15,13 @@ public class GameManager : MonoBehaviour
     private bool _isPausing = false; // 정지 중 여부
     public bool IsPausing { get => _isPausing; set => _isPausing = value; }
 
+    private bool _haveToShowCursor = false; // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
+    public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; }
+
     private bool _isClear = false;
     public bool IsClear => _isClear;
+
+
 
     // 싱글톤 변수
     public static GameManager instance;
@@ -37,12 +42,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        InitGame();
+    }
+
     /// <summary>
     /// 게임 초기 설정
     /// </summary>
     private void InitGame()
     {
         _isPausing = false; // 정지 해제
+        SetCursorVisible(false);
     }
 
     /// <summary>
@@ -55,14 +66,33 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 커서 보이거나 숨기기
+    /// </summary>
+    /// <param name="visible">보이기 여부</param>
+    public void SetCursorVisible(bool visible)
+    {
+        if (visible)
+        {
+            Cursor.visible = true; // 마우스 커서 보이게 함
+            Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
+        }
+        else
+        {
+            Cursor.visible = false; // 마우스 커서 숨김
+            Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+        }
+    }
+
+    /// <summary>
     /// 게임 정지
     /// </summary>
     public void Pause()
     {
+        Debug.Log("정지");
         _isPausing = true; // 정지 중으로 설정
-        Cursor.visible = true; // 마우스 커서 보이게 함
-        Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
+        SetCursorVisible(true); // 커서 보이기
         Time.timeScale = 0f; // 시간 정지
+        AudioListener.pause = true;
     }
 
     /// <summary>
@@ -70,10 +100,12 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void Resume()
     {
+        Debug.Log("재시작");
         _isPausing = false; // 정지 중 아님으로 설정
-        Cursor.visible = false; // 마우스 커서 숨김
-        Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+        if (!_haveToShowCursor) // 현재 커서가 보여야 하는 게 아니면
+            SetCursorVisible(false); // 커서 숨기기
         Time.timeScale = 1.0f; // 시간 정지 해제
+        AudioListener.pause = false;
     }
 
     /// <summary>

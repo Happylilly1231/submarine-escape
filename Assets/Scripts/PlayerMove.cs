@@ -28,6 +28,8 @@ public class PlayerMove : MonoBehaviour
     public float MouseY => _mouseY;
     [SerializeField] float mouseSensitivity = 1f; // 마우스 감도
 
+    private bool _isRunning = false;
+
     // 점프 & 중력
     private float _jumpSpeed = 3f; // 점프 속도
     private bool _jumpInput = false; // 점프 입력
@@ -39,9 +41,11 @@ public class PlayerMove : MonoBehaviour
     private float fallDamageSpeed = -10f;   // 이 속도보다 빠르면 데미지
 
     // 회피
+    private bool _dodgeInput;
     private float _dodgeSpeed = 2.5f; // 회피 속도
     private bool _isDodging = false; // 회피 중인지 여부
     public bool IsDodging => _isDodging;
+
     private float _currentDodgeTime = 0f; // 현재 회피 진행 시간(회피 시간으로 초기화돼서 0까지 감소)
     private float _dodgeTime = 1.2f; // 회피 시간
 
@@ -50,19 +54,28 @@ public class PlayerMove : MonoBehaviour
     private bool _isClimbing = false; // 타는 중 여부
     private bool _isMovingToTargetSafe = false; // 사다리에서 목표 위치로 안전 이동 중인지 여부
 
+    private bool _canMove = true; // 이동 가능 여부
+
+    // 사운드
+    [Header("Sound")]
+    [SerializeField] private AudioClip walkSound;
+    [SerializeField] private AudioClip runSound;
+    [SerializeField] private AudioClip jumpLandingSound;
+    [SerializeField] private AudioClip climbingLadderSound;
+    private AudioSource _audioSource;
+
     void Awake()
     {
         _controller = GetComponent<CharacterController>();
         _animator = GetComponent<Animator>();
         _playerStat = GetComponent<PlayerStat>();
         _playerStatus = GetComponent<PlayerStatus>();
+        _audioSource = GetComponent<AudioSource>();
     }
 
     void Start()
     {
         moveSpeed = _walkSpeed; // 걷기 속도를 기본 속도로 설정
-        Cursor.visible = false; // 마우스 커서 안 보이게 하기
-        Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
     }
 
     /// <summary>
@@ -86,10 +99,18 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnRun(InputAction.CallbackContext context)
     {
+        if (!_canMove) return;
+
         if (context.performed)
+        {
+            _isRunning = true;
             moveSpeed = _runSpeed * _playerStatus.SpeedScale;
+        }
         else if (context.canceled)
+        {
+            _isRunning = false;
             moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
+        }
     }
 
     /// <summary>
@@ -97,6 +118,8 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnJump(InputAction.CallbackContext context)
     {
+        if (!_canMove) return;
+
         if (context.performed && _controller.isGrounded)
         {
             _jumpInput = true;
@@ -127,10 +150,14 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     public void OnDodge(InputAction.CallbackContext context)
     {
+        if (!_canMove) return;
+
         if (_isClimbing) // 사다리 오르는 중 -> 회피 불가능
             return;
 
-        if (context.performed && _playerStat.UseStamina()) // 스태미나 사용했을 때
+        _dodgeInput = context.performed;
+
+        if (_dodgeInput && _playerStat.UseStamina()) // 스태미나 사용했을 때
         {
             _isDodging = true; // 회피 중 true
             _currentDodgeTime = _dodgeTime; // 현재 회피 진행 시간을 회피 시간으로 초기화
@@ -143,44 +170,47 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if (!GameManager.instance.IsPausing) // 정지 중이 아닐 때
+        // 정지 중 -> 이동 불가
+        if (GameManager.instance.IsPausing) return;
+
+        // 움직임 허용 안됨 -> 이동 불가
+        if (!_canMove) return;
+
+        // 플레이어 상태가 스턴일 때 -> 오직 중력만 계산
+        if (_playerStatus.IsStunned)
         {
-            // 플레이어 상태가 스턴일 때 -> 오직 중력만 계산
-            if (_playerStatus.IsStunned)
-            {
-                CalculateGravity(); // 중력 연산
+            CalculateGravity(); // 중력 연산
 
-                // 중력에 따른 이동
-                Vector3 velocity = Vector3.up * _ySpeed;
-                _controller.Move(velocity * Time.deltaTime);
+            // 중력에 따른 이동
+            Vector3 velocity = Vector3.up * _ySpeed;
+            _controller.Move(velocity * Time.deltaTime);
 
-                return;
-            }
+            return;
+        }
 
-            // 상하 회전 값 업데이트
-            _mouseY = _lookInput.y * mouseSensitivity;
+        // 상하 회전 값 업데이트
+        _mouseY = _lookInput.y * mouseSensitivity;
 
-            // 사다리에서 목표 위치로 안전 이동 중이면 -> 움직일 수 X
-            if (_isMovingToTargetSafe)
-                return;
+        // 사다리에서 목표 위치로 안전 이동 중이면 -> 움직일 수 X
+        if (_isMovingToTargetSafe)
+            return;
 
-            // 사다리 타기 중 -> 사다리 타기
-            if (_isClimbing)
-            {
-                ClimbLadder(); // 사다리 타기
-                return;
-            }
+        // 사다리 타기 중 -> 사다리 타기
+        if (_isClimbing)
+        {
+            ClimbLadder(); // 사다리 타기
+            return;
+        }
 
-            Rotate(); // 회전
+        Rotate(); // 회전
 
-            if (_isDodging) // 회피 중이면
-            {
-                Dodge(); // 회피
-            }
-            else // 회피 중이 아닐 때만
-            {
-                Move(); // 이동
-            }
+        if (_isDodging) // 회피 중이면
+        {
+            Dodge(); // 회피
+        }
+        else // 회피 중이 아닐 때만
+        {
+            Move(); // 이동
         }
     }
 
@@ -209,9 +239,13 @@ public class PlayerMove : MonoBehaviour
                 _playerStat.Damage(5f);
             }
 
-            // 점프가 끝나서 바닥에 닿은 거면 -> 점프 중 아님으로 설정
+            // 점프 착지(점프가 끝나서 바닥에 닿은 거면) -> 점프 중 아님으로 설정
             if (_isJumping && _ySpeed <= 0f) // 점프 시작 시 바로 바닥에서 떨어지지 않을 수 있기 때문에 ySpeed가 0 이하인지도 함께 검사
+            {
+                AudioManager.Instance.PlaySFX(jumpLandingSound);
+                Debug.Log("!!!!!!");
                 _isJumping = false;
+            }
 
             if (_ySpeed < 0f)
                 _ySpeed = -0.8f; // 바닥에 붙도록 작은 값만큼 y 속도를 아래로 줌
@@ -260,7 +294,8 @@ public class PlayerMove : MonoBehaviour
 
         // 애니메이션 파라미터 설정
         _animator.SetFloat("Speed", _moveDir.magnitude); // Idle or 이동(달리기 & 걷기)
-        _animator.SetBool("isRunning", moveSpeed == _runSpeed * _playerStatus.SpeedScale); // 달리기 애니메이션
+
+        _animator.SetBool("isRunning", _isRunning); // 달리기 애니메이션
 
         // 바닥에 닿아있을 때만 -> 점프 가능
         if (_controller.isGrounded)
@@ -276,6 +311,17 @@ public class PlayerMove : MonoBehaviour
                 _jumpInput = false; // 점프 입력을 false로 설정(중복 실행 안되도록)
             }
         }
+
+        // 걷기 / 달리기 소리 재생
+        if (_moveDir.magnitude < 0.1f || _isJumping)
+        {
+            if (_audioSource.isPlaying)
+                _audioSource.Stop();
+        }
+        else if (!_isRunning)
+            AudioManager.Instance.PlaySoundSafe(_audioSource, walkSound, 0.75f);
+        else if (_isRunning)
+            AudioManager.Instance.PlaySoundSafe(_audioSource, runSound, 1.3f);
 
         // 중력 연산
         CalculateGravity();
@@ -306,6 +352,11 @@ public class PlayerMove : MonoBehaviour
 
         // 애니메이션 설정
         _animator.SetInteger("climbDirection", v);
+
+        if (v != 0)
+        {
+            AudioManager.Instance.PlaySoundSafe(_audioSource, climbingLadderSound);
+        }
     }
 
     /// <summary>
@@ -461,6 +512,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void StartClimb()
     {
+        _audioSource.Stop();
         _isClimbing = true; // 사다리 타는 중으로 설정
         _animator.SetBool("isClimbing", true);
         _animator.SetTrigger("ClimbStart");
@@ -471,8 +523,23 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void ExitClimb()
     {
+        _audioSource.Stop();
         _isClimbing = false; // 사다리 타는 중 아님으로 설정
         _animator.SetBool("isClimbing", false);
     }
 
+    /// <summary>
+    /// 이동 가능 여부 설정
+    /// </summary>
+    public void SetMoveable(bool isMoveable)
+    {
+        _canMove = isMoveable;
+
+        if (!isMoveable)
+        {
+            moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
+            _animator.SetFloat("Speed", 0f);
+            _animator.SetBool("isRunning", false);
+        }
+    }
 }
