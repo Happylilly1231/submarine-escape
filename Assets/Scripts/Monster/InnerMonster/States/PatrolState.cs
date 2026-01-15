@@ -24,6 +24,7 @@ namespace InnerMonsterStates
             owner.CanMove(true); // 이동
             owner.Nav.speed = _patrolSpeed;
             owner.Animator.SetBool("isPatrolling", true); // 애니메이션 순찰 중(->walk)으로 설정
+            AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.patrolSound, 1.5f);
             owner.ColliderCenterChange(false); // 컨트롤러 중심 기본으로 돌림
 
             monster = owner;
@@ -69,6 +70,7 @@ namespace InnerMonsterStates
         public void Exit(InnerMonsterController owner)
         {
             owner.Animator.SetBool("isPatrolling", false); // 애니메이션 순찰 중 아님으로 설정
+            owner.StopPlaying();
 
             // 이벤트 구독 해제
             Door.OnDoorOpenStateChanged -= UpdateDestination;

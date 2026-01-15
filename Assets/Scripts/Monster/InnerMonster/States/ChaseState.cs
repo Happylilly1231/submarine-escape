@@ -28,6 +28,7 @@ namespace InnerMonsterStates
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
             owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
             owner.Animator.SetBool("isChasing", true);
+            AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.chaseSound, 3f);
 
             // 플레이어 위치를 목적지로 설정
             owner.Nav.SetDestination(owner.PlayerTransform.position);
@@ -65,11 +66,13 @@ namespace InnerMonsterStates
             {
                 owner.CanMove(false);
                 owner.Animator.SetBool("isChaseWaiting", true);
+                owner.StopPlaying();
             }
             else // 플레이어와 멀어지면 -> Chase 애니메이션
             {
                 owner.CanMove(true);
                 owner.Animator.SetBool("isChaseWaiting", false);
+                AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.chaseSound, 3f);
             }
         }
 
@@ -77,6 +80,7 @@ namespace InnerMonsterStates
         {
             owner.Animator.SetBool("isChasing", false);
             owner.Animator.SetBool("isChaseWaiting", false);
+            owner.StopPlaying();
             owner.Nav.updateRotation = true; // 회전 자동으로 변경
         }
     }

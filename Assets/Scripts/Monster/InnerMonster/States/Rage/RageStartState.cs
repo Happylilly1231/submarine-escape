@@ -20,6 +20,7 @@ namespace InnerMonsterStates
 
             owner.Animator.SetBool("isRageEnd", false);
             owner.Animator.SetTrigger("RageStart");
+            AudioManager.Instance.PlaySFX(owner.rageStartSound);
             owner.ResetAttackCoolDown(); // 쿨타임 초기화(쿨타임 상태 아닌 걸로 변경)
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
 
@@ -31,7 +32,7 @@ namespace InnerMonsterStates
             }
 
             // 이벤트 구독
-            InnerMonsterController.OnRageStartAnimationEnded += owner.ChangeState; // 길 완전하지 않아질 때 -> 폭주 추적 상태로 전환
+            InnerMonsterController.OnRageStartAnimationEnded += ChangeToRageChaseState; // 폭주 시작 애니메이션 종료 -> 폭주 추적 상태로 전환
         }
 
         public void Update(InnerMonsterController owner)
@@ -47,8 +48,15 @@ namespace InnerMonsterStates
 
         public void Exit(InnerMonsterController owner)
         {
+            owner.StopPlaying();
+
             // 이벤트 구독 해제
-            InnerMonsterController.OnRageStartAnimationEnded -= owner.ChangeState;
+            InnerMonsterController.OnRageStartAnimationEnded -= ChangeToRageChaseState;
+        }
+
+        public void ChangeToRageChaseState(InnerMonsterController monster)
+        {
+            monster.ChangeState(new RageChaseState());
         }
     }
 }

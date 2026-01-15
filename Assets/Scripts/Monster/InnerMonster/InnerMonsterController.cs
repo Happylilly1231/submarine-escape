@@ -109,8 +109,26 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private bool _isLookingAroundAfterAction = false;
     public bool IsLookingAroundAfterAction => _isLookingAroundAfterAction;
 
-    // public static event Action<IState<InnerMonsterController>> OnPathIsNotComplete; // 길 완전하지 않아질 때 이벤트
-    public static event Action<IState<InnerMonsterController>> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
+    // 이벤트
+    public static event Action<InnerMonsterController> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
+
+    // 사운드
+    [Header("Sound")]
+    public AudioClip idleGrowlSound;
+    public AudioClip patrolSound;
+    public AudioClip detectSound;
+    public AudioClip chaseSound;
+    public AudioClip lookAroundGrowlSound;
+    public AudioClip[] attackSounds;
+    public AudioClip jumpLandingSound;
+    public AudioClip staggerSound;
+    public AudioClip rageStartSound;
+    public AudioClip rageChaseSound;
+    public AudioClip rageAttackSound;
+    public AudioClip destroyRageSound;
+    public AudioClip destroyingSound;
+    public AudioClip destroyCompleteSound;
+    public AudioSource audioSource;
 
     private void OnEnable()
     {
@@ -146,8 +164,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
         _collider = GetComponent<CapsuleCollider>();
-
-
+        audioSource = GetComponent<AudioSource>();
 
         // 웨이포인트 배열 가져오기
         _wayPoints = wayPointsParent.GetComponentsInChildren<Transform>().Where(t => t != wayPointsParent).ToArray();
@@ -373,6 +390,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         _isLookingAroundAfterAction = true; // 행동 후 두리번거리는 중으로 설정
         _animator.SetBool("isLookingAround", true); // 애니메이션 파라미터 설정(-> LookingAfterAction)
+        AudioManager.Instance.PlaySoundSafe(audioSource, lookAroundGrowlSound);
         ChangeState(new IdleState()); // Idle 상태로 전환
     }
 
@@ -431,21 +449,11 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     #region Range Attack
     /// <summary>
-    /// 점프 공격
-    /// </summary>
-    public void JumpAttack()
-    {
-        Debug.Log("점프 공격!");
-        _playerStat.Damage(15f * _attackForce);
-    }
-
-    /// <summary>
     /// 던지기 공격
     /// </summary>
     public void ThrowAttack()
     {
         Debug.Log("던지기 공격!");
-
         // 더 이상 투사체 잡고 있지 않음
         _isGrabbing = false;
 
@@ -465,6 +473,15 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _isGrabbing = true; // 투사체 잡고 있는 중
         throwObj.SetActive(true); // 투사체 활성화
         throwObj.GetComponent<ThrowObj>().damage = 5f * _attackForce; // 투사체의 대미지 설정
+    }
+
+    /// <summary>
+    /// 점프 공격
+    /// </summary>
+    public void JumpAttack()
+    {
+        Debug.Log("점프 공격!");
+        _playerStat.Damage(15f * _attackForce);
     }
     #endregion
 
@@ -487,6 +504,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public void OnAttack()
     {
         Debug.Log("공격 중");
+
 
         // 폭주 파괴 공격 -> RageDestroyState에서 처리
         if (currentAttackType == EAttackType.RageDestroyAttack)
@@ -518,18 +536,22 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             switch (currentAttackType)
             {
                 case EAttackType.HitAttack:
+                    AudioManager.Instance.PlaySFX(attackSounds[0]);
                     if (canReach)
                         HitAttack();
                     break;
                 case EAttackType.DoubleClawAttack:
+                    AudioManager.Instance.PlaySFX(attackSounds[1]);
                     if (canReach)
                         DoubleClawAttack();
                     break;
                 case EAttackType.JumpAttack:
+                    AudioManager.Instance.PlaySFX(attackSounds[2]);
                     if (canReach)
                         JumpAttack();
                     break;
                 case EAttackType.ThrowAttack:
+                    AudioManager.Instance.PlaySFX(attackSounds[3]);
                     ThrowAttack();
                     break;
             }
@@ -621,6 +643,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("점프 종료");
         _isJumping = false; // 점프 중 아님으로 설정
         CanMove(false); // 이동 정지
+        AudioManager.Instance.PlaySFX(jumpLandingSound);
         if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
         {
             // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)
@@ -635,7 +658,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public void OnRageStartEnd()
     {
         // 폭주 시작 애니메이션 종료 이벤트 알림
-        OnRageStartAnimationEnded?.Invoke(new RageChaseState());
+        OnRageStartAnimationEnded?.Invoke(this);
     }
 
     /// <summary>
@@ -656,5 +679,11 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             _rangeAttackDistance = _meleeAttackDistance; // 원거리 공격 거리를 근접 공격 거리와 동일하게 변경(원거리 공격 불가)
             _attackForce = 1f; // 공격력 반으로 깎임
         }
+    }
+
+    public void StopPlaying()
+    {
+        if (audioSource.isPlaying)
+            audioSource.Stop();
     }
 }

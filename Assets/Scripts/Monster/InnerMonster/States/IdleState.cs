@@ -22,7 +22,10 @@ namespace InnerMonsterStates
 
             _timer = 0f;
             if (!owner.IsLookingAroundAfterAction)
+            {
                 owner.Animator.SetBool("isWaiting", true);
+                AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.idleGrowlSound);
+            }
         }
 
         public void Update(InnerMonsterController owner)
@@ -63,6 +66,7 @@ namespace InnerMonsterStates
         {
             owner.Animator.SetBool("isWaiting", false);
             owner.IsNoWaypointCanGo = false;
+            owner.StopPlaying();
         }
     }
 }

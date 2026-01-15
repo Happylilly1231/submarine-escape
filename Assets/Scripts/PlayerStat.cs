@@ -36,6 +36,10 @@ public class PlayerStat : MonoBehaviour
     [SerializeField] private Slider staminaSlider; // 스태미나 바
     [SerializeField] private Slider staminaGlowSlider; // 스태미나 각 칸이 완전히 채워졌을 때 표시되는 발광 부분
 
+    // 사운드
+    [Header("Sound")]
+    [SerializeField] private AudioClip damageSound;
+
     void Awake()
     {
         _playerStatus = GetComponent<PlayerStatus>();
@@ -62,6 +66,7 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void Damage(float value)
     {
+        AudioManager.Instance.PlaySFX(damageSound);
         _hp -= value;
         Debug.Log("Damage: -" + value);
         if (_hp <= 0)

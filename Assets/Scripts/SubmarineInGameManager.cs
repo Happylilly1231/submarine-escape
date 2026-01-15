@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 잠수함 씬의 인게임 매니저
+/// <para>- 경보 발생/해제</para>
+/// <para>- 파괴될 장비 배열 저장</para>
+/// <para>- 잠수함 씬에서 공통적으로 접근하는 변수들(플레이어, 괴물 등)을 모아두고 관리한다.</para>
+/// <para>- UI에 포커스 여부 설정 함수</para>
+/// </summary>
 public class SubmarineInGameManager : MonoBehaviour
 {
     // 경보
@@ -34,8 +41,17 @@ public class SubmarineInGameManager : MonoBehaviour
     private LayerMask monsterLayer;
     public LayerMask MonsterLayer => monsterLayer;
 
+    // 심해 괴물
+    [SerializeField] private DeepSeaMonsterController deepSeaMonsterController;
+    public DeepSeaMonsterController DeepSeaMonsterController => deepSeaMonsterController;
+
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
+
+    // 사운드
+    [Header("Sound")]
+    [SerializeField] private AudioClip alertSound;
+    private AudioSource _audioSource;
 
     // 싱글톤 변수
     public static SubmarineInGameManager instance;
@@ -48,6 +64,12 @@ public class SubmarineInGameManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+
+            _audioSource = GetComponent<AudioSource>();
+        }
+        else
+        {
+            Destroy(gameObject);
         }
     }
 
@@ -77,7 +99,7 @@ public class SubmarineInGameManager : MonoBehaviour
             // 인덱스 범위 넘는 경우 예외 처리
             if (currentDestroyEquipmentIndex >= destroyEquipments.Length)
             {
-                AlertOff();
+                // AlertOff();
                 return;
             }
 
@@ -92,6 +114,7 @@ public class SubmarineInGameManager : MonoBehaviour
         alertButton.colors = colorBlock;
 
         _isAlerting = true; // 경보 발생 중으로 설정
+        AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound);
         Debug.Log("경보 발생!");
 
         // 경보 발생 시작 이벤트 알림
@@ -107,6 +130,7 @@ public class SubmarineInGameManager : MonoBehaviour
         _currentAlertPos = null; // 현재 경보 발생 위치 null로 초기화
         _isAlerting = false; // 경보 발생 중 아님으로 설정
         Debug.Log("경보 해제");
+        _audioSource.Stop();
 
         // 임시 - 경보 버튼 하얀색으로 변경(후에 지워야 함)
         ColorBlock colorBlock = alertButton.colors;
@@ -118,5 +142,28 @@ public class SubmarineInGameManager : MonoBehaviour
     public void SetPlayerGeoActive(bool isActive)
     {
         playerGeo.SetActive(isActive);
+    }
+
+    /// <summary>
+    /// UI에 포커스 여부 설정 - 커서, 카메라, 플레이어 이동 조작
+    /// </summary>
+    /// <param name="isFocus">포커스 여부</param>
+    public void SetFocusUI(bool isFocus)
+    {
+        if (isFocus)
+        {
+            GameManager.instance.HaveToShowCursor = true; // 커서 보여야 함으로 설정
+            GameManager.instance.SetCursorVisible(true); // 커서 보이기
+            Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가
+            player.GetComponent<PlayerMove>().SetMoveable(false); // 플레이어 이동 불가능
+        }
+        else
+        {
+            GameManager.instance.HaveToShowCursor = false; // 커서 보여야 함 아님으로 설정
+            GameManager.instance.SetCursorVisible(false); // 커서 숨기기
+            Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
+            player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능
+        }
+
     }
 }

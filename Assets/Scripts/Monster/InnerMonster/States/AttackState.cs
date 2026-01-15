@@ -73,6 +73,7 @@ namespace InnerMonsterStates
                     monster.currentAttackType = EAttackType.HitAttack;
                     monster.Animator.SetInteger("attackType", 0);
                     monster.Animator.SetTrigger("Attack");
+
                     break;
 
                 case 1:
@@ -100,6 +101,7 @@ namespace InnerMonsterStates
                     monster.currentAttackType = EAttackType.JumpAttack;
                     monster.Animator.SetInteger("attackType", 3);
                     monster.Animator.SetTrigger("Attack");
+                    monster.StopPlaying();
                     break;
             }
         }
