@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 9073368469698671396}
   - component: {fileID: 1606655241010032239}
   - component: {fileID: 6463798717438709451}
+  - component: {fileID: 2260919648242125980}
+  - component: {fileID: 5785525453679996550}
   m_Layer: 0
   m_Name: LP_Door_snaps
   m_TagString: Untagged
@@ -99,3 +101,46 @@ MonoBehaviour:
   frontPos: {x: 0, y: 0, z: 0}
   backPos: {x: 0, y: 0, z: 0}
   isOpened: 0
+--- !u!208 &2260919648242125980
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4483158982627376947}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.15, y: 0.05, z: 0.75}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.1, z: 3.0000002}
+  m_TimeToStationary: 0.5
+--- !u!54 &5785525453679996550
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4483158982627376947}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
