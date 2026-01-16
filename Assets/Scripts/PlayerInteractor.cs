@@ -77,25 +77,45 @@ public class PlayerInteractor : MonoBehaviour
         if (!context.performed) return;
         if (!_canInteractable || _currentFurniture == null) return;
 
-        Item selectedItem = null;
+        List<Item> candidateItems = new List<Item>();
         if (_itemEquipController.HeldItemData != null)
         {
-            selectedItem = _itemEquipController.HeldItemData;
+            if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual") return;
+            candidateItems.Add(_itemEquipController.HeldItemData);
         }
-        else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
+        if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
         {
-            selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
+            if (!candidateItems.Contains(slotItem))
+            {
+                candidateItems.Add(slotItem);
+            }
         }
 
-        bool hasSelectedItem = selectedItem != null;
+        Item validItem = null;
+        bool canInteract = false;
+
+        if (candidateItems.Count > 0)
+        {
+            foreach (Item item in candidateItems)
+            {
+                if (_currentFurniture.CanInteractwithSelectedItem(item))
+                {
+                    validItem = item;
+                    canInteract = true;
+                    break;
+                }
+            }
+        }
 
         // 선택된 아이템이 없거나 선택된 아이템으로 상호작용이 가능한 경우에만 상호작용 실행
-        if (!hasSelectedItem || _currentFurniture.CanInteractwithSelectedItem(selectedItem))
+        if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
         {
             _currentFurniture.Interact();
-            if (hasSelectedItem && selectedItem.IsConsumable)
+            if (canInteract && validItem.IsConsumable)
             {
-                _inventoryManager.ConsumeItemInSlot(selectedItem);
+                _inventoryManager.ConsumeItemInSlot(validItem);
             }
         }
     }
@@ -115,21 +135,38 @@ public class PlayerInteractor : MonoBehaviour
 
             if (_sphereCastHit.transform.TryGetComponent(out IInteractable furniture))
             {
-                Item selectedItem = null;
-
+                List<Item> candidateItems = new List<Item>();
                 if (_itemEquipController.HeldItemData != null)
                 {
-                    selectedItem = _itemEquipController.HeldItemData;
+                    if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual") return;
+                    candidateItems.Add(_itemEquipController.HeldItemData);
                 }
-                else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
+                if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
                 {
-                    selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+                    Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+                    // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
+                    if (!candidateItems.Contains(slotItem))
+                    {
+                        candidateItems.Add(slotItem);
+                    }
                 }
 
-                bool hasSelectedItem = selectedItem != null;
+                bool canInteract = false;
+
+                if (candidateItems.Count > 0)
+                {
+                    foreach (Item selectedItem in candidateItems)
+                    {
+                        if (furniture.CanInteractwithSelectedItem(selectedItem))
+                        {
+                            canInteract = true;
+                            break;
+                        }
+                    }
+                }
 
                 // 인벤토리가 닫혀 있거나 선택된 아이템이 없거나 선택된 아이템으로 상호작용이 가능한 경우에만 상호작용 UI 표시
-                if (!hasSelectedItem || furniture.CanInteractwithSelectedItem(selectedItem))
+                if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
                 {
                     HandleInteractable(furniture);
                     return;

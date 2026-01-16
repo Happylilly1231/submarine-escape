@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using InnerMonsterStates;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -28,7 +29,8 @@ public class InventoryManager : MonoBehaviour
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private int _heldItemSlotIndex = -1; // 손에 들고 있는 아이템의 슬롯 인덱스
     public int HeldItemSlotIndex => _heldItemSlotIndex;
-    private PlayerInteractor _playerInteractor; // 플레이어 상호작용 컴포넌트
+    private CrewRoom1KeyPad _crewRoom1KeyPad;
+    private CrewRoom1KeyPadPanel _crewRoom1KeyPadPanel;
 
     /// <summary>
     /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
@@ -42,7 +44,8 @@ public class InventoryManager : MonoBehaviour
 
         _inventorySlots = inventorySlotsParent.GetComponentsInChildren<InventorySlot>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
-        _playerInteractor = FindObjectOfType<PlayerInteractor>();
+        _crewRoom1KeyPadPanel = FindObjectOfType<CrewRoom1KeyPadPanel>();
+        _crewRoom1KeyPad = FindObjectOfType<CrewRoom1KeyPad>();
     }
 
     /// <summary>
@@ -74,7 +77,7 @@ public class InventoryManager : MonoBehaviour
     /// <summary>
     /// 인벤토리 비활성화
     /// </summary>
-    private void CloseInventory()
+    public void CloseInventory()
     {
         inventoryUI.SetActive(false);
         _isInventoryOpen = false;
@@ -222,16 +225,10 @@ public class InventoryManager : MonoBehaviour
 
         var selectedSlot = _inventorySlots[_selectedSlotIndex];
         if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
-        // if (_playerInteractor != null && _playerInteractor.IsMatchingItemFocused(selectedSlot.Item))
-        // {
-        //     // 선택된 아이템이 현재 상호작용 중인 가구와 상호작용에 사용 중이라면 장착하지 않음
-        //     return;
-        // }
-        // if (selectedSlot.Item.ItemType == EItemType.Puzzle)
-        // {
-        //     // 퍼즐형 아이템은 장착하지 않음
-        //     return;
-        // }
+        if ((_crewRoom1KeyPad != null && _crewRoom1KeyPad.IsFocused) || (_crewRoom1KeyPadPanel != null && _crewRoom1KeyPadPanel.IsFocused))
+        {
+            if (selectedSlot.Item.ItemName == "Flashlight") return;
+        }
 
         _heldItemSlotIndex = _selectedSlotIndex;
         _itemEquipController.EquipItem(selectedSlot.Item);

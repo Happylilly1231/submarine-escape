@@ -13,7 +13,10 @@ public class KeyPadBatterySlot : MonoBehaviour
     [SerializeField] private MeshRenderer ledRenderer; // 해당 슬롯의 LED 렌더러
     [SerializeField] private Material greenMaterial; // sign green
     [SerializeField] private Material redMaterial;   // sign red
-    [SerializeField] private Material darkRedMaterial; // sign dark red
+    [SerializeField] private GameObject sparkParticle;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip sparkSound;
+    [SerializeField] private AudioClip ejectExplosionSound;
 
     private bool _isBurnt = true;
     public bool IsBurnt => _isBurnt;
@@ -92,6 +95,8 @@ public class KeyPadBatterySlot : MonoBehaviour
         else
         {
             ledRenderer.material = redMaterial;
+            sparkParticle.SetActive(true);
+            PlaySparkSound();
             StartBlinking();
         }
     }
@@ -106,10 +111,30 @@ public class KeyPadBatterySlot : MonoBehaviour
         .SetLoops(-1);
     }
 
-    public void StopLED()
+    private void PlaySparkSound()
+    {
+        if (audioSource != null && !audioSource.isPlaying)
+        {
+            audioSource.clip = sparkSound;
+            audioSource.Play();
+        }
+    }
+
+    private void PlayExplosionSound()
+    {
+        if (audioSource != null && audioSource.isPlaying)
+        {
+            audioSource.clip = ejectExplosionSound;
+            audioSource.Play();
+        }
+    }
+
+    public void StopAllEffects()
     {
         _ledBlinkTween?.Kill();
-        if (ledRenderer != null) ledRenderer.material = darkRedMaterial;
+        if (ledRenderer != null) ledRenderer.material = redMaterial;
+        sparkParticle.SetActive(false);
+        PlayExplosionSound();
     }
 
     public void EjectBattery()
@@ -134,7 +159,7 @@ public class KeyPadBatterySlot : MonoBehaviour
 
             if (_isBurnt)
             {
-                Destroy(ejectingBattery, 5f);
+                Destroy(ejectingBattery, 8f);
                 _isBurnt = false;
             }
         });

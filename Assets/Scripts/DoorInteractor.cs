@@ -16,8 +16,8 @@ public class DoorInteractor : MonoBehaviour
             }
             // 문 닫거나 열기 - 간단 구현(현재는 시야에 문이 들어오지 않아도 문과 상호작용 가능)
             Debug.Log("문에 닿았습니다.");
-            if (door.gameObject.activeSelf)
-                door.ToggleDoor();
+            // if (door.gameObject.activeSelf)
+            //     door.ToggleDoor();
         }
     }
 }
