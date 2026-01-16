@@ -92,7 +92,7 @@ public class PlayerStat : MonoBehaviour
     public void Die()
     {
         Debug.Log("플레이어 사망");
-        GameManager.instance.GameOver();
+        GameManager.instance.GameOver(EEndingType.MonsterDeath);
     }
 
     /// <summary>
