@@ -10,6 +10,9 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
     [SerializeField] private KeyPadBatterySlot[] batterySlots;
     [SerializeField] private Item[] batteryItems;
     [SerializeField] private Transform DoorPivot;
+    [SerializeField] private GameObject flashlight;
+    [SerializeField] private GameObject keyPadPanel;
+    [SerializeField] private GameObject[] keyPadScrew;
 
     [Header("Focus View Settings")]
     [SerializeField] private Vector3 focusViewPos;
@@ -20,6 +23,8 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
     [SerializeField] private Vector3 successViewPos;
     [SerializeField] private Vector3 successViewRot;
     [SerializeField] private float successDuration = 3.0f;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip openingDoorSound;
 
     private PlayerCameraController _playerCameraController;
     private ItemEquipController _itemEquipController;
@@ -33,6 +38,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
     private InputAction _exchangeBatteryAction;
     private Camera _mainCamera;
     private bool _isFocused;
+    public bool IsFocused => _isFocused;
     private KeyPadBatterySlot _currentSelectedBatterySlot = null;
 
     void Awake()
@@ -101,9 +107,11 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
         SubmarineInGameManager.instance.SetPlayerGeoActive(false);
         _playerCameraController.enabled = false;
+        flashlight.SetActive(true);
         _playerInteractor.IsPuzzleActive = true;
         _playerInteractor.ClearDetectionText();
 
+        this.GetComponent<BoxCollider>().enabled = false;
         foreach (var slot in batterySlots)
         {
             var col = slot.GetComponent<BoxCollider>();
@@ -116,6 +124,9 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         {
             _playerInput.actions[action].Enable();
         }
+
+        Item heldBattery = _itemEquipController.HeldItemData;
+        if (heldBattery != null && heldBattery.ItemName == "Flashlight") _itemEquipController.UnequipItem();
 
         _mainCamera.transform.DOMove(focusViewPos, duration).SetEase(Ease.InOutSine);
         _mainCamera.transform.DORotate(focusViewRot, duration).SetEase(Ease.InOutSine).OnComplete(() =>
@@ -140,6 +151,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         if (!_isFocused) return;
         _isFocused = false;
 
+        this.GetComponent<BoxCollider>().enabled = true;
         foreach (var slot in batterySlots)
         {
             var col = slot.GetComponent<BoxCollider>();
@@ -155,6 +167,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         _playerInteractor.IsPuzzleActive = false;
         SubmarineInGameManager.instance.SetPlayerGeoActive(true);
         _playerInput.currentActionMap.Enable();
+        flashlight.SetActive(false);
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -272,6 +285,8 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         if (allCorrect)
         {
             Debug.Log("Complete!");
+            Destroy(keyPadPanel);
+            foreach (var screw in keyPadScrew) Destroy(screw);
             HandleSuccess();
         }
     }
@@ -290,7 +305,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
     {
         foreach (var slot in batterySlots)
         {
-            slot.StopLED();
+            slot.StopAllEffects();
             slot.EjectBattery();
         }
 
@@ -299,11 +314,24 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         _playerInput.actions["RemoveScrew"].Enable();
         _playerInput.actions["ExitKeyPad"].Enable();
 
-        DOVirtual.DelayedCall(0.5f, () => ForceExitKeyPad());
+        float recoilStrength = 0.7f; // 뒤로 밀리는 힘
+        float shakeDuration = 0.5f; // 흔들리는 시간
+
+        _mainCamera.transform.DOKill();
+
+        _mainCamera.transform.DOLocalMoveX(_mainCamera.transform.localPosition.x + recoilStrength, 0.1f)
+        .SetLoops(2, LoopType.Yoyo) // 갔다가 다시 제자리로 살짝 돌아옴
+        .SetEase(Ease.OutQuad);
+        _mainCamera.transform.DOShakePosition(shakeDuration, strength: 0.3f, vibrato: 30, randomness: 90);
+        // _mainCamera.transform.DOPunchPosition(_mainCamera.transform.forward * -0.5f, 0.5f, 15, 0.5f);
+        // _mainCamera.transform.DOPunchRotation(new Vector3(10, 0, 0), 0.5f, 10);
+
+        DOVirtual.DelayedCall(0.8f, () => ForceExitKeyPad());
     }
 
     private void HandleSuccess()
     {
+        PlayOpeningDoorSound();
         _mainCamera.transform.DOMove(successViewPos, successDuration).SetEase(Ease.InOutCubic);
         _mainCamera.transform.DORotate(successViewRot, successDuration).SetEase(Ease.InOutCubic);
 
@@ -313,7 +341,19 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
         successSeq.OnComplete(() =>
         {
-            DOVirtual.DelayedCall(1f, () => ForceExitKeyPad());
+            DOVirtual.DelayedCall(1f, () => ForceExitKeyPad()).OnComplete(() =>
+            {
+                Destroy(this);
+            });
         });
+    }
+
+    private void PlayOpeningDoorSound()
+    {
+        if (audioSource != null)
+        {
+            audioSource.clip = openingDoorSound;
+            audioSource.Play();
+        }
     }
 }

@@ -111,16 +111,35 @@ public class Cabinet : MonoBehaviour, IInteractable
 
     private bool IsKeySelected()
     {
-        Item selectedItem = null;
+        List<Item> candidateItems = new List<Item>();
         if (_itemEquipController.HeldItemData != null)
         {
-            selectedItem = _itemEquipController.HeldItemData;
+            candidateItems.Add(_itemEquipController.HeldItemData);
         }
-        else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
+        if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
         {
-            selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
+            if (!candidateItems.Contains(slotItem))
+            {
+                candidateItems.Add(slotItem);
+            }
         }
 
-        return CanInteractwithSelectedItem(selectedItem);
+        bool canInteract = false;
+
+        if (candidateItems.Count > 0)
+        {
+            foreach (Item item in candidateItems)
+            {
+                if (CanInteractwithSelectedItem(item))
+                {
+                    canInteract = true;
+                    break;
+                }
+            }
+        }
+
+        return canInteract;
     }
 }

@@ -12,6 +12,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
     [SerializeField] private KeyPadScrew[] screws;
     [SerializeField] private Item screwdriver;
     [SerializeField] private Transform itemViewRoot;
+    [SerializeField] private GameObject flashlight;
     [Header("Focus View Settings")]
     [SerializeField] private Vector3 focusViewPos;
     [SerializeField] private Vector3 focusViewRot;
@@ -26,6 +27,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
     private InputAction _removeScrewAction;
     private InputAction _exitKeyPadAction;
     private bool _isFocused = false;
+    public bool IsFocused => _isFocused;
     private int _removedScrewCount = 0;
     private Camera _mainCamera;
     private KeyPadScrew _currentSelectedScrew = null;
@@ -86,6 +88,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
 
         SubmarineInGameManager.instance.SetPlayerGeoActive(false);
         _playerCameraController.enabled = false;
+        flashlight.SetActive(true);
 
         Debug.Log(_playerInput.currentActionMap);
         _playerInput.currentActionMap.Disable();
@@ -94,6 +97,9 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
         {
             _playerInput.actions[action].Enable();
         }
+
+        // Item heldBattery = _itemEquipController.HeldItemData;
+        // if (heldBattery.ItemName == "Flashlight") _itemEquipController.UnequipItem();
 
         _mainCamera.transform.DOMove(focusViewPos, duration).SetEase(Ease.InOutSine);
         _mainCamera.transform.DORotate(focusViewRot, duration).SetEase(Ease.InOutSine).OnComplete(() =>
@@ -117,17 +123,36 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
     /// </summary>
     private bool IsScrewdriverSelected()
     {
-        Item selectedItem = null;
+        List<Item> candidateItems = new List<Item>();
         if (_itemEquipController.HeldItemData != null)
         {
-            selectedItem = _itemEquipController.HeldItemData;
+            candidateItems.Add(_itemEquipController.HeldItemData);
         }
-        else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
+        if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
         {
-            selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+            // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
+            if (!candidateItems.Contains(slotItem))
+            {
+                candidateItems.Add(slotItem);
+            }
         }
 
-        return CanInteractwithSelectedItem(selectedItem);
+        bool canInteract = false;
+
+        if (candidateItems.Count > 0)
+        {
+            foreach (Item item in candidateItems)
+            {
+                if (CanInteractwithSelectedItem(item))
+                {
+                    canInteract = true;
+                    break;
+                }
+            }
+        }
+
+        return canInteract;
     }
 
     void OnEnable()
@@ -228,7 +253,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
             {
                 RemovePanel();
                 _crewRoom1KeyPad.StartFocusMode();
-                this.enabled = false;
+                _isFocused = false;
             }
         });
     }
@@ -243,6 +268,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
             Rigidbody rb = gameObject.AddComponent<Rigidbody>();
             rb.mass = 0.1f;
             rb.drag = 0.5f;
+            Destroy(this);
         });
     }
 
@@ -264,6 +290,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
         _playerCameraController.enabled = true;
         SubmarineInGameManager.instance.SetPlayerGeoActive(true);
         _playerInput.currentActionMap.Enable();
+        flashlight.SetActive(false);
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;

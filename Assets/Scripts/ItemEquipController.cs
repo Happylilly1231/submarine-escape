@@ -28,18 +28,28 @@ public class ItemEquipController : MonoBehaviour
         _heldItemObject.transform.localPosition = item.GripPositionOffset;
         _heldItemObject.transform.localRotation = Quaternion.Euler(item.GripRotationOffset);
 
+        SetLayerRecursive(_heldItemObject, LayerMask.NameToLayer("HeldItem"));
+
         foreach (var col in _heldItemObject.GetComponentsInChildren<Collider>())
         {
-            col.enabled = false;
-        }
-        foreach (var rb in _heldItemObject.GetComponentsInChildren<Rigidbody>())
-        {
-            rb.isKinematic = true;
+            col.isTrigger = false;
         }
 
         _heldItemObject.transform.SetParent(itemViewRoot);
 
         rightHandIK.weight = 1f;
+    }
+
+    /// <summary>
+    /// 장착할 아이템의 모든 자식들까지 레이어 변경
+    /// </summary>
+    private void SetLayerRecursive(GameObject obj, int newLayer)
+    {
+        obj.layer = newLayer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursive(child.gameObject, newLayer);
+        }
     }
 
     /// <summary>
