@@ -362,7 +362,7 @@ public class RadarController : MonoBehaviour
         if (Vector3.Distance(_monsterPos, Vector3.zero) <= 5f)
         {
             Debug.Log("폭발!!! " + timer);
-            GameManager.instance.GameOver();
+            GameManager.instance.GameOver(EEndingType.SubmarineExplode);
         }
     }
 
@@ -794,7 +794,7 @@ public class RadarController : MonoBehaviour
                     if (Vector3.Distance(currentRealSelectPos, Vector3.zero) <= _explosionDistance)
                     {
                         Debug.Log("잠수함 폭발");
-                        GameManager.instance.GameOver(); // 게임 오버
+                        GameManager.instance.GameOver(EEndingType.SubmarineExplode); // 게임 오버
                         yield break;
                     }
 

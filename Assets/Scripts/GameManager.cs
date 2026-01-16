@@ -122,13 +122,27 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// 게임 오버
     /// </summary>
-    public void GameOver()
+    public void GameOver(EEndingType type)
     {
         // 임시 - 후에 수정 예정
-        Debug.Log("게임 오버!");
+        Debug.Log($"게임 오버!: {type}");
+        SaveEnding(type); // 엔딩 데이터 저장
         Pause();
         _isClear = false;
         ShowEnding(); // 엔딩 보여주기
+    }
+
+    /// <summary>
+    /// 특정 엔딩을 저장
+    /// </summary>
+    /// <param name="ending">달성한 엔딩 종류</param>
+    public void SaveEnding(EEndingType ending)
+    {
+        // PlayerPrefs를 사용하여 저장 (Key: Ending_타입명, Value: 1(해금됨))
+        string key = "Ending_" + ending.ToString();
+        PlayerPrefs.SetInt(key, 1);
+        PlayerPrefs.Save(); // 디스크에 즉시 저장
+        Debug.Log($"{ending} 엔딩이 수집되었습니다!");
     }
 
     /// <summary>
@@ -150,6 +164,11 @@ public class GameManager : MonoBehaviour
     public void ReturnToTitle()
     {
         SceneManager.LoadScene("TitleScene"); // 추후 씬 이름 수정 예정
+    }
+
+    public void EndingGallery()
+    {
+        SceneManager.LoadScene("EndingFrameScene");
     }
 
     /// <summary>
