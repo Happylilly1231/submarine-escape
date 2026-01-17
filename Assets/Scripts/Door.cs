@@ -12,6 +12,7 @@ public class Door : MonoBehaviour, IInteractable
     //private float _openAngle = -90f; // 목표 회전각
     private float _openDuration = 1f; // 여는 시간
     private bool _isMoving = false;
+    public bool isLocked;
 
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
@@ -29,7 +30,7 @@ public class Door : MonoBehaviour, IInteractable
     /// <returns></returns>
     public string GetInteractText()
     {
-        if (_isMoving) return "";
+        if (_isMoving || isLocked) return "";
         return isOpened ? "close [E]" : "open [E]";
     }
 
@@ -38,7 +39,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving) return;
+        if (_isMoving || isLocked) return;
 
         if (!isOpened)
         {
@@ -74,6 +75,14 @@ public class Door : MonoBehaviour, IInteractable
     private void OpenDoor(float angle)
     {
         _isMoving = true;
+
+        // 탈출실 문을 연 경우
+        if (gameObject.CompareTag("EscapeRoomDoor"))
+        {
+            SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
+            SubmarineInGameManager.instance.AlertOn(); // 경보 발생
+        }
+
         _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
@@ -87,12 +96,42 @@ public class Door : MonoBehaviour, IInteractable
     private void CloseDoor()
     {
         _isMoving = true;
+
         _doorAxis.DOLocalRotate(Vector3.zero, _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
             {
                 isOpened = false;
                 _isMoving = false;
+
+                // 탈출실 문을 닫은 경우
+                if (gameObject.CompareTag("EscapeRoomDoor"))
+                {
+                    // 발사해서 심해 괴물 맞추기 한 번이라도 성공한 경우
+                    if (SubmarineInGameManager.instance.IsFireSuccess)
+                    {
+                        // 내부 괴물의 현재 위치 가져오기
+                        Vector3 innerMonsterPos = SubmarineInGameManager.instance.innerMonsterTransform.position;
+
+                        // 내부 괴물과 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
+                        float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
+                        float distToBack = Vector3.Distance(innerMonsterPos, backPos);
+
+                        // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 뒤와 가까운 경우 = 탈출실 안쪽에 있는 경우)
+                        if (GetTargetAngleBasedOnPlayer() == 90f)
+                        {
+                            if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
+                            {
+                                GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
+                            }
+                            else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
+                            {
+                                GameManager.instance.GameClear(); // 탈출 성공
+                            }
+                        }
+                    }
+                }
+
                 OnDoorOpenStateChanged?.Invoke();
                 OnDoorClosed?.Invoke(this);
             });

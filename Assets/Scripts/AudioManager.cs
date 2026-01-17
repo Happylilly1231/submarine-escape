@@ -12,6 +12,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource bgmSource;
     [SerializeField] private AudioSource sfxSource;
 
+    [SerializeField] private AudioClip deepSeaMonsterExplosionSound; // 심해 괴물이 부딪혀서 나는 폭발 사운드
+
     void Awake()
     {
         if (Instance == null)
@@ -63,5 +65,13 @@ public class AudioManager : MonoBehaviour
         audioSource.clip = audioClip;
         audioSource.pitch = pitch; // 피치 설정 가능
         audioSource.Play();
+    }
+
+    /// <summary>
+    /// 심해 괴물 폭발 사운드 재생(RadarController는 엔딩으로 씬 넘어갈 시 삭제되므로 이곳에서 함)
+    /// </summary>
+    public void PlayDeepSeaMonsterExplosionSound()
+    {
+        PlaySFX(deepSeaMonsterExplosionSound);
     }
 }

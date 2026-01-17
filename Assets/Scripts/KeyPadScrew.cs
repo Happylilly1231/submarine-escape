@@ -55,7 +55,8 @@ public class KeyPadScrew : MonoBehaviour
 
     private void ApplyPhysics()
     {
-        Rigidbody rb = gameObject.AddComponent<Rigidbody>();
+        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        rb.isKinematic = false;
         rb.mass = 0.1f;
         rb.drag = 5.0f;
     }

@@ -91,7 +91,7 @@ public class RadarController : MonoBehaviour
     private Image _monsterDotImg; // 심해 괴물 점 이미지
     private Vector3 _monsterPos; // 심해 괴물 위치
     private bool _isUpdatingMonsterPos = true; // 심해 괴물 위치 갱신 중인지 여부
-    private float _monsterPeriod = 1200f; // 심해 괴물이 다가오기까지 걸리는 시간: 20분
+    private float _monsterPeriod = 1200f / 0.7712f; // 심해 괴물이 다가오기까지 걸리는 시간: 20분 (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 20분으로 맞추기 위해 0.7712f로 20분을 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
     private float startAngle = 90f; // 시작 각도(심해 괴물의 시작 위치 변경 시 사용)
     private float _monsterWaitTime = 300f; // 심해 괴물 재등장 대기 시간: 5분
@@ -100,14 +100,16 @@ public class RadarController : MonoBehaviour
     private Image _subamrine2DotImg; // 다른 잠수함 점 이미지
     private Vector3 _submarine2Pos; // 다른 잠수함 위치 갱신 중인지 여부
     private bool _isUpdatingSubmarine2Pos = true; // 다른 잠수함 점 보여주는 중인지 여부
-    private float _submarine2Period = 540f; // 다른 잠수함 한 바퀴 주기: 9분
+    private float _submarine2Period = 540f / 0.7712f; // 다른 잠수함 한 바퀴 주기: 9분 (괴물과 주기를 맞추기 위해 0.7712f로 똑같이 나누어줌)
 
-    private PlayerInteractor _playerInteractor;
+    // 사운드
+    [Header("Sound")]
+    [SerializeField] private AudioClip deepSeaMonsterCloseSound;
+    private float _deepMonsterVolumeMaxDistance = 10f; // 최대 볼륨 되기 시작하는 거리
+    [SerializeField] private AudioSource _monsterAudioSource;
 
     private void Start()
     {
-        _playerInteractor = FindAnyObjectByType<PlayerInteractor>();
-
         // 점 이미지 가져오기
         _monsterDotImg = monsterDot.gameObject.GetComponent<Image>();
         _subamrine2DotImg = submarine2Dot.gameObject.GetComponent<Image>();
@@ -136,7 +138,7 @@ public class RadarController : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.instance.IsPausing)
+        if (SubmarineInGameManager.instance.IsPausing)
             return;
 
         // 심해 괴물 위치 갱신 중 -> 심해 괴물 타이머 계산 (보여지는 중 아닐 때는 사라졌을 때이므로 계산 X)
@@ -169,7 +171,7 @@ public class RadarController : MonoBehaviour
                 Keyboard.current.onTextInput += OnTextInput;
                 _currentInput = "";
                 logText.text = CHANGE_MODE_HELP_TEXT + "> ";
-                SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Disable(); // 인풋 막기
+                // SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Disable(); // 인풋 막기
             }
 
             _isUIVisible = true; // UI 보이는 중으로 설정
@@ -198,14 +200,13 @@ public class RadarController : MonoBehaviour
         else // 숨기기
         {
             // UI에 포커스 비활성화
-            _playerInteractor.IsPuzzleActive = false;
             SubmarineInGameManager.instance.SetFocusUI(false);
 
             // 수동 전환이 아직 되지 않았을 때 -> 키 입력 이벤트 구독 해제
             if (!_isManualModeActive)
             {
                 Keyboard.current.onTextInput -= OnTextInput;
-                SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Enable();
+                // SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Enable();
             }
 
             _isUIVisible = false; // UI 보이는 중 아님으로 설정
@@ -223,8 +224,8 @@ public class RadarController : MonoBehaviour
     /// <param name="c">입력된 문자</param>
     private void OnTextInput(char c)
     {
-        // 입력 불가 시 -> 아무것도 안 하고 종료
-        if (!_canType) return;
+        // 입력 불가 시 or 게임 정지 중 -> 아무것도 안 하고 종료
+        if (!_canType || SubmarineInGameManager.instance.IsPausing) return;
 
         // 엔터 -> 제출
         if (c == '\n' || c == '\r')
@@ -289,7 +290,7 @@ public class RadarController : MonoBehaviour
             yield return new WaitForSeconds(1.5f);
 
             // 인풋 막았던 거 해제
-            SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Enable();
+            // SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions.Enable();
 
             // 텍스트 초기화
             _currentInput = "";
@@ -358,11 +359,28 @@ public class RadarController : MonoBehaviour
             }
         }
 
-        // 잠수함과 가까워지면 -> 폭발, 게임 종료
-        if (Vector3.Distance(_monsterPos, Vector3.zero) <= 5f)
+        // 거리에 따른 로직
+        float monsterDistance = Vector3.Distance(_monsterPos, Vector3.zero);
+        if (timer >= 1200f) // 20분이 되면(잠수함과의 거리가 거의 5f가 되는 시점) -> 폭발, 게임 종료
         {
             Debug.Log("폭발!!! " + timer);
+            AudioManager.Instance.PlayDeepSeaMonsterExplosionSound(); // 폭발 소리
             GameManager.instance.GameOver(EEndingType.SubmarineExplode);
+        }
+        else if (monsterDistance <= _radarMaxDistance / 2) // 잠수함과 어느 정도 가까워지면 -> 소리나기 시작(가까워질수록 커짐)
+        {
+            Debug.Log("가까워지기 시작: " + timer);
+            AudioManager.Instance.PlaySoundSafe(_monsterAudioSource, deepSeaMonsterCloseSound);
+            float v = Mathf.InverseLerp(_radarMaxDistance / 2, _deepMonsterVolumeMaxDistance, monsterDistance);
+            _monsterAudioSource.volume = v; // 0~1
+        }
+        else // 잠수함과 거리 먼 경우 -> 소리 안 남
+        {
+            if (_monsterAudioSource.isPlaying)
+            {
+                _monsterAudioSource.Stop();
+                _monsterAudioSource.volume = 0f;
+            }
         }
     }
 
@@ -847,6 +865,7 @@ public class RadarController : MonoBehaviour
     private void HitMonster()
     {
         SubmarineInGameManager.instance.DeepSeaMonsterController.OnTorpedoHit(); // 심해 괴물 어뢰 맞았을 때 함수 호출
+        SubmarineInGameManager.instance.IsFireSuccess = true;
         StartCoroutine(RunAwayMonster()); // 심해 괴물 도망
     }
 
