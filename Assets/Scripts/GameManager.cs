@@ -65,6 +65,7 @@ public class GameManager : MonoBehaviour
     public void GameClear()
     {
         Debug.Log("게임 클리어!");
+        SaveEnding(EEndingType.EscapeSuccess);
         SetCursorVisible(true); // 커서 보이기
         Time.timeScale = 0f; // 시간 정지
         _isClear = true;
@@ -93,7 +94,24 @@ public class GameManager : MonoBehaviour
     {
         // PlayerPrefs를 사용하여 저장 (Key: Ending_타입명, Value: 1(해금됨))
         string key = "Ending_" + ending.ToString();
-        PlayerPrefs.SetInt(key, 1);
+        string firstTimeKey = key + "_FirstTime";
+        string bestTimeKey = key + "_BestTime";
+        float currentTime = GameTime.Instance.TimeSinceStart;
+
+        if (PlayerPrefs.GetInt(key, 0) == 0) // 처음 해금하는 경우
+        {
+            PlayerPrefs.SetInt(key, 1);
+            PlayerPrefs.SetFloat(firstTimeKey, currentTime); // 최초 기록 저장
+            PlayerPrefs.SetFloat(bestTimeKey, currentTime);  // 최초 기록이 곧 베스트
+        }
+        else // 이미 해금된 경우 - 최단 기록 갱신 확인
+        {
+            float existingBest = PlayerPrefs.GetFloat(bestTimeKey, float.MaxValue);
+            if (currentTime < existingBest)
+            {
+                PlayerPrefs.SetFloat(bestTimeKey, currentTime);
+            }
+        }
         PlayerPrefs.Save(); // 디스크에 즉시 저장
         Debug.Log($"{ending} 엔딩이 수집되었습니다!");
     }

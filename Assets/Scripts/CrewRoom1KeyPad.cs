@@ -309,7 +309,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
             slot.EjectBattery();
         }
 
-        _playerStat.Damage(10);
+        _playerStat.Damage(10, EEndingType.KeypadExplosion);
 
         _playerInput.actions["RemoveScrew"].Enable();
         _playerInput.actions["ExitKeyPad"].Enable();
@@ -331,6 +331,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
     private void HandleSuccess()
     {
+        _currentSelectedBatterySlot.DeSelect();
         PlayOpeningDoorSound();
         _mainCamera.transform.DOMove(successViewPos, successDuration).SetEase(Ease.InOutCubic);
         _mainCamera.transform.DORotate(successViewRot, successDuration).SetEase(Ease.InOutCubic);
