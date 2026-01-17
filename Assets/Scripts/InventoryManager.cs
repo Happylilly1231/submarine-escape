@@ -243,7 +243,7 @@ public class InventoryManager : MonoBehaviour
     public void OnItemDrop(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (GameManager.instance.IsPausing) return;
+        if (SubmarineInGameManager.instance.IsPausing) return;
 
         InventorySlot targetSlot = null;
 

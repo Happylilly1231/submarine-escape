@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
@@ -13,6 +14,11 @@ using UnityEngine.UI;
 /// </summary>
 public class SubmarineInGameManager : MonoBehaviour
 {
+    // 정지
+    private bool _isPausing = false; // 정지 중 여부
+    public bool IsPausing { get => _isPausing; set => _isPausing = value; }
+    private bool _haveToShowCursor = false; // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
+
     // 경보
     [SerializeField] private Button alertButton; // 임시 - 경보 버튼
     private bool _isAlerting = false; // 경보 발생 중 여부
@@ -35,6 +41,8 @@ public class SubmarineInGameManager : MonoBehaviour
     // 플레이어
     public GameObject player;
     private GameObject playerGeo;
+    private PlayerInteractor _playerInteractor;
+    private PlayerInput _playerInput;
 
     // 내부 괴물
     public Transform innerMonsterTransform;
@@ -44,6 +52,10 @@ public class SubmarineInGameManager : MonoBehaviour
     // 심해 괴물
     [SerializeField] private DeepSeaMonsterController deepSeaMonsterController;
     public DeepSeaMonsterController DeepSeaMonsterController => deepSeaMonsterController;
+
+    // 어뢰 발사 성공 여부(현재는 1, 2, 3차 다 가능)
+    private bool _isFireSuccess = false;
+    public bool IsFireSuccess { get => _isFireSuccess; set => _isFireSuccess = value; }
 
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
@@ -83,6 +95,51 @@ public class SubmarineInGameManager : MonoBehaviour
 
         // 플레이어 Geo(외형) 가져오기
         playerGeo = player.transform.GetChild(0).gameObject; // Player의 첫번째 자식
+
+        // 플레이어 인터랙터 가져오기
+        _playerInteractor = FindObjectOfType<PlayerInteractor>();
+        _playerInput = FindObjectOfType<PlayerInput>();
+
+        InitGame();
+    }
+
+    /// <summary>
+    /// 게임 초기 설정
+    /// </summary>
+    private void InitGame()
+    {
+        _isPausing = false; // 정지 해제
+        GameManager.instance.SetCursorVisible(false);
+    }
+
+    /// <summary>
+    /// 게임 정지
+    /// </summary>
+    public void Pause()
+    {
+        Debug.Log("정지");
+        _isPausing = true; // 정지 중으로 설정
+        _playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
+        _playerInput.actions["Pause"].Enable();
+        GameManager.instance.SetCursorVisible(true); // 커서 보이기
+        Time.timeScale = 0f; // 시간 정지
+        AudioListener.pause = true; // 오디오 듣기 정지
+    }
+
+    /// <summary>
+    /// 게임 정지 해제
+    /// </summary>
+    public void Resume()
+    {
+        Debug.Log("재시작");
+        _isPausing = false; // 정지 중 아님으로 설정
+        if (!_haveToShowCursor) // 현재 커서가 보여야 하는 게 아니면(퍼즐 UI 등이 켜져 있는 게 아닐 때만)
+        {
+            _playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
+            GameManager.instance.SetCursorVisible(false); // 커서 숨기기
+        }
+        Time.timeScale = 1.0f; // 시간 정지 해제
+        AudioListener.pause = false; // 오디오 듣기 정지 해제
     }
 
     /// <summary>
@@ -145,21 +202,26 @@ public class SubmarineInGameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// UI에 포커스 여부 설정 - 커서, 카메라, 플레이어 이동 조작
+    /// UI에 포커스 여부 설정 - 플레이어 인터랙터의 퍼즐 푸는 중 여부, 플레이어 인풋 활성화 여부, 커서, 카메라, 플레이어 이동 조작
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
     public void SetFocusUI(bool isFocus)
     {
         if (isFocus)
         {
-            GameManager.instance.HaveToShowCursor = true; // 커서 보여야 함으로 설정
+            _playerInteractor.IsPuzzleActive = true;
+            _playerInteractor.ClearDetectionText();
+            _playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
+            _haveToShowCursor = true; // 커서 보여야 함으로 설정
             GameManager.instance.SetCursorVisible(true); // 커서 보이기
             Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가
             player.GetComponent<PlayerMove>().SetMoveable(false); // 플레이어 이동 불가능
         }
         else
         {
-            GameManager.instance.HaveToShowCursor = false; // 커서 보여야 함 아님으로 설정
+            _playerInteractor.IsPuzzleActive = false;
+            _playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
+            _haveToShowCursor = false; // 커서 보여야 함 아님으로 설정
             GameManager.instance.SetCursorVisible(false); // 커서 숨기기
             Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
             player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능

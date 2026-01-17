@@ -134,13 +134,13 @@ public class PlayerMove : MonoBehaviour
         // 정지 버튼(ESC) 눌렀을 때
         if (context.performed)
         {
-            if (GameManager.instance.IsPausing) // 정지 중이면
+            if (SubmarineInGameManager.instance.IsPausing) // 정지 중이면
             {
-                GameManager.instance.Resume(); // 정지 해제(플레이)
+                SubmarineInGameManager.instance.Resume(); // 정지 해제(플레이)
             }
             else // 플레이 중이면
             {
-                GameManager.instance.Pause(); // 정지
+                SubmarineInGameManager.instance.Pause(); // 정지
             }
         }
     }
@@ -171,7 +171,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 정지 중 -> 이동 불가
-        if (GameManager.instance.IsPausing) return;
+        if (SubmarineInGameManager.instance.IsPausing) return;
 
         // 움직임 허용 안됨 -> 이동 불가
         if (!_canMove) return;
@@ -535,11 +535,16 @@ public class PlayerMove : MonoBehaviour
     {
         _canMove = isMoveable;
 
+        // 이동 불가 경우
         if (!isMoveable)
         {
+            // 애니메이션 가만히 있는 걸로 초기화
             moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
             _animator.SetFloat("Speed", 0f);
             _animator.SetBool("isRunning", false);
+
+            // 소리 멈추기
+            _audioSource.Stop();
         }
     }
 }

@@ -14,12 +14,8 @@ public class RecordingDevice : MonoBehaviour, IInteractable
     private const string RECORDING_TEXT = "z좌표 -25 ~ -34에서 순회하고 있는 다른 잠수함 발견.\n비정상적인 패턴을 가진 점 발견. 순회하면서 접근 중이다. 통신 실패...\n근처 잠수함에 해당 타겟에 대한 정보를 요청... ... ...\n*(기록이 비정상적으로 종료되었습니다.)";
     private bool _isTypingCompleted = false; // 한 번이라도 타이핑이 완료되었는지 여부
 
-    private PlayerInteractor _playerInteractor;
-
     private void Start()
     {
-        _playerInteractor = FindObjectOfType<PlayerInteractor>();
-
         // 버튼 클릭 이벤트 함수 할당
         skipButton.onClick.AddListener(SkipTyping);
         exitButton.onClick.AddListener(ExitRecordingDevice);
@@ -40,8 +36,6 @@ public class RecordingDevice : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        _playerInteractor.IsPuzzleActive = true;
-        _playerInteractor.ClearDetectionText();
         SubmarineInGameManager.instance.SetFocusUI(true);
 
         recordingUI.SetActive(true);
@@ -98,7 +92,6 @@ public class RecordingDevice : MonoBehaviour, IInteractable
     /// </summary>
     public void ExitRecordingDevice()
     {
-        _playerInteractor.IsPuzzleActive = false;
         SubmarineInGameManager.instance.SetFocusUI(false);
 
         recordingUI.SetActive(false);

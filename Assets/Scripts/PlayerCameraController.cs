@@ -20,7 +20,7 @@ public class PlayerCameraController : MonoBehaviour
     /// </summary>
     void Update()
     {
-        if (!GameManager.instance.IsPausing) // 정지 중이 아닐 때
+        if (!SubmarineInGameManager.instance.IsPausing) // 정지 중이 아닐 때
         {
             _xRotation -= playerMove.MouseY; // 상하 회전값
             // _yRotation += playerMove.MouseX; // 좌우 회전값
@@ -34,7 +34,7 @@ public class PlayerCameraController : MonoBehaviour
     /// </summary>
     void LateUpdate()
     {
-        if (!GameManager.instance.IsPausing)
+        if (!SubmarineInGameManager.instance.IsPausing)
         {
             if (playerMove.IsDodging)
                 transform.position = playerHead.TransformPoint(cameraOffset);

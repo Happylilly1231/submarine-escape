@@ -11,17 +11,8 @@ using TMPro;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    // 정지
-    private bool _isPausing = false; // 정지 중 여부
-    public bool IsPausing { get => _isPausing; set => _isPausing = value; }
-
-    private bool _haveToShowCursor = false; // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
-    public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; }
-
     private bool _isClear = false;
     public bool IsClear => _isClear;
-
-
 
     // 싱글톤 변수
     public static GameManager instance;
@@ -40,29 +31,6 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
-
-    private void Start()
-    {
-        InitGame();
-    }
-
-    /// <summary>
-    /// 게임 초기 설정
-    /// </summary>
-    private void InitGame()
-    {
-        _isPausing = false; // 정지 해제
-        SetCursorVisible(false);
-    }
-
-    /// <summary>
-    /// 게임 시작
-    /// </summary>
-    public void StartGame()
-    {
-        InitGame(); // 게임 초기 설정
-        SceneManager.LoadScene("SubmarineScene");
     }
 
     /// <summary>
@@ -84,28 +52,11 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 게임 정지
+    /// 게임 시작
     /// </summary>
-    public void Pause()
+    public void StartGame()
     {
-        Debug.Log("정지");
-        _isPausing = true; // 정지 중으로 설정
-        SetCursorVisible(true); // 커서 보이기
-        Time.timeScale = 0f; // 시간 정지
-        AudioListener.pause = true;
-    }
-
-    /// <summary>
-    /// 게임 정지 해제
-    /// </summary>
-    public void Resume()
-    {
-        Debug.Log("재시작");
-        _isPausing = false; // 정지 중 아님으로 설정
-        if (!_haveToShowCursor) // 현재 커서가 보여야 하는 게 아니면
-            SetCursorVisible(false); // 커서 숨기기
-        Time.timeScale = 1.0f; // 시간 정지 해제
-        AudioListener.pause = false;
+        SceneManager.LoadScene("SubmarineScene");
     }
 
     /// <summary>
@@ -114,7 +65,8 @@ public class GameManager : MonoBehaviour
     public void GameClear()
     {
         Debug.Log("게임 클리어!");
-        Pause();
+        SetCursorVisible(true); // 커서 보이기
+        Time.timeScale = 0f; // 시간 정지
         _isClear = true;
         ShowEnding(); // 엔딩 보여주기
     }
@@ -127,7 +79,8 @@ public class GameManager : MonoBehaviour
         // 임시 - 후에 수정 예정
         Debug.Log($"게임 오버!: {type}");
         SaveEnding(type); // 엔딩 데이터 저장
-        Pause();
+        SetCursorVisible(true); // 커서 보이기
+        Time.timeScale = 0f; // 시간 정지
         _isClear = false;
         ShowEnding(); // 엔딩 보여주기
     }
@@ -150,9 +103,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void ShowEnding()
     {
-        _isPausing = false; // 정지 중 아님으로 설정
-        Cursor.visible = true; // 마우스 커서 보이게 함
-        Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
+        // Cursor.visible = true; // 마우스 커서 보이게 함
+        // Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
         Time.timeScale = 1.0f; // 시간 정지 해제
 
         SceneManager.LoadScene("EndingScene"); // 엔딩 씬으로 이동

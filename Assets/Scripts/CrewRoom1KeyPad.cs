@@ -343,6 +343,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         {
             DOVirtual.DelayedCall(1f, () => ForceExitKeyPad()).OnComplete(() =>
             {
+                DoorPivot.transform.GetChild(0).GetComponent<Door>().isLocked = false; // 문 잠금 해제
                 Destroy(this);
             });
         });
