@@ -20,6 +20,8 @@ public class EndingFrameData
     public Sprite lockedSprite;   // 잠겨있을 때 보일 이미지
     public Sprite unlockedSprite; // 해금되었을 때 보일 실제 엔딩 이미지
     public Button clickButton; // 확대 버튼
+    public EndingFrame endingFrame; // 엔딩
+    public string endingTitle; // 엔딩 제목
     [TextArea]
     public string endingDescription; // 엔딩 설명
     // 해당 엔딩을 클리어하는 데 걸린 시간
@@ -67,6 +69,7 @@ public class EndingGallery : MonoBehaviour
 
             frame.displayImage.sprite = isUnlocked ? frame.unlockedSprite : frame.lockedSprite;
             frame.clickButton.gameObject.SetActive(isUnlocked);
+            frame.endingFrame.SetTitle(frame.endingTitle);
         }
     }
 
