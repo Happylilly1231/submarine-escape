@@ -127,25 +127,6 @@ public class PlayerMove : MonoBehaviour
     }
 
     /// <summary>
-    /// Escape키 입력에 따라 정지/정지 해제
-    /// </summary>
-    public void OnPause(InputAction.CallbackContext context)
-    {
-        // 정지 버튼(ESC) 눌렀을 때
-        if (context.performed)
-        {
-            if (SubmarineInGameManager.instance.IsPausing) // 정지 중이면
-            {
-                SubmarineInGameManager.instance.Resume(); // 정지 해제(플레이)
-            }
-            else // 플레이 중이면
-            {
-                SubmarineInGameManager.instance.Pause(); // 정지
-            }
-        }
-    }
-
-    /// <summary>
     /// Left Control키가 입력되고 스태미나가 정상적으로 사용되면 회피 시작
     /// </summary>
     public void OnDodge(InputAction.CallbackContext context)

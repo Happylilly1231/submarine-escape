@@ -18,6 +18,9 @@ public class SubmarineInGameManager : MonoBehaviour
     private bool _isPausing = false; // 정지 중 여부
     public bool IsPausing { get => _isPausing; set => _isPausing = value; }
     private bool _haveToShowCursor = false; // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
+    public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; }
+    private bool _isMapOpened = false;
+    public bool IsMapOpened { get => _isMapOpened; set => _isMapOpened = value; }
 
     // 경보
     [SerializeField] private Button alertButton; // 임시 - 경보 버튼
@@ -97,11 +100,50 @@ public class SubmarineInGameManager : MonoBehaviour
         playerGeo = player.transform.GetChild(0).gameObject; // Player의 첫번째 자식
 
         // 플레이어 인터랙터 가져오기
-        _playerInteractor = FindObjectOfType<PlayerInteractor>();
-        _playerInput = FindObjectOfType<PlayerInput>();
+        _playerInteractor = player.GetComponent<PlayerInteractor>();
+        _playerInput = player.GetComponent<PlayerInput>();
 
         InitGame();
     }
+
+    /// <summary>
+    /// Escape키 입력에 따라 메뉴 열기/열기 해제
+    /// </summary>
+    public void OnToggleMenu(InputAction.CallbackContext context)
+    {
+        // 정지 버튼(ESC) 눌렀을 때
+        if (context.performed)
+        {
+            GameManager.instance.ToggleMenu();
+            if (_isPausing) // 정지 중이면
+            {
+                Resume(); // 정지 해제(플레이)
+            }
+            else // 플레이 중이면
+            {
+                Pause(); // 정지
+            }
+        }
+    }
+
+    // /// <summary>
+    // /// Escape키 입력에 따라 정지/정지 해제
+    // /// </summary>
+    // public void OnPause(InputAction.CallbackContext context)
+    // {
+    //     // 정지 버튼(ESC) 눌렀을 때
+    //     if (context.performed)
+    //     {
+    //         if (_isPausing) // 정지 중이면
+    //         {
+    //             Resume(); // 정지 해제(플레이)
+    //         }
+    //         else // 플레이 중이면
+    //         {
+    //             Pause(); // 정지
+    //         }
+    //     }
+    // }
 
     /// <summary>
     /// 게임 초기 설정
@@ -119,8 +161,8 @@ public class SubmarineInGameManager : MonoBehaviour
     {
         Debug.Log("정지");
         _isPausing = true; // 정지 중으로 설정
-        _playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
-        _playerInput.actions["Pause"].Enable();
+        _playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
+        _playerInput.actions["ToggleMenu"].Enable();
         GameManager.instance.SetCursorVisible(true); // 커서 보이기
         Time.timeScale = 0f; // 시간 정지
         AudioListener.pause = true; // 오디오 듣기 정지
@@ -131,13 +173,22 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void Resume()
     {
+        if (_isMapOpened)
+        {
+            Debug.Log("맵 켜져 있는 상태");
+            _playerInput.actions["ToggleMap"].Enable(); // 맵 켜고 끄는 버튼만 활성화
+            return;
+        }
+
         Debug.Log("재시작");
         _isPausing = false; // 정지 중 아님으로 설정
+
         if (!_haveToShowCursor) // 현재 커서가 보여야 하는 게 아니면(퍼즐 UI 등이 켜져 있는 게 아닐 때만)
         {
             _playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
             GameManager.instance.SetCursorVisible(false); // 커서 숨기기
         }
+        // _playerInput.actions["ToggleMap"].Enable(); // 맵 켜고 끄는 버튼은 활성화 필요(맵이 켜질 때는 커서가 보이는 상태라 다른 상호작용은 안되어도 끌 수는 있어야 하기 때문)
         Time.timeScale = 1.0f; // 시간 정지 해제
         AudioListener.pause = false; // 오디오 듣기 정지 해제
     }
@@ -212,6 +263,7 @@ public class SubmarineInGameManager : MonoBehaviour
             _playerInteractor.IsPuzzleActive = true;
             _playerInteractor.ClearDetectionText();
             _playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
+            _playerInput.actions["ToggleMenu"].Enable(); // 정지 버튼은 활성화 필요
             _haveToShowCursor = true; // 커서 보여야 함으로 설정
             GameManager.instance.SetCursorVisible(true); // 커서 보이기
             Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가

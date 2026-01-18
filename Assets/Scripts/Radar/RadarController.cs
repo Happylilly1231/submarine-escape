@@ -105,6 +105,10 @@ public class RadarController : MonoBehaviour
     // 사운드
     [Header("Sound")]
     [SerializeField] private AudioClip deepSeaMonsterCloseSound;
+    [SerializeField] private AudioClip radarOpenSound;
+    [SerializeField] private AudioClip radarCloseSound;
+    [SerializeField] private AudioClip modeChangeFailSound;
+    [SerializeField] private AudioClip modeChangeSuccessSound;
     private float _deepMonsterVolumeMaxDistance = 10f; // 최대 볼륨 되기 시작하는 거리
     [SerializeField] private AudioSource _monsterAudioSource;
 
@@ -196,6 +200,9 @@ public class RadarController : MonoBehaviour
             _clickedTarget = null;
             monsterPosText.gameObject.SetActive(false);
             submarine2PosText.gameObject.SetActive(false);
+
+            // 레이더 열리는 소리
+            AudioManager.Instance.PlaySFX(radarOpenSound);
         }
         else // 숨기기
         {
@@ -214,6 +221,9 @@ public class RadarController : MonoBehaviour
 
             // 로그 텍스트 초기화
             logText.text = "";
+
+            // 레이더 꺼지는 소리
+            AudioManager.Instance.PlaySFX(radarCloseSound);
         }
     }
 
@@ -286,6 +296,8 @@ public class RadarController : MonoBehaviour
             _canType = false;
             Keyboard.current.onTextInput -= OnTextInput; // 입력 이벤트 구독 해제
 
+            AudioManager.Instance.PlaySFX(modeChangeSuccessSound);
+
             // 1.5초 대기
             yield return new WaitForSeconds(1.5f);
 
@@ -300,6 +312,8 @@ public class RadarController : MonoBehaviour
         {
             // 실패 메시지 띄우기
             logText.text = "[INVALID CODE]";
+
+            AudioManager.Instance.PlaySFX(modeChangeFailSound);
 
             // 1.5초 대기(대기하는 동안 입력 불가)
             _canType = false;

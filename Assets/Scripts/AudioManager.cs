@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 /// <summary>
 /// 전역적인 오디오 재생과 공통으로 사용할 오디오 함수를 관리한다.
@@ -9,6 +10,7 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
+    [SerializeField] private AudioMixer audioMixer;
     [SerializeField] private AudioSource bgmSource;
     [SerializeField] private AudioSource sfxSource;
 
@@ -25,6 +27,28 @@ public class AudioManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    void Start()
+    {
+        SetMasterVolume(0.5f);
+        SetBGMVolume(0.5f);
+        SetSFXVolume(0.5f);
+    }
+
+    public void SetMasterVolume(float value)
+    {
+        audioMixer.SetFloat("Master", Mathf.Log10(value) * 20f);
+    }
+
+    public void SetBGMVolume(float value)
+    {
+        audioMixer.SetFloat("BGM", Mathf.Log10(value) * 20f);
+    }
+
+    public void SetSFXVolume(float value)
+    {
+        audioMixer.SetFloat("SFX", Mathf.Log10(value) * 20f);
     }
 
     public void PlayBGM(AudioClip clip, bool loop = true)

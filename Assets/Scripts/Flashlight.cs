@@ -13,7 +13,7 @@ public class Flashlight : MonoBehaviour
 
     void Awake()
     {
-        _playerInput = FindFirstObjectByType<PlayerInput>();
+        _playerInput = SubmarineInGameManager.instance.player.GetComponent<PlayerInput>();
         _crewRoom1KeyPad = FindObjectOfType<CrewRoom1KeyPad>();
         _crewRoom1KeyPadPanel = FindObjectOfType<CrewRoom1KeyPadPanel>();
 

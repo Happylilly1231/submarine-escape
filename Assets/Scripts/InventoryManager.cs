@@ -227,7 +227,16 @@ public class InventoryManager : MonoBehaviour
         if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
         if ((_crewRoom1KeyPad != null && _crewRoom1KeyPad.IsFocused) || (_crewRoom1KeyPadPanel != null && _crewRoom1KeyPadPanel.IsFocused))
         {
+
             if (selectedSlot.Item.ItemName == "Flashlight") return;
+        }
+
+        if (selectedSlot.Item.ItemName == "Map")
+        {
+            FindAnyObjectByType<MapViewController>().UnlockMap(); // 맵 잠금 해제
+            ConsumeItemInSlot(selectedSlot.Item);
+            Debug.Log("이제 지도를 Tab키로 열고 닫을 수 있습니다.");
+            return;
         }
 
         _heldItemSlotIndex = _selectedSlotIndex;
