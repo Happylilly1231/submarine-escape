@@ -43,9 +43,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Pause",
+                    "name": "ToggleMenu",
                     "type": "Button",
-                    "id": "e0253f67-5074-4012-8620-7170f5b751e0",
+                    "id": "7e50d403-0439-457f-96ca-be2ff8fbab39",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -185,6 +185,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "ToggleMap",
+                    "type": "Button",
+                    "id": "f400d86e-ab55-49d3-ae4f-284a89720e98",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -273,17 +282,6 @@
                     "processors": "",
                     "groups": ";PC",
                     "action": "Jump",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "99347ad5-7dbf-4d1a-b4ea-87b4da6968af",
-                    "path": "<Keyboard>/escape",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -504,6 +502,28 @@
                     "processors": "",
                     "groups": ";PC",
                     "action": "PowerPuzzle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4d57c234-129d-4ea3-9cd8-07fc1264eaf7",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ToggleMap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5d62a8bc-5f3f-4fcd-be16-9bd87ef91a44",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

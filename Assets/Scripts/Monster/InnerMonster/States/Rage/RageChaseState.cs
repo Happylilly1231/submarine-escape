@@ -107,7 +107,7 @@ namespace InnerMonsterStates
                     closestDestroyPos = door.frontPos;
                     float dist1 = Vector3.Distance(owner.transform.position, door.frontPos);
                     float dist2 = Vector3.Distance(owner.transform.position, door.backPos);
-                    if (dist2 < dist1)
+                    if (dist2 < 5f && dist2 < dist1)
                     {
                         closestDestroyPos = door.backPos;
                     }

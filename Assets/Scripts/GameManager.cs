@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 게임 전반의 플레이와 관련된 변수, 함수 관리
@@ -16,6 +17,8 @@ public class GameManager : MonoBehaviour
 
     // 싱글톤 변수
     public static GameManager instance;
+
+    [SerializeField] private GameObject menuUI;
 
     /// <summary>
     /// 싱글톤 구현
@@ -48,6 +51,28 @@ public class GameManager : MonoBehaviour
         {
             Cursor.visible = false; // 마우스 커서 숨김
             Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+        }
+    }
+
+    public void ToggleMenu()
+    {
+        menuUI.SetActive(!menuUI.activeSelf);
+    }
+
+    public void ExitMenu()
+    {
+        menuUI.SetActive(false);
+        // 인게임 매니저가 존재한다면(플레이 중)
+        if (SubmarineInGameManager.instance != null)
+        {
+            if (SubmarineInGameManager.instance.IsPausing) // 정지 중이면
+            {
+                SubmarineInGameManager.instance.Resume(); // 정지 해제(플레이)
+            }
+            else // 플레이 중이면
+            {
+                SubmarineInGameManager.instance.Pause(); // 정지
+            }
         }
     }
 
