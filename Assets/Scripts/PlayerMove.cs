@@ -217,7 +217,7 @@ public class PlayerMove : MonoBehaviour
             // 높은 곳에서 착지 시(점프 중 아닐 때) -> 고정 낙하 대미지
             if (_ySpeed < fallDamageSpeed)
             {
-                _playerStat.Damage(5f);
+                _playerStat.Damage(5f, EEndingType.FallingDeath);
             }
 
             // 점프 착지(점프가 끝나서 바닥에 닿은 거면) -> 점프 중 아님으로 설정

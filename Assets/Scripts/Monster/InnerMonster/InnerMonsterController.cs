@@ -493,7 +493,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public void RageAttack()
     {
         Debug.Log("폭주 공격!");
-        _playerStat.Die(); // 즉사
+        _playerStat.Die(EEndingType.MonsterDeath); // 즉사
     }
     #endregion
 

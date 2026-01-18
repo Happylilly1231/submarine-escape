@@ -64,15 +64,15 @@ public class PlayerStat : MonoBehaviour
     /// 피해: value만큼 체력 감소
     /// <para> - 체력 0 이하 시 사망 </para> 
     /// </summary>
-    public void Damage(float value)
+    public void Damage(float value, EEndingType cause = EEndingType.MonsterDeath)
     {
         AudioManager.Instance.PlaySFX(damageSound);
         _hp -= value;
-        Debug.Log("Damage: -" + value);
+        Debug.Log($"Damage: -{value} | Cause: {cause}");
         if (_hp <= 0)
         {
             _hp = 0;
-            Die();
+            Die(cause); // 사망 원인을 넘겨줌
         }
         UpdateHpSlider();
         StartCoroutine(DamageEffect());
@@ -89,10 +89,10 @@ public class PlayerStat : MonoBehaviour
         hpText.color = originalColor;
     }
 
-    public void Die()
+    public void Die(EEndingType cause)
     {
-        Debug.Log("플레이어 사망");
-        GameManager.instance.GameOver(EEndingType.MonsterDeath);
+        Debug.Log($"플레이어 사망 원인: {cause}");
+        GameManager.instance.GameOver(cause);
     }
 
     /// <summary>
