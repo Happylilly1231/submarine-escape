@@ -81,6 +81,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartGame()
     {
+        if (menuUI.activeSelf)
+        {
+            menuUI.SetActive(false);
+        }
         SceneManager.LoadScene("SubmarineScene");
     }
 
@@ -150,6 +154,10 @@ public class GameManager : MonoBehaviour
         // Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
         Time.timeScale = 1.0f; // 시간 정지 해제
 
+        if (menuUI.activeSelf)
+        {
+            menuUI.SetActive(false);
+        }
         SceneManager.LoadScene("EndingScene"); // 엔딩 씬으로 이동
     }
 
@@ -158,11 +166,19 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void ReturnToTitle()
     {
+        if (menuUI.activeSelf)
+        {
+            menuUI.SetActive(false);
+        }
         SceneManager.LoadScene("TitleScene"); // 추후 씬 이름 수정 예정
     }
 
     public void EndingGallery()
     {
+        if (menuUI.activeSelf)
+        {
+            menuUI.SetActive(false);
+        }
         SceneManager.LoadScene("EndingFrameScene");
     }
 

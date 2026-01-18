@@ -150,8 +150,7 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     private void InitGame()
     {
-        _isPausing = false; // 정지 해제
-        GameManager.instance.SetCursorVisible(false);
+        Resume();
     }
 
     /// <summary>
@@ -278,6 +277,5 @@ public class SubmarineInGameManager : MonoBehaviour
             Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
             player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능
         }
-
     }
 }

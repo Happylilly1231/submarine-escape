@@ -104,12 +104,10 @@ public class PlayerMove : MonoBehaviour
         if (context.performed)
         {
             _isRunning = true;
-            moveSpeed = _runSpeed * _playerStatus.SpeedScale;
         }
         else if (context.canceled)
         {
             _isRunning = false;
-            moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
         }
     }
 
@@ -156,6 +154,11 @@ public class PlayerMove : MonoBehaviour
 
         // 움직임 허용 안됨 -> 이동 불가
         if (!_canMove) return;
+
+        if (_isRunning)
+            moveSpeed = _runSpeed * _playerStatus.SpeedScale;
+        else
+            moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
 
         // 플레이어 상태가 스턴일 때 -> 오직 중력만 계산
         if (_playerStatus.IsStunned)

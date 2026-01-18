@@ -38,7 +38,7 @@ public class RecordingDevice : MonoBehaviour, IInteractable
 
     public string GetInteractText()
     {
-        return "Play Recording[E]";
+        return "Play Recording [E]";
     }
 
     public void Interact()
