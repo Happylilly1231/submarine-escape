@@ -122,8 +122,8 @@ public class PowerGridManager : MonoBehaviour
                 {
                     _completedColors.Add(_activeColor);
                     Debug.Log($"<color=cyan>{_activeColor} 전선 연결 완성!</color>");
-
-                    if (_completedColors.Count == 6)
+                    Debug.Log(_completedColors.Count);
+                    if (_completedColors.Count == 4)
                     {
                         _electricalBox.ForceExitMode(true);
                     }
