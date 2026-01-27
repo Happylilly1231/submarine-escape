@@ -55,9 +55,9 @@ public class MapViewController : MonoBehaviour
         {
             // 현재 플레이어 위치에 따라 자동으로 보여줄 층수 설정됨
             if (SubmarineInGameManager.instance.player.transform.position.y < secondFloorHeight)
-                _currentFloor = 1;
+                SetFloor(1);
             else
-                _currentFloor = 2;
+                SetFloor(2);
 
             SubmarineInGameManager.instance.IsMapOpened = true;
             SubmarineInGameManager.instance.Pause();

@@ -8,6 +8,14 @@ public class MenuUIController : MonoBehaviour
 {
     [SerializeField] private GameObject tabButtonRoot;
     [SerializeField] private GameObject tabPanelRoot;
+    [SerializeField] private Slider masterVolumeSlider;
+    [SerializeField] private Slider bgmSlider;
+    [SerializeField] private Slider sfxSlider;
+    [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private Button returnToTitleButton;
+    [SerializeField] private Button quitButton;
+    [SerializeField] private Button exitButton;
+
     private int _currentIndex = -1;
     private GameObject[] tabButtons;
     private GameObject[] tabPanels;
@@ -40,9 +48,24 @@ public class MenuUIController : MonoBehaviour
         }
     }
 
-    private void OnEnable()
+    private void Start()
     {
-        OpenTab(0);
+        // 슬라이더 수치 변경 이벤트 함수 연결
+        masterVolumeSlider.onValueChanged.AddListener(AudioManager.Instance.SetMasterVolume);
+        bgmSlider.onValueChanged.AddListener(AudioManager.Instance.SetBGMVolume);
+        sfxSlider.onValueChanged.AddListener(AudioManager.Instance.SetSFXVolume);
+        mouseSensitivitySlider.onValueChanged.AddListener(GameManager.instance.SetMouseSensitivity);
+
+        // 슬라이더 수치대로 설정 초기화
+        AudioManager.Instance.SetMasterVolume(masterVolumeSlider.value);
+        AudioManager.Instance.SetBGMVolume(bgmSlider.value);
+        AudioManager.Instance.SetSFXVolume(sfxSlider.value);
+        GameManager.instance.SetMouseSensitivity(mouseSensitivitySlider.value);
+
+        // 버튼 함수 연결
+        returnToTitleButton.onClick.AddListener(GameManager.instance.ReturnToTitle);
+        quitButton.onClick.AddListener(GameManager.instance.QuitGame);
+        exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
     }
 
     public void OpenTab(int index)

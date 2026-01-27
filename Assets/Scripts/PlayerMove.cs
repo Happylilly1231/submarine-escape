@@ -26,7 +26,6 @@ public class PlayerMove : MonoBehaviour
     public float MouseX => _mouseX;
     private float _mouseY; // 마우스 y좌표
     public float MouseY => _mouseY;
-    [SerializeField] float mouseSensitivity = 1f; // 마우스 감도
 
     private bool _isRunning = false;
 
@@ -173,7 +172,7 @@ public class PlayerMove : MonoBehaviour
         }
 
         // 상하 회전 값 업데이트
-        _mouseY = _lookInput.y * mouseSensitivity;
+        _mouseY = _lookInput.y * GameManager.instance.MouseSensitivity;
 
         // 사다리에서 목표 위치로 안전 이동 중이면 -> 움직일 수 X
         if (_isMovingToTargetSafe)
@@ -204,7 +203,7 @@ public class PlayerMove : MonoBehaviour
     private void Rotate()
     {
         // 마우스 입력
-        _mouseX = _lookInput.x * mouseSensitivity;
+        _mouseX = _lookInput.x * GameManager.instance.MouseSensitivity;
 
         // 플레이어 좌우 회전
         transform.Rotate(Vector3.up * MouseX);
@@ -227,7 +226,6 @@ public class PlayerMove : MonoBehaviour
             if (_isJumping && _ySpeed <= 0f) // 점프 시작 시 바로 바닥에서 떨어지지 않을 수 있기 때문에 ySpeed가 0 이하인지도 함께 검사
             {
                 AudioManager.Instance.PlaySFX(jumpLandingSound);
-                Debug.Log("!!!!!!");
                 _isJumping = false;
             }
 

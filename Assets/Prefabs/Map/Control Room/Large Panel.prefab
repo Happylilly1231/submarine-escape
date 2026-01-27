@@ -84,6 +84,91 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8726446640757830535}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1895428589697054002
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2550775784193888837}
+  m_Layer: 0
+  m_Name: Monster Destroy Pos
+  m_TagString: Untagged
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2550775784193888837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1895428589697054002}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.17, y: -0.9, z: -1.25}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 386547680053507026}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2051465860802900778
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 386547680053507026}
+  - component: {fileID: 8672666972079245995}
+  m_Layer: 10
+  m_Name: Oxygen Control Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &386547680053507026
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051465860802900778}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.953717, z: 0, w: 0.30070582}
+  m_LocalPosition: {x: 7.114, y: 1.0539999, z: 2.878}
+  m_LocalScale: {x: 1.1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2550775784193888837}
+  m_Father: {fileID: 2529573594186587871}
+  m_LocalEulerAnglesHint: {x: 0, y: 145, z: 0}
+--- !u!65 &8672666972079245995
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051465860802900778}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.51512337, y: 0.8622489, z: 0.9230013}
+  m_Center: {x: -0.0045313835, y: -0.06887555, z: 0.038499355}
 --- !u!1 &3521113594436263569
 GameObject:
   m_ObjectHideFlags: 0
@@ -148,7 +233,7 @@ GameObject:
   - component: {fileID: 8726446640757830535}
   - component: {fileID: 4611845595729909455}
   - component: {fileID: 5899351360226307129}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Radar Control Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -165,7 +250,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
   m_LocalPosition: {x: 2.3766668, y: 1.0539999, z: 1.0369997}
-  m_LocalScale: {x: 1.1111112, y: 1, z: 1}
+  m_LocalScale: {x: 1.1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4163267086224483902}
@@ -206,7 +291,92 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _radarController: {fileID: 0}
   radarViewPoint: {fileID: 0}
-  toolKitItem: {fileID: 0}
+  toolKitItem: {fileID: 11400000, guid: 7cb1e76071f43af4b945bbca66d83fd5, type: 2}
+--- !u!1 &7135589248774044719
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1129781585340337594}
+  - component: {fileID: 7280602079811787022}
+  m_Layer: 10
+  m_Name: Torpedo Control Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1129781585340337594
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7135589248774044719}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.953717, z: 0, w: 0.30070582}
+  m_LocalPosition: {x: 5.853, y: 1.0539999, z: 2.017}
+  m_LocalScale: {x: 1.2, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7634784233120110905}
+  m_Father: {fileID: 2529573594186587871}
+  m_LocalEulerAnglesHint: {x: 0, y: 145, z: 0}
+--- !u!65 &7280602079811787022
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7135589248774044719}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.51512337, y: 0.8622489, z: 0.9230013}
+  m_Center: {x: -0.0045313835, y: -0.06887555, z: 0.038499355}
+--- !u!1 &9113222318390174466
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7634784233120110905}
+  m_Layer: 0
+  m_Name: Monster Destroy Pos
+  m_TagString: Untagged
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7634784233120110905
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9113222318390174466}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.17, y: -0.9, z: -1.25}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1129781585340337594}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2634712114195757364
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -282,6 +452,14 @@ PrefabInstance:
         type: 3}
       insertIndex: 0
       addedObject: {fileID: 8726446640757830535}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 263478f2002807f4ab84494c1830cd71,
+        type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1129781585340337594}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 263478f2002807f4ab84494c1830cd71,
+        type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 386547680053507026}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 263478f2002807f4ab84494c1830cd71,
         type: 3}
       insertIndex: -1

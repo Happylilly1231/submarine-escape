@@ -16,16 +16,17 @@ namespace InnerMonsterStates
     {
         private float _rageSpeed = 10f; // 폭주 속도
         private List<Door> _doorsOnPathList = new List<Door>(); // 경로 상의 문 리스트(해당 문만 파괴하도록 해야 하므로 필요)
-        private float _detectDestroyObjDistance = 1f; // 파괴 오브젝트 감지 거리
+        private float _detectDestroyObjDistance = 1.5f; // 파괴 오브젝트 감지 거리
         private bool _isChasingEscapeRoom; // 탈출실이 목적지인지 여부
         private bool _reachedEscapeRoom = false; // 탈출실에 도착했는지 여부
+        // private Vector3 _currentAlertPos; // 현재 경보 발생 위치
 
         public void Enter(InnerMonsterController owner)
         {
             owner.CanMove(true); // 이동
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
-            owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentAlertPos.position); // 경보 발생지를 향해 이동
-            owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
+            owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentTargetPos.position); // 현재 목표 위치를 향해 이동
+            owner.ColliderCenterChange(true, 0.3f); // 컨트롤러 중심 변경
 
             // 경로 상의 문 리스트 얻기
             owner.StartCoroutine(GetDoorsOnPathList(owner));
@@ -71,6 +72,20 @@ namespace InnerMonsterStates
                     }
                 }
             }
+            else // 장비 파괴해야 되는 경우
+            {
+                // 현재 목표 위치(파괴해야 할 장비 파괴 위치)에 도착하면 -> 폭주 파괴 상태로 전환
+                if (Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentTargetPos.position) < 0.1f)
+                {
+                    // 현재 파괴해야 할 오브젝트로 설정
+                    owner.currentDestroyObj = SubmarineInGameManager.instance.CurrentDestroyEquipment;
+                    owner.currentDestroyPos = owner.currentDestroyObj.transform.position;
+                    owner.Nav.Warp(SubmarineInGameManager.instance.CurrentTargetPos.position); // 현재 목표 위치로 순간 이동
+                    owner.currentDestroyObjType = EDestroyObjType.CurrentDestroyEquipment; // 현재 파괴해야 할 오브젝트 타입 -> 현재 파괴해야 할 장비로 설정
+                    owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환
+                    return;
+                }
+            }
 
             // 폭주 공격 상태로 전환
             if (owner.CanAttack() && owner.DistToPlayer < owner.RageAttackDistance)
@@ -79,28 +94,18 @@ namespace InnerMonsterStates
                 return;
             }
 
-            // 레이로 파괴할 것에 닿았는지 검사
+            // 레이로 문 감지 후 파괴
             Vector3 eyePos = owner.transform.position + Vector3.up; // 눈높이 위치
-            Debug.DrawRay(eyePos, owner.transform.forward * _detectDestroyObjDistance, Color.red);
-            if (Physics.Raycast(eyePos, owner.transform.forward, out RaycastHit hit, _detectDestroyObjDistance))
+            Debug.DrawRay(eyePos, owner.transform.forward * _detectDestroyObjDistance, Color.cyan);
+            if (Physics.Raycast(eyePos, owner.transform.forward, out RaycastHit hit, _detectDestroyObjDistance, owner.doorLayer))
             {
-                // 현재 파괴해야 할 장비에 닿으면 -> 폭주 파괴 상태로 전환
-                if (hit.collider.gameObject == SubmarineInGameManager.instance.CurrentDestroyEquipment)
-                {
-                    // 현재 파괴해야 할 오브젝트로 설정
-                    owner.currentDestroyObj = hit.collider.gameObject;
-                    owner.Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyEquipment.transform.GetChild(0).transform.position); // 정확한 파괴 위치로 순간 이동
-                    owner.currentDestroyObjType = EDestroyObjType.CurrentDestroyEquipment; // 현재 파괴해야 할 오브젝트 타입 -> 현재 파괴해야 할 장비로 설정
-                    owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환
-                    return;
-                }
-
                 // 경로 상의 문에 닿으면 -> 폭주 파괴 상태로 전환
                 Door door = hit.collider.GetComponent<Door>();
                 if (door != null && _doorsOnPathList.Contains(door)) // 경로 상의 문 리스트에 존재하면
                 {
                     // 현재 파괴해야 할 오브젝트로 설정
                     owner.currentDestroyObj = hit.collider.gameObject;
+                    owner.currentDestroyPos = door.centerPos;
 
                     // 가까운 정확한 파괴 위치로 순간 이동
                     Vector3 closestDestroyPos;

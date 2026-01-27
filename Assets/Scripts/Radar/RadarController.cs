@@ -47,6 +47,9 @@ public class RadarController : MonoBehaviour
     [SerializeField] private GameObject redBackground; // 빨간 배경(수동 전환 전 조작 막기 용도)
     [SerializeField] private MeshRenderer monitorScreenRenderer; // 레이더 모니터 오브젝트 렌더러
 
+    private bool _isUpdateStart = false;
+    public bool IsUpdateStart { get => _isUpdateStart; set => _isUpdateStart = value; }
+
     // 수동 전환
     private bool _canType = true; // 코드 입력 가능 여부
     private const string CHANGE_MODE_HELP_TEXT = "[ERROR]: 어뢰의 자동 추적 발사가 불가능합니다.\n수동 전환 코드를 입력하세요.\n"; // 모드 변경 안내 메시지
@@ -63,6 +66,7 @@ public class RadarController : MonoBehaviour
     public float RadarRadius => _radarRadius;
     private float _radarMaxDistance = 100f; // 실제 최대 거리
     public float RadarMaxDistance => _radarMaxDistance;
+
     private float _radarMaxHeight = 50f;  // 실제 최대 높이(Z 최대 표현값)
     private float _maxR = 12f; // 최대 R 수치(정규화할 때 필요)
     private float _maxZ = 4f; // 최대 Z 수치(정규화할 때 필요)
@@ -91,7 +95,8 @@ public class RadarController : MonoBehaviour
     private Image _monsterDotImg; // 심해 괴물 점 이미지
     private Vector3 _monsterPos; // 심해 괴물 위치
     private bool _isUpdatingMonsterPos = true; // 심해 괴물 위치 갱신 중인지 여부
-    private float _monsterPeriod = 1200f / 0.7712f; // 심해 괴물이 다가오기까지 걸리는 시간: 20분 (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 20분으로 맞추기 위해 0.7712f로 20분을 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
+    private int _currentMonsterPeriodIndex = 0; // 심해 괴물 주기 인덱스(몇번째 출현인가)
+    private float[] _monsterPeriods = { 600f / 0.7712f, 1020f / 0.7712f, 1020f / 0.7712f, 1020f / 0.7712f }; // 심해 괴물이 다가오기까지 걸리는 시간: 10분, 17분, 17분 (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 원하는 시간으로 맞추기 위해 0.7712f로 원하는 시간으로 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
     private float startAngle = 90f; // 시작 각도(심해 괴물의 시작 위치 변경 시 사용)
     private float _monsterWaitTime = 300f; // 심해 괴물 재등장 대기 시간: 5분
@@ -100,6 +105,7 @@ public class RadarController : MonoBehaviour
     private Image _subamrine2DotImg; // 다른 잠수함 점 이미지
     private Vector3 _submarine2Pos; // 다른 잠수함 위치 갱신 중인지 여부
     private bool _isUpdatingSubmarine2Pos = true; // 다른 잠수함 점 보여주는 중인지 여부
+
     private float _submarine2Period = 540f / 0.7712f; // 다른 잠수함 한 바퀴 주기: 9분 (괴물과 주기를 맞추기 위해 0.7712f로 똑같이 나누어줌)
 
     // 사운드
@@ -138,11 +144,16 @@ public class RadarController : MonoBehaviour
         // 초기 상태: 수동 전환 필요 상태
         logText.color = Color.red;
         redBackground.SetActive(true);
+
+        // 초기 위치로 이동
+        UpdateMonsterPos(0f);
+        UpdateSubmarine2Pos(0f);
     }
 
     private void Update()
     {
-        if (SubmarineInGameManager.instance.IsPausing)
+        // 정지 중이거나 아직 업데이트 시작 안됐을 때(전력 복구 X) -> 아무것도 안 함
+        if (SubmarineInGameManager.instance.IsPausing || !_isUpdateStart)
             return;
 
         // 심해 괴물 위치 갱신 중 -> 심해 괴물 타이머 계산 (보여지는 중 아닐 때는 사라졌을 때이므로 계산 X)
@@ -151,7 +162,7 @@ public class RadarController : MonoBehaviour
 
         // 각각 위치가 갱신 중일 때만 심해 괴물과 다른 잠수함 위치 갱신
         if (_isUpdatingMonsterPos) UpdateMonsterPos(_monsterTimer);
-        if (_isUpdatingSubmarine2Pos) UpdateSubmarinePos(GameTime.Instance.TimeSinceStart);
+        if (_isUpdatingSubmarine2Pos) UpdateSubmarine2Pos(GameTime.Instance.TimeSinceStart);
     }
 
     private void LateUpdate()
@@ -335,7 +346,7 @@ public class RadarController : MonoBehaviour
     private void UpdateMonsterPos(float timer)
     {
         // 시간, 필요 수식
-        float t = (timer % _monsterPeriod) / _monsterPeriod * 10f; // t가 0 ~ 10이므로 그에 맞춤
+        float t = (timer % _monsterPeriods[_currentMonsterPeriodIndex]) / _monsterPeriods[_currentMonsterPeriodIndex] * 10f; // t가 0 ~ 10이므로 그에 맞춤
         float R = 10f - t + 2f * Mathf.Sin(3f * t);
         float Z = 2f * Mathf.Sin(4f * t) * (1f - t / 10f);
         float angle = startAngle + 5f * t;
@@ -402,7 +413,7 @@ public class RadarController : MonoBehaviour
     /// 다른 잠수함 위치 갱신
     /// </summary>
     /// <param name="timer">타이머</param>
-    private void UpdateSubmarinePos(float timer)
+    private void UpdateSubmarine2Pos(float timer)
     {
         // 시간, 필요 수식
         float t = (timer % _submarine2Period) / _submarine2Period * 10f; // t가 0 ~ 10이므로 그에 맞춤
@@ -478,15 +489,18 @@ public class RadarController : MonoBehaviour
     /// </summary>
     private void SetFireButtonInteractable()
     {
-        if (_isDistanceSelected && _isHeightSelected)
+        // 거리나 높이가 하나라도 선택되지 않았을 때 or 어뢰 3번 발사한 이후 or 현재 발사 중 or 현재 경보 발생 중일 때 -> 비활성화
+        if (!_isDistanceSelected || !_isHeightSelected || _currentTorpedoIndex >= 3 || _isFiring || SubmarineInGameManager.instance.IsAlerting)
         {
-            fireButton.interactable = true;
-            fireButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>().color = new Color(255f / 255f, 146f / 255f, 0f);
-        }
-        else
-        {
+            // 비활성화
             fireButton.interactable = false;
             fireButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>().color = new Color(155f / 255f, 155f / 255f, 155f / 255f);
+        }
+        else // 위 경우가 아닌 경우에만 활성화
+        {
+            // 활성화
+            fireButton.interactable = true;
+            fireButton.transform.GetChild(0).GetComponent<TextMeshProUGUI>().color = new Color(255f / 255f, 146f / 255f, 0f);
         }
     }
 
@@ -704,6 +718,7 @@ public class RadarController : MonoBehaviour
 
         // 실제 어뢰 발사
         StartCoroutine(FireRealTorpedo());
+        SetFireButtonInteractable(); // 발사 버튼 활성화 여부 설정
 
         // 경보 발생
         SubmarineInGameManager.instance.AlertOn();
@@ -908,6 +923,7 @@ public class RadarController : MonoBehaviour
         yield return new WaitForSeconds(_monsterWaitTime); // 심해 괴물 다시 나타날 때까지 대기 시간만큼 대기
 
         // 재등장
+        _currentMonsterPeriodIndex++;
         _isUpdatingMonsterPos = true; // 심해 괴물 위치 갱신 중으로 설정
         startAngle += 90f; // 시작 위치 변경을 위해 시작 각도 90 더해주기
         StartCoroutine(FadeInOut(true, monsterDot, _fadeDuration)); // 심해 괴물 페이드 인되면서 나타남

@@ -5,8 +5,14 @@ using DG.Tweening;
 
 public class Door : MonoBehaviour, IInteractable
 {
+    [SerializeField] private Transform frontTransform; // 문 앞 트랜스폼
+    [SerializeField] private Transform backTransform; // 문 뒤 트랜스폼
+    [SerializeField] private Transform centerTransform; // 중앙 트랜스폼
+
     public Vector3 frontPos; // 문 앞 위치
     public Vector3 backPos; // 문 뒤 위치
+    public Vector3 centerPos; // 중앙 위치
+
     public bool isOpened = false; // 열려있는지 변수
     private Transform _doorAxis;
     //private float _openAngle = -90f; // 목표 회전각
@@ -19,8 +25,9 @@ public class Door : MonoBehaviour, IInteractable
 
     void Start()
     {
-        frontPos = transform.GetChild(0).position;
-        backPos = transform.GetChild(1).position;
+        frontPos = frontTransform.position;
+        backPos = backTransform.position;
+        centerPos = centerTransform.position;
         _doorAxis = transform.parent; // 문 회전 축
     }
 

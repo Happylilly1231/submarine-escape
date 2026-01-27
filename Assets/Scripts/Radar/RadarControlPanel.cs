@@ -47,10 +47,8 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         if (!_isBroken) // 고장 나지 않았을 때 -> 레이더 보기
             return "View Radar [E]";
 
-        // 고장났을 때(폭주 파괴로 인해) -> 현재는 고장 메시지만 띄움
-        return "Broken";
-        // // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
-        // return IsToolKitSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
+        // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
+        return IsToolKitSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
     }
 
     /// <summary>
@@ -65,10 +63,10 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         {
             ViewRadar();
         }
-        // else if (_isBroken && IsToolKitSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
-        // {
-        //     StartCoroutine(Repair());
-        // }
+        else if (_isBroken && IsToolKitSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
+        {
+            StartCoroutine(Repair());
+        }
         // 이외는 상호작용 X
     }
 
@@ -102,6 +100,8 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     /// </summary>
     private void SetPower(bool isPowerOn)
     {
+        if (isPowerOn && !_radarController.IsUpdateStart)
+            _radarController.IsUpdateStart = true;
         _isPowerOn = isPowerOn;
     }
 
@@ -139,14 +139,18 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         float repairTime = 3f;
         float timer = repairTime;
 
+        SubmarineInGameManager.instance.SetFocusUI(true);
         while (timer > 0)
         {
-            Debug.Log($"수리 중...({timer:F0}초)");
+            MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
             timer -= Time.deltaTime;
             yield return null;
         }
+        MessageUIController.Instance.ShowMessage("수리 완료");
+        yield return new WaitForSeconds(1f);
+        MessageUIController.Instance.HideMessage();
 
-        Debug.Log("수리 완료!");
+        SubmarineInGameManager.instance.SetFocusUI(false);
         _isBroken = false;
     }
 }

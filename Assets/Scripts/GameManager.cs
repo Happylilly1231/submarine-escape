@@ -2,23 +2,23 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using TMPro;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// 게임 전반의 플레이와 관련된 변수, 함수 관리
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    private bool _isClear = false;
+    [SerializeField] private GameObject menuUI;
+
+    private bool _isClear = false; // 클리어 여부 변수
     public bool IsClear => _isClear;
+
+    private float _mouseSensitivity; // 마우스 감도
+    public float MouseSensitivity => _mouseSensitivity;
 
     // 싱글톤 변수
     public static GameManager instance;
-
-    [SerializeField] private GameObject menuUI;
 
     /// <summary>
     /// 싱글톤 구현
@@ -34,6 +34,14 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    /// <summary>
+    /// 마우스 감도 설정
+    /// </summary>
+    public void SetMouseSensitivity(float value)
+    {
+        _mouseSensitivity = value;
     }
 
     /// <summary>
@@ -57,6 +65,10 @@ public class GameManager : MonoBehaviour
     public void ToggleMenu()
     {
         menuUI.SetActive(!menuUI.activeSelf);
+        if (menuUI.activeSelf)
+        {
+            MenuUIController.instance.OpenTab(0);
+        }
     }
 
     public void ExitMenu()

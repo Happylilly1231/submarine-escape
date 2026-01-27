@@ -29,13 +29,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        SetMasterVolume(0.5f);
-        SetBGMVolume(0.5f);
-        SetSFXVolume(0.5f);
-    }
-
     public void SetMasterVolume(float value)
     {
         audioMixer.SetFloat("Master", Mathf.Log10(value) * 20f);

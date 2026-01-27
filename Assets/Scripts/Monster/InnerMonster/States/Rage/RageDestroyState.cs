@@ -52,7 +52,7 @@ namespace InnerMonsterStates
         {
             if (owner.currentDestroyObj != null)
             {
-                owner.LookAtTarget(owner.currentDestroyObj.transform.position); // 현재 파괴 오브젝트를 바라보도록 회전
+                owner.LookAtTarget(owner.currentDestroyPos); // 현재 파괴 오브젝트를 바라보도록 회전
 
                 _timer += Time.deltaTime;
                 if (_timer > _destroyTime)

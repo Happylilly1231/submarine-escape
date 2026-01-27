@@ -49,6 +49,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private NavMeshAgent _nav; // NavMeshAgent
     public NavMeshAgent Nav { get => _nav; set => _nav = value; }
     private CapsuleCollider _collider; // 콜라이더
+    public LayerMask doorLayer;
+    public LayerMask destroyEquipmentLayer;
 
 
     // 플레이어 관련
@@ -100,6 +102,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool IsRageStartEnd { get => _isRageStartEnd; set => _isRageStartEnd = value; }
     public EDestroyObjType currentDestroyObjType;
     public GameObject currentDestroyObj = null; // 현재 파괴해야 할 오브젝트
+    public Vector3 currentDestroyPos;
 
     // 휘청임
     private bool _isStaggering; // 현재 휘청임 중인지 여부
@@ -148,6 +151,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         _fsm = new StateMachine<InnerMonsterController>(this);
         _rageFsm = new StateMachine<InnerMonsterController>(this);
+
+        doorLayer = LayerMask.GetMask("Door");
+        destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
     }
 
     private void Start()
@@ -240,6 +246,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         Vector3 targetDir = targetPos - transform.position;
         targetDir.y = 0;
+        Debug.DrawRay(transform.position, transform.forward * 5f, Color.yellow);
+        Debug.DrawRay(transform.position, targetDir * 5f, Color.white);
         Quaternion lookRotation = Quaternion.LookRotation(targetDir);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
     }
@@ -334,12 +342,13 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// <para>- 몬스터의 머리가 애니메이션 때문에 콜라이더 바깥으로 나가서 카메라에 머릿속이 보이는 현상 때문에 필요</para>
     /// </summary>
     /// <param name="isChange">변경 여부, false면 기본으로 되돌림</param>
-    public void ColliderCenterChange(bool isChange)
+    /// <param name="zValue">변경할 z 값(기본은 0.5f), false면 기본으로 되돌림</param>
+    public void ColliderCenterChange(bool isChange, float zValue = 0.5f)
     {
         if (isChange)
         {
             Vector3 centerPos = _collider.center;
-            centerPos.z = 0.5f;
+            centerPos.z = zValue;
             _collider.center = centerPos;
         }
         else
@@ -504,7 +513,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public void OnAttack()
     {
         Debug.Log("공격 중");
-
 
         // 폭주 파괴 공격 -> RageDestroyState에서 처리
         if (currentAttackType == EAttackType.RageDestroyAttack)

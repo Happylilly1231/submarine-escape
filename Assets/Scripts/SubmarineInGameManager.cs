@@ -34,8 +34,8 @@ public class SubmarineInGameManager : MonoBehaviour
     public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
     private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
     public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
-    private Transform _currentAlertPos; // 현재 경보 발생 위치
-    public Transform CurrentAlertPos => _currentAlertPos;
+    private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
+    public Transform CurrentTargetPos => _currentTargetPos;
 
     // 문
     private Door[] _doors;
@@ -126,25 +126,6 @@ public class SubmarineInGameManager : MonoBehaviour
         }
     }
 
-    // /// <summary>
-    // /// Escape키 입력에 따라 정지/정지 해제
-    // /// </summary>
-    // public void OnPause(InputAction.CallbackContext context)
-    // {
-    //     // 정지 버튼(ESC) 눌렀을 때
-    //     if (context.performed)
-    //     {
-    //         if (_isPausing) // 정지 중이면
-    //         {
-    //             Resume(); // 정지 해제(플레이)
-    //         }
-    //         else // 플레이 중이면
-    //         {
-    //             Pause(); // 정지
-    //         }
-    //     }
-    // }
-
     /// <summary>
     /// 게임 초기 설정
     /// </summary>
@@ -199,7 +180,7 @@ public class SubmarineInGameManager : MonoBehaviour
     {
         if (hasEverOpenedEscapeDoor) // 탈출실 문이 한 번이라도 열린 경우(이후 어뢰실 장비에서 경보 발생해도 경보 발생 위치는 탈출실 위치로 설정됨(우선순위 더 높음))
         {
-            _currentAlertPos = escapeRoomPos; // 현재 경보 위치 -> 탈출실 위치로 설정
+            _currentTargetPos = escapeRoomPos; // 현재 목표 위치 -> 탈출실 위치로 설정
         }
         else // 어뢰실 장비에서 경보 발생하는 경우
         {
@@ -212,7 +193,7 @@ public class SubmarineInGameManager : MonoBehaviour
 
             // 현재 파괴 정보 설정
             _currentDestroyEquipment = destroyEquipments[currentDestroyEquipmentIndex]; // 현재 파괴될 장비 설정
-            _currentAlertPos = _currentDestroyEquipment.transform; // 현재 경보 위치 -> 현재 파괴될 장비 위치로 변경
+            _currentTargetPos = _currentDestroyEquipment.transform.GetChild(0); // 현재 목표 위치 -> 현재 파괴될 장비 위치의 파괴 위치(첫번째 자식)로 변경
         }
 
         // 임시 - 경보 버튼 빨간색으로 변경(후에 지워야 함)
@@ -234,7 +215,7 @@ public class SubmarineInGameManager : MonoBehaviour
     public void AlertOff()
     {
         _currentDestroyEquipment = null; // 현재 파괴될 장비 없으므로 null로 초기화
-        _currentAlertPos = null; // 현재 경보 발생 위치 null로 초기화
+        _currentTargetPos = null; // 현재 목표 위치 null로 초기화
         _isAlerting = false; // 경보 발생 중 아님으로 설정
         Debug.Log("경보 해제");
         _audioSource.Stop();
