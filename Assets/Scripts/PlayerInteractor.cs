@@ -80,7 +80,7 @@ public class PlayerInteractor : MonoBehaviour
         List<Item> candidateItems = new List<Item>();
         if (_itemEquipController.HeldItemData != null)
         {
-            if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual") return;
+            if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual" || _itemEquipController.HeldItemData.ItemName == "Radar System Manual") return;
             candidateItems.Add(_itemEquipController.HeldItemData);
         }
         if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
@@ -138,7 +138,7 @@ public class PlayerInteractor : MonoBehaviour
                 List<Item> candidateItems = new List<Item>();
                 if (_itemEquipController.HeldItemData != null)
                 {
-                    if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual") return;
+                    if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual" || _itemEquipController.HeldItemData.ItemName == "Radar System Manual") return;
                     candidateItems.Add(_itemEquipController.HeldItemData);
                 }
                 if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)

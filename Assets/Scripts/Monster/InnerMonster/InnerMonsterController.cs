@@ -184,6 +184,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     private void Update()
     {
+        // 게임 정지 중일 때 -> 작동 X
+        if (SubmarineInGameManager.instance.IsPausing)
+            return;
+
         // 플레이어와의 거리 계산
         _distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
 
