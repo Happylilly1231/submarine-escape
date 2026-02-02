@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
@@ -59,6 +60,7 @@ public class ItemEquipController : MonoBehaviour
     {
         if (_heldItemObject != null)
         {
+            _heldItemObject.SetActive(false); // Destroy가 프레임 끝에 되기 때문에 먼저 비활성화해줌(장착 해제한 아이템이 감지되지 않도록)
             Destroy(_heldItemObject);
             _heldItemObject = null;
             _heldItemData = null;
