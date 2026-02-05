@@ -3,7 +3,14 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Item
+  - Door
+  - EscapeRoomDoor
+  - DestroyEquipment
+  - Monster
+  - LadderTop
+  - LadderBottom
   layers:
   - Default
   - TransparentFX
@@ -11,15 +18,15 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Ceiling
+  - Floor
+  - Stairs
+  - Door
+  - DestroyEquipment
+  - Monster
+  - Ladder
+  - Player
+  - HeldItem
   - 
   - 
   - 
@@ -40,4 +47,7 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: UI
+    uniqueID: 3522492377
     locked: 0
