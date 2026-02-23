@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5215768668341346202}
   - component: {fileID: 486698821468935461}
   - component: {fileID: 874506933389219052}
+  - component: {fileID: 7822712803810418586}
   m_Layer: 0
   m_Name: ForcePoint
   m_TagString: Untagged
@@ -817,7 +818,7 @@ ParticleSystem:
       speed:
         serializedVersion: 2
         minMaxState: 0
-        scalar: 1
+        scalar: -1
         minScalar: 1
         maxCurve:
           serializedVersion: 2
@@ -1763,7 +1764,7 @@ ParticleSystem:
     orbitalZ:
       serializedVersion: 2
       minMaxState: 0
-      scalar: -2
+      scalar: 2
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -4863,9 +4864,32 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 0.1, y: 0.1, z: 0.03}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!136 &7822712803810418586
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 761461585545151562}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.13
+  m_Height: 0.13
+  m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5128856860426899125
 GameObject:

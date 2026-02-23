@@ -17,6 +17,8 @@ public class ForcePoint : MonoBehaviour
     private Transform _circleTransform;
     private Material _circleMaterial;
     private float enalbeTimer = 0f;
+    private Color yellowColor = new Color(255f / 255f, 220f / 255f, 90f / 255f, 20f / 255f);
+    private Color redColor = new Color(1, 0, 0, 20f / 255f);
 
     private void Awake()
     {
@@ -64,7 +66,7 @@ public class ForcePoint : MonoBehaviour
             if (CurrentAngleAmount < 0)
             {
                 // 빨간 원 표시
-                _circleMaterial.SetColor("_TintColor", Color.red);
+                _circleMaterial.SetColor("_TintColor", redColor);
                 float scale = (-CurrentAngleAmount) / startAngle * _circleMaxSize;
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }
@@ -72,7 +74,7 @@ public class ForcePoint : MonoBehaviour
             {
                 Gauge = Mathf.Clamp01(CurrentAngleAmount / (torpedoTubeHandle.CurrentRange / cnt)); // 게이지 갱신
 
-                _circleMaterial.SetColor("_TintColor", Color.yellow);
+                _circleMaterial.SetColor("_TintColor", yellowColor);
                 float scale = Gauge * _circleMaxSize;
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }
@@ -106,7 +108,7 @@ public class ForcePoint : MonoBehaviour
                     CurrentAngleAmount -= _fastDecreaseAmount * Time.deltaTime; // 빠르게 감소
                 }
                 // 빨간 원 표시
-                _circleMaterial.SetColor("_TintColor", Color.red);
+                _circleMaterial.SetColor("_TintColor", redColor);
                 float scale = (-CurrentAngleAmount) / startAngle * _circleMaxSize;
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }
@@ -115,7 +117,7 @@ public class ForcePoint : MonoBehaviour
                 CurrentAngleAmount -= _decreaseAmount * Time.deltaTime; // 느리게 감소
                 Gauge = Mathf.Clamp01(CurrentAngleAmount / (torpedoTubeHandle.CurrentRange / cnt)); // 게이지 갱신
 
-                _circleMaterial.SetColor("_TintColor", Color.yellow);
+                _circleMaterial.SetColor("_TintColor", yellowColor);
                 float scale = Gauge * _circleMaxSize;
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }

@@ -126,7 +126,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3c62ca37af422f640b73724bd5ec7e2b, type: 2}
+  - {fileID: 2100000, guid: 3a9b823d1b946944abcff3119c477373, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -160,9 +160,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineMode: 0
-  outlineColor: {r: 1, g: 0.7415003, b: 0.3075471, a: 1}
-  outlineWidth: 2
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 4
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
@@ -496,7 +496,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2014630440945075054}
   - component: {fileID: 517835840478741452}
-  - component: {fileID: 3465347469970327148}
   m_Layer: 15
   m_Name: door_button
   m_TagString: Untagged
@@ -542,23 +541,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.10760806, y: 0.123277634, z: 0.07557842}
   m_Center: {x: -0.0027354844, y: 0.01163882, z: 0.03535185}
---- !u!114 &3465347469970327148
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7719272543132589708}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19113d7957e31f64eb3bc70b5c800ee0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  torpedoTube: {fileID: 0}
-  buttonPart: {fileID: 8363121434761204947}
-  greenButtonMaterial: {fileID: 2100000, guid: 3a9b823d1b946944abcff3119c477373, type: 2}
-  redButtonMaterial: {fileID: 2100000, guid: 2c640f387bd44264fa8244734071d83c, type: 2}
-  openViewPoint: {fileID: 0}
 --- !u!1 &8455731379573677356
 GameObject:
   m_ObjectHideFlags: 0

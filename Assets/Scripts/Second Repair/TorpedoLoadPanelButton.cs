@@ -9,10 +9,11 @@ public class TorpedoLoadPanelButton : HoverInteractable
 {
     [SerializeField] private TorpedoLoadPanelButtonType buttonType;
     public TorpedoLoadPanelButtonType ButtonType => buttonType;
-    [SerializeField] private PuzzleController puzzleController;
+    [SerializeField] private TorpedoTube linkedTorpedoTube; // 어뢰 발사관 문 버튼만 연결된 어뢰 발사관 알기 위해 사용
+    public TorpedoTube LinkedTorpedoTube => linkedTorpedoTube;
 
     public bool isCurrentActive = true; // 현재 활성화 여부
-    public int torpedoTubeId; // 어뢰 발사관 문 버튼만 사용
+    //public int torpedoTubeId; // 어뢰 발사관 문 버튼만 사용
 
     private Material material;
 
@@ -20,19 +21,49 @@ public class TorpedoLoadPanelButton : HoverInteractable
     {
         base.Awake();
 
-        if (!isCurrentActive)
+        if (buttonType == TorpedoLoadPanelButtonType.SetUp
+        || buttonType == TorpedoLoadPanelButtonType.Load
+        || buttonType == TorpedoLoadPanelButtonType.TorpedoTubeDoorButton)
         {
-            material = GetComponent<Renderer>().material;
-            material.DisableKeyword("_EMISSION");
+            material = GetComponent<Renderer>()?.material;
+
+            if (!isCurrentActive)
+            {
+                material.DisableKeyword("_EMISSION");
+            }
         }
     }
 
     private void OnEnable()
     {
-        if (buttonType == TorpedoLoadPanelButtonType.SetUp)
-            TorpedoLoadPanel.OnSetUpButtonStateChanged += SetActiveButton;
-        if (buttonType == TorpedoLoadPanelButtonType.Load)
-            TorpedoLoadPanel.OnLoadButtonStateChanged += SetActiveButton;
+        switch (buttonType)
+        {
+            case TorpedoLoadPanelButtonType.SetUp:
+                TorpedoLoadPanel.OnSetUpButtonStateChanged += SetActiveButton;
+                break;
+            case TorpedoLoadPanelButtonType.Load:
+                TorpedoLoadPanel.OnLoadButtonStateChanged += SetActiveButton;
+                break;
+            case TorpedoLoadPanelButtonType.TorpedoTubeDoorButton:
+                linkedTorpedoTube.OnDoorOpenStateChanged += ChangeDoorButtonColor;
+                break;
+        }
+    }
+
+    private void OnDisable()
+    {
+        switch (buttonType)
+        {
+            case TorpedoLoadPanelButtonType.SetUp:
+                TorpedoLoadPanel.OnSetUpButtonStateChanged -= SetActiveButton;
+                break;
+            case TorpedoLoadPanelButtonType.Load:
+                TorpedoLoadPanel.OnLoadButtonStateChanged -= SetActiveButton;
+                break;
+            case TorpedoLoadPanelButtonType.TorpedoTubeDoorButton:
+                linkedTorpedoTube.OnDoorOpenStateChanged -= ChangeDoorButtonColor;
+                break;
+        }
     }
 
     private void SetActiveButton(bool isActive)
@@ -44,21 +75,17 @@ public class TorpedoLoadPanelButton : HoverInteractable
             material.DisableKeyword("_EMISSION");
     }
 
-    public override void OnHoverEnter()
+    private void ChangeDoorButtonColor(bool isOpen)
     {
-        base.OnHoverEnter();
-    }
-
-    public override void OnHoverExit()
-    {
-        base.OnHoverExit();
-    }
-
-    private void OnDisable()
-    {
-        if (buttonType == TorpedoLoadPanelButtonType.SetUp)
-            TorpedoLoadPanel.OnSetUpButtonStateChanged -= SetActiveButton;
-        if (buttonType == TorpedoLoadPanelButtonType.Load)
-            TorpedoLoadPanel.OnLoadButtonStateChanged -= SetActiveButton;
+        if (isOpen)
+        {
+            material.color = Color.green;
+            material.SetColor("_EmissionColor", Color.green);
+        }
+        else
+        {
+            material.color = Color.red;
+            material.SetColor("_EmissionColor", Color.red);
+        }
     }
 }

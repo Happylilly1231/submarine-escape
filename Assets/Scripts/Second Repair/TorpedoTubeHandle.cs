@@ -13,6 +13,8 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     [SerializeField] private GameObject torpedoTubeUnlockUI; // 잠금 해제 UI
     [SerializeField] private Image progressImage; // 진행도 이미지
 
+    protected override bool IsHoverRequired => false;
+
     public List<ForcePoint> currentForcePoints = new List<ForcePoint>(); // 현재 힘 줘야 하는 위치 리스트
 
     private float _finalTargetAngle = 1080f; // 최종 목표 각도
@@ -31,7 +33,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     private void Awake()
     {
         torpedoTubeUnlockUI.SetActive(false);
-        UpdateProgressUI();
     }
 
     #region IInteratable
@@ -72,6 +73,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         _currentForcePartIndex = 0;
         CurrentPressingForcePoint = null;
         _currentAngle = 0f;
+        progressImage.fillAmount = 0f;
+
+        // torpedoTube.SetLockingDogOutlinesShow(true); // 잠금장치 아웃라인 보이기
 
         StartCoroutine(StartHandleRotateCoroutine());
     }
@@ -91,6 +95,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             forcePoints[i].gameObject.SetActive(false);
         }
         torpedoTubeUnlockUI.SetActive(false); // UI 끄기
+        // torpedoTube.SetLockingDogOutlinesShow(false); // 잠금장치 아웃라인 숨기기
     }
     #endregion
 
@@ -104,7 +109,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
             if (forcePoint != null && currentForcePoints.Contains(forcePoint))
             {
-                // float startAngle = _currentForcePartIndex == 0 ? 100f : _targetAngles[_currentForcePartIndex - 1];
                 CurrentPressingForcePoint = forcePoint;
                 CurrentPressingForcePoint.StartForce(_forcePointCounts[_currentForcePartIndex]);
             }
@@ -120,7 +124,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         }
     }
 
-    private void OnPoint(InputAction.CallbackContext context)
+    public override void OnPoint(InputAction.CallbackContext context)
     {
         if (CurrentPressingForcePoint != null)
         {
@@ -179,7 +183,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             _currentAngle += 150f * Time.deltaTime;
             if (_currentAngle > targetAngle)
                 _currentAngle = targetAngle;
-            UpdateProgressUI();
+            UpdateProgressUI(Color.green);
             transform.localRotation = Quaternion.Euler(0f, _currentAngle, 0f);
 
             yield return null;
@@ -217,9 +221,15 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
                 totalAngleAmount += currentForcePoints[i].CurrentAngleAmount;
             }
 
+            float calculatedAngle = Mathf.Clamp(startAngle + totalAngleAmount, 0f, _targetAngles[_currentForcePartIndex]);
+            float delta = calculatedAngle - _currentAngle;
+
             // 현재 회전 값 갱신 및 회전
-            _currentAngle = Mathf.Clamp(startAngle + totalAngleAmount, 0f, _targetAngles[_currentForcePartIndex]);
-            UpdateProgressUI();
+            _currentAngle = calculatedAngle;
+            if (delta < 0)
+                UpdateProgressUI(Color.red);
+            else
+                UpdateProgressUI(Color.green);
             transform.localRotation = Quaternion.Euler(0f, _currentAngle, 0f);
 
             yield return null;
@@ -269,24 +279,10 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     /// <summary>
     /// 진행도 UI 갱신
     /// </summary>
-    private void UpdateProgressUI()
+    private void UpdateProgressUI(Color color)
     {
-        if (_currentAngle <= 100f)
-            progressImage.color = Color.green;
-        else if (_currentAngle <= 300f)
-            progressImage.color = Color.red;
-        else if (_currentAngle <= 400f)
-            progressImage.color = Color.green;
-        else if (_currentAngle <= 600f)
-            progressImage.color = Color.yellow;
-        else if (_currentAngle <= 700f)
-            progressImage.color = Color.green;
-        else if (_currentAngle <= 900f)
-            progressImage.color = Color.cyan;
-        else
-            progressImage.color = Color.green;
-
-        progressImage.fillAmount = (_currentAngle % 360f) / 360f;
+        progressImage.color = color;
+        progressImage.fillAmount = _currentAngle / _finalTargetAngle;
     }
     #endregion
 }

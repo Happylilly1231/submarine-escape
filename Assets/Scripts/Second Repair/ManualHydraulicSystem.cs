@@ -11,6 +11,9 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     [SerializeField] private Slider gaugeBarSlider;
     [SerializeField] private Transform leverTransform;
     [SerializeField] private HydraulicSystemDoorButton[] doorButtons;
+    [SerializeField] private TextMeshProUGUI topInfoText;
+
+    protected override bool IsHoverRequired => true;
 
     private float _currentProgress = 0f; // 0 ~ 100
     private bool _isLeverMoving = false;
@@ -29,14 +32,11 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         if (!IsPuzzleStarted)
             return;
 
-        // 호버 검사
-        CheckHover();
-
         if (_currentProgress > 0)
         {
             if (_currentProgress == 100f) // 달성 -> 해당 문 열고 퍼즐 종료
             {
-                doorButtons[_currentSelectDoorIndex].OpenDoor();
+                doorButtons[_currentSelectDoorIndex].ViewDoorOpen();
             }
             else
             {
@@ -60,7 +60,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     {
         // 나중에 추가해야할 내용: 잠금 해제 하나도 안 된 경우 -> 잠금 해제부터하라는 텍스트
 
-        return "Manual Hydraulic System [E]";
+        return "Open Torpedo Tube Door [E]";
     }
 
     public void Interact()
@@ -76,7 +76,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
 
         Click.performed += OnClickPerformed; // 클릭 performed 사용
         Space.performed += OnSpace; // 스페이스 사용
-        TorpedoTube.OnOpened += ExitPuzzle;
+        TorpedoTube.OnOpened += ExitAfterSuccess;
 
         _currentProgress = 0f;
         gaugeBarSlider.gameObject.SetActive(true);
@@ -89,14 +89,11 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
 
         Click.performed -= OnClickPerformed;
         Space.performed -= OnSpace;
-        TorpedoTube.OnOpened -= ExitPuzzle;
+        TorpedoTube.OnOpened -= ExitAfterSuccess;
 
         gaugeBarSlider.gameObject.SetActive(false);
-        if (_currentSelectDoorIndex != -1)
-        {
-            doorButtons[_currentSelectDoorIndex].UnselectButton();
-            _currentSelectDoorIndex = -1;
-        }
+        _currentSelectDoorIndex = -1;
+        topInfoText.text = "";
     }
     #endregion
 
@@ -143,6 +140,14 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         {
             _isLeverMoving = false;
         });
+    }
+
+    /// <summary>
+    /// 성공 후 종료
+    /// </summary>
+    private void ExitAfterSuccess()
+    {
+        ExitPuzzle();
     }
     #endregion
 }

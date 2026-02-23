@@ -10,43 +10,53 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 {
     [SerializeField] private Camera torpedoLoadPanelCamera; // 어뢰 탑재 패널의 카메라
     [SerializeField] private GameObject statUI; // 스탯 UI
-    [SerializeField] private GameObject torpedoLoadUI; // 어뢰 탑재 UI
-    [SerializeField] private GameObject stretcherGroup;
-    [SerializeField] private GameObject stretcher;
+    [SerializeField] private GameObject stretcherGroup; // 들 것 그룹(들것 & 사슬 + 위의 4개의 큐브)
+    [SerializeField] private GameObject stretcher; // 들 것(들 것 & 사슬)
     [SerializeField] private GameObject joystickMoveBone; // 조이스틱 움직이는 뼈대
     [SerializeField] private GameObject switchCube; // 카메라 전환 스위치 큐브
     [SerializeField] private GameObject torpedo; // 어뢰
-    [SerializeField] private TorpedoTube[] torpedoTubes; // 어뢰 발사관 배열 문 포함 X
-    [SerializeField] private MeshRenderer monitorScreenMeshRenderer;
-    [SerializeField] private Material cameraMataerial;
-    [SerializeField] private Material blackMaterial;
+    [SerializeField] private TorpedoTube[] torpedoTubes; // 어뢰 발사관 배열
+    [SerializeField] private MeshRenderer monitorScreenMeshRenderer; // 모니터 화면 렌더러
+    [SerializeField] private Material cameraMataerial; // 카메라 머티리얼(카메라 켜졌을 때)
+    [SerializeField] private Material blackMaterial; // 검정 머티리얼(카메라 꺼졌을 때)
+    [SerializeField] private TextMeshProUGUI infoText; // 정보 텍스트
+    [SerializeField] private TorpedoTubeScrew torpedoTubeScrew; // 2번 어뢰 발사관의 나사
+    [SerializeField] private TorpedoLoadPanelButton[] doorButtons; // 문 버튼 배열
+    [SerializeField] private Transform ejectViewPoint; // 나사 튀어나올 때 볼 위치
 
+    protected override bool IsHoverRequired => true;
+
+    // 아웃라인
     private Outline _torpedoOutline;
     private Outline _stretcherOutline;
     private Outline[] _torpedoTubeOutlines = new Outline[4];
 
-    private bool _isCurrentActive = false; // 현재 패널의 활성화 여부
+    // 들 것 이동
     private bool _isJoystickDragging = false; // 현재 조이스틱이 드래그 되고 있는지 여부
     private Vector2 _joystickMoveStartPos; // 조이스틱 이동 시작 위치
     private Vector2 _joystickMove; // 조이스틱 이동 벡터
     private float _joystickMaxAngle = 30f; // 조이스틱 최대로 꺾이는 각도 크기
     private bool _isPressingMoveUpButton = false; // 위로 이동 버튼이 현재 눌리고 있는지 여부
     private bool _isPressingMoveDownButton = false; // 아래로 이동 버튼이 현재 눌리고 있는지 여부
-
     private float _realMoveSpeed = 3f; // 실제 이동 속도
     private float _inputThreshold = 0.5f; // 0.3 이하의 입력은 무시
 
+    // 카메라 전환
     private int _currentCameraMode = 0; // 0: 3D / 1: 2D
 
+    // 싣기
     private bool _canSetUp = false; // 어뢰 들 것에 싣기 가능 여부
     private bool _isSetUp = false; // 현재 어뢰가 들 것에 실어져 있는지 여부
 
+    // 탑재
     private bool _canLoad = false; // 어뢰 탑재 가능 여부
     private bool _isLoadCompleted = false; // 어뢰 탑재 성공 여부
+    private bool _isLoading = false; // 현재 탑재 중인지 여부
     private int _currentTorpedoTubeIndex = -1; // 현재 앞에 위치한 어뢰 발사관 인덱스 (없음: -1)
-    private float[] _loadPosXArray = { -1f, 1f, -1f, 1f };
-    private float[] _loadPosYArray = { 1.3f, 1.3f, -0.2f, -0.2f };
+    private float[] _loadPosXArray = { -1f, 1f, -1f, 1f }; // 어뢰 발사관 앞 위치 x 좌표 배열
+    private float[] _loadPosYArray = { 1.3f, 1.3f, -0.2f, -0.2f }; // 어뢰 발사관 앞 위치 y 좌표 배열
 
+    // 이벤트
     public static event Action<bool> OnSetUpButtonStateChanged; // READY 버튼 상태(활성화 여부) 변경 이벤트
     public static event Action<bool> OnLoadButtonStateChanged; // LOAD 버튼 상태(활성화 여부) 변경 이벤트
 
@@ -65,7 +75,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
             _torpedoTubeOutlines[i].enabled = false;
         }
 
-        torpedoLoadUI.SetActive(false);
+        infoText.gameObject.SetActive(false);
         torpedoLoadPanelCamera.enabled = false; // 카메라 끄기
 
         // 들 것, 들 것 그룹 초기 위치로 이동
@@ -81,9 +91,6 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 
         // 패널이 활성화되어 있을 때
 
-        // 호버 검사
-        CheckHover();
-
         // 조이스틱 드래그 중 -> 조이스틱, 들 것 움직이기
         if (_isJoystickDragging)
         {
@@ -97,8 +104,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         else if (_isPressingMoveDownButton)
             MoveUpDown(-1f);
 
-        // 어뢰 탑재 아직 못 한 경우
-        if (!_isLoadCompleted)
+        // 어뢰 탑재 아직 못 했고, 어뢰를 탑재하고 있는 중도 아닐 경우
+        if (!_isLoadCompleted && !_isLoading)
         {
             // 어뢰가 들 것에 실어져 있지 않으면 -> 어뢰 들 것에 싣기 가능 여부 검사
             if (!_isSetUp)
@@ -140,6 +147,12 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     #endregion
 
     #region PuzzleController
+    public override void ActivatePuzzle()
+    {
+        statUI.SetActive(false); // 스탯 UI 비활성화 추가
+        base.ActivatePuzzle();
+    }
+
     public override void StartPuzzle()
     {
         base.StartPuzzle();
@@ -147,17 +160,20 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.started += OnClickStarted; // 클릭 시작 사용
         Click.performed += OnClickPerformed; // 클릭 performed 사용
         Click.canceled += OnClickCanceled; // 클릭 끝 사용
-        Point.performed += OnPoint; // 마우스 좌표 사용
 
         if (!_isLoadCompleted)
         {
-            ShowOutlineSafe(_torpedoOutline);
-            ShowOutlineSafe(_stretcherOutline);
+            _torpedoOutline.enabled = true;
+            _stretcherOutline.enabled = true;
         }
 
         // 카메라 켜기
         torpedoLoadPanelCamera.enabled = true;
         monitorScreenMeshRenderer.material = cameraMataerial;
+
+        infoText.gameObject.SetActive(true);
+
+        _currentTorpedoTubeIndex = -1;
     }
 
     public override void ExitPuzzle()
@@ -167,10 +183,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.started -= OnClickStarted;
         Click.performed -= OnClickPerformed;
         Click.canceled -= OnClickCanceled;
-        Point.performed -= OnPoint;
 
         statUI.SetActive(true);
-        // torpedoLoadUI.SetActive(false);
         joystickMoveBone.transform.localRotation = Quaternion.identity; // 조이스틱 회전 초기화
         _torpedoOutline.enabled = false;
         _stretcherOutline.enabled = false;
@@ -180,6 +194,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         // 카메라 끄기
         torpedoLoadPanelCamera.enabled = false;
         monitorScreenMeshRenderer.material = blackMaterial;
+
+        infoText.gameObject.SetActive(false);
     }
     #endregion
 
@@ -227,7 +243,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
                     SwitchCamera();
                     break;
                 case TorpedoLoadPanelButtonType.TorpedoTubeDoorButton:
-                    ToggleDoorOpenState(torpedoTubes[currentHoverButton.torpedoTubeId]);
+                    ToggleDoorOpenState(currentHoverButton.LinkedTorpedoTube);
                     break;
             }
         }
@@ -251,8 +267,10 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         }
     }
 
-    private void OnPoint(InputAction.CallbackContext context)
+    public override void OnPoint(InputAction.CallbackContext context)
     {
+        base.OnPoint(context);
+
         // 조이스틱
         if (_isJoystickDragging)
         {
@@ -290,25 +308,6 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     #endregion
 
     #region 퍼즐용 함수
-    public override void ActivatePuzzle()
-    {
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(false);
-        statUI.SetActive(false); // 스탯 UI 비활성화 추가
-
-        Sequence seq = DOTween.Sequence();
-        seq.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
-        .SetEase(Ease.OutQuad));
-
-        seq.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
-            .SetEase(Ease.OutQuad));
-
-        seq.OnComplete(() =>
-        {
-            StartPuzzle(); // 퍼즐 시작
-        });
-    }
-
     /// <summary>
     /// 값과 목표 값의 차이가 임계값 이하인지 검사하는 함수
     /// </summary>
@@ -457,7 +456,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 
         _torpedoOutline.enabled = false;
         torpedo.transform.SetParent(stretcher.transform);
-        ShowOutlineSafe(_torpedoOutline);
+        _torpedoOutline.enabled = true;
         _stretcherOutline.OutlineColor = Color.white;
         _torpedoOutline.OutlineColor = Color.white;
         OnSetUpButtonStateChanged?.Invoke(false);
@@ -510,25 +509,43 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     {
         for (int i = 0; i < 4; i++)
         {
+            // 앞에 어뢰 발사관이 있으면 -> 문이 열려있을 때는 가능 / 문이 닫혀있을 때는 불가능
             if (IsCloseTo(stretcherGroup.transform.localPosition.x, _loadPosXArray[i]) && IsCloseTo(stretcher.transform.localPosition.y, _loadPosYArray[i]))
             {
-                // 가능
-                if (!_canLoad)
+                if (torpedoTubes[i].IsOpened) // 문이 열려있는 경우 -> 가능
                 {
-                    _canLoad = true;
-                    ShowOutlineSafe(_torpedoTubeOutlines[i]);
-                    _currentTorpedoTubeIndex = i;
-                    OnLoadButtonStateChanged?.Invoke(true);
+                    // 불가능 상태였다면 -> 가능으로 변경
+                    if (!_canLoad)
+                    {
+                        _canLoad = true;
+                        _torpedoTubeOutlines[i].OutlineColor = Color.green;
+                        _torpedoTubeOutlines[i].enabled = true;
+                        _currentTorpedoTubeIndex = i;
+                        OnLoadButtonStateChanged?.Invoke(true);
+                    }
+                }
+                else // 문이 닫혀있는 경우 -> 불가능
+                {
+                    // 현재 앞에 있는 어뢰 발사관이 없는 상태였다면 -> 불가능으로 변경, 대신 현재 앞에 있는 어뢰 발사관은 현재 발사관으로 설정
+                    if (_currentTorpedoTubeIndex == -1)
+                    {
+                        _canLoad = false;
+                        _torpedoTubeOutlines[i].OutlineColor = Color.red;
+                        _torpedoTubeOutlines[i].enabled = true;
+                        _currentTorpedoTubeIndex = i;
+                        OnLoadButtonStateChanged?.Invoke(false);
+                    }
                 }
                 return;
             }
         }
 
-        // 불가능
-        if (_canLoad)
+        // 앞에 어떤 발사관도 없는 경우인데 이전에 앞에 있던 발사관이 있었다면 -> 불가능으로 변경 후 현재 앞에 있는 어뢰 발사관이 없음으로 설정
+        if (_currentTorpedoTubeIndex != -1)
         {
             _canLoad = false;
             _torpedoTubeOutlines[_currentTorpedoTubeIndex].enabled = false;
+            _currentTorpedoTubeIndex = -1;
             OnLoadButtonStateChanged?.Invoke(false);
         }
     }
@@ -540,7 +557,11 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     {
         Vector3 torpedoPos;
 
+        _isLoading = true;
+
         SetInputLock(true);
+
+        TorpedoTube.OnClosed += ExitAfterSuccess;
 
         // 들 것 위치 딱 맞는 위치로 보정
         stretcherGroup.transform.localPosition = new Vector3(_loadPosXArray[_currentTorpedoTubeIndex], 0f, 0f);
@@ -550,11 +571,29 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         if (_currentCameraMode == 1)
             SwitchCamera();
 
+        bool isSoundPlayed = false;
         while (!IsCloseTo(torpedo.transform.localPosition.z, 6f))
         {
             torpedoPos = torpedo.transform.localPosition;
             torpedoPos.z = torpedoPos.z + 1f * _realMoveSpeed * Time.deltaTime;
             torpedo.transform.localPosition = torpedoPos;
+
+            // 3번 발사관 -> 절반 도달했을 때 끼이익 소리 재생 후 얼마 더 간 뒤 폭발
+            if (torpedoTubes[_currentTorpedoTubeIndex].TorpedoTubeNum == 3)
+            {
+                if (torpedo.transform.localPosition.z > 3f && !isSoundPlayed) // 절반 도달했을 때 -> 끼이익 소리 재생(1번만)
+                {
+                    // 끼이익 소리 재생
+                    Debug.Log("끼이익 소리");
+                    isSoundPlayed = true;
+                }
+                else if (torpedo.transform.localPosition.z > 4f) // 1f 더 갔을 때 -> 폭발
+                {
+                    // 폭발 사망 엔딩
+                    GameManager.instance.GameOver(EEndingType.KeypadExplosion); // 일단 키패드 폭발 엔딩으로 함
+                    yield break;
+                }
+            }
 
             yield return null;
         }
@@ -564,12 +603,54 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 
         _torpedoOutline.enabled = false;
         torpedo.transform.SetParent(torpedoTubes[_currentTorpedoTubeIndex].transform);
-        ShowOutlineSafe(_torpedoOutline);
+        _torpedoOutline.enabled = true;
 
-        SetInputLock(false);
-        _isLoadCompleted = true;
+        torpedoTubes[_currentTorpedoTubeIndex].SetDoorOpenState(false);
+    }
 
-        ExitPuzzle();
+    /// <summary>
+    /// 성공 후 종료
+    /// </summary>
+    private void ExitAfterSuccess()
+    {
+        TorpedoTube.OnClosed -= ExitAfterSuccess;
+
+        // 2번 발사관 나사 안 조였는데 탑재하고 문을 닫은 경우 -> 나사 튀어나옴
+        if (torpedoTubes[_currentTorpedoTubeIndex].TorpedoTubeNum == 2 && !torpedoTubes[_currentTorpedoTubeIndex].IsNormal)
+        {
+            Sequence seq = DOTween.Sequence();
+            seq.Append(Camera.main.transform.DOMove(ejectViewPoint.position, 1.5f)
+            .SetEase(Ease.OutQuad));
+
+            seq.Join(Camera.main.transform.DORotateQuaternion(ejectViewPoint.rotation, 1.5f)
+            .SetEase(Ease.OutQuad));
+
+            seq.AppendCallback(() =>
+            {
+                torpedoTubeScrew.Eject();
+            });
+
+            seq.AppendInterval(1.5f); // 나사 튀어나갈 때까지 대기
+
+            seq.OnComplete(() =>
+            {
+                SetInputLock(false);
+                _isLoadCompleted = true;
+                _isLoading = false;
+
+                ExitPuzzle();
+
+                torpedoTubes[_currentTorpedoTubeIndex].SetDoorOpenState(true);
+            });
+        }
+        else
+        {
+            SetInputLock(false);
+            _isLoadCompleted = true;
+            _isLoading = false;
+
+            ExitPuzzle();
+        }
     }
     #endregion
 
@@ -581,27 +662,12 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         {
             torpedoTube.SetDoorOpenState(false);
         }
-        else // 닫혀있으면 -> 자동 열기 불가! 무조건 수동 잠금 해제하고 수동 유압으로 열어야 함
+        else // 닫혀있으면 -> 버튼으로 열기 불가
         {
-            Debug.Log("자동 열기 불가!!!");
-            torpedoTube.SetDoorOpenState(true); // 임시 코드
+            // 버튼으로 열기 불가
+            Debug.Log("버튼으로 열기 불가");
+            // 안된다는 삐빅 소리 재생 추가 필요
         }
     }
     #endregion
-
-    public void ShowOutlineSafe(Outline outline)
-    {
-        float targetWidth = outline.OutlineWidth; // 원래 두께 값
-        outline.OutlineWidth = 0f; // 일단 안 보이게 두께 0으로 함
-        outline.enabled = true; // 활성화
-        Debug.Log("!!! " + outline.OutlineWidth);
-        StartCoroutine(EnableOutlineRoutine(outline, targetWidth));
-    }
-
-    private IEnumerator EnableOutlineRoutine(Outline outline, float targetWidth)
-    {
-        yield return new WaitForEndOfFrame(); // 깊이 계산을 기다리기 위해 한 프레임 대기
-        outline.OutlineWidth = targetWidth; // 이제 두께가 정상적으로 보이게함으로써 진짜 활성화
-        Debug.Log("!!!!!!!!!!!! " + outline.OutlineWidth);
-    }
 }

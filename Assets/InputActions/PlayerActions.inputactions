@@ -568,6 +568,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "KeyA",
+                    "type": "Button",
+                    "id": "34a53334-b9d4-457f-9922-5f9aa778c4a6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "KeyD",
+                    "type": "Button",
+                    "id": "bb84ec35-2f49-4a61-b7ef-6e2bc6cdb671",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -612,6 +630,28 @@
                     "processors": "",
                     "groups": ";PC",
                     "action": "Space",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "df9818d3-11e7-4f34-86a6-ed72422d49d7",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "KeyA",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b08317ea-42a3-417e-a1bb-9d2a64d53d35",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "KeyD",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

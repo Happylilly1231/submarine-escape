@@ -7509,6 +7509,11 @@ MonoBehaviour:
   - {fileID: 5659811115157465535}
   - {fileID: 2642823766230616791}
   - {fileID: 4369413348500550745}
+  lockingDogOutlines:
+  - {fileID: 8648095507748069564}
+  - {fileID: 7928841686064111767}
+  - {fileID: 301289891458663423}
+  - {fileID: 2026639569953504625}
   torpedoTubeNum: 0
 --- !u!1001 &1630307739197403597
 PrefabInstance:
@@ -7622,7 +7627,7 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.76
+      value: 0.78
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -7680,6 +7685,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 3324702207613226345}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2026639569953504625 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3603907717123174424, guid: 820b29255f2b8a54291b0819d14bc9fd,
+    type: 3}
+  m_PrefabInstance: {fileID: 3324702207613226345}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &4369413348500550745 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1333330749675796784, guid: 820b29255f2b8a54291b0819d14bc9fd,
@@ -7702,7 +7719,7 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.76
+      value: 0.78
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -7712,7 +7729,7 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.30070576
+      value: 0.30070582
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -7722,12 +7739,12 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.953717
+      value: -0.95371693
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -7742,18 +7759,35 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 215
+      value: -145
       objectReference: {fileID: 0}
     - target: {fileID: 4491261342129891645, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_Name
       value: Locking Dog (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 4491261342129891645, guid: 820b29255f2b8a54291b0819d14bc9fd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 820b29255f2b8a54291b0819d14bc9fd, type: 3}
+--- !u!114 &301289891458663423 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3603907717123174424, guid: 820b29255f2b8a54291b0819d14bc9fd,
+    type: 3}
+  m_PrefabInstance: {fileID: 3903991364255560679}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &971077482721999032 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
@@ -7878,7 +7912,7 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.91
+      value: 1.9
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -7942,6 +7976,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 5334394951244697764}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8648095507748069564 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3603907717123174424, guid: 820b29255f2b8a54291b0819d14bc9fd,
+    type: 3}
+  m_PrefabInstance: {fileID: 5334394951244697764}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &5483272014196297157
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8066,7 +8112,7 @@ PrefabInstance:
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.91
+      value: 1.9
       objectReference: {fileID: 0}
     - target: {fileID: 4275102030720355167, guid: 820b29255f2b8a54291b0819d14bc9fd,
         type: 3}
@@ -8113,6 +8159,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Locking Dog (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 4491261342129891645, guid: 820b29255f2b8a54291b0819d14bc9fd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8130,6 +8181,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 6632466860963221647}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7928841686064111767 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3603907717123174424, guid: 820b29255f2b8a54291b0819d14bc9fd,
+    type: 3}
+  m_PrefabInstance: {fileID: 6632466860963221647}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &8628776466088958438
 PrefabInstance:
   m_ObjectHideFlags: 0
