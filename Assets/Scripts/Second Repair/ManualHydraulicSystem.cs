@@ -58,6 +58,9 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
+        if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
+            return "Power Restoration Required";
+
         // 나중에 추가해야할 내용: 잠금 해제 하나도 안 된 경우 -> 잠금 해제부터하라는 텍스트
 
         return "Open Torpedo Tube Door [E]";
@@ -65,6 +68,9 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
 
     public void Interact()
     {
+        if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
+            return;
+
         ActivatePuzzle();
     }
     #endregion

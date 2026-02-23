@@ -43,14 +43,26 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
-        if (torpedoTube.IsUnlocked) // 잠금 해제된 경우 -> 더 이상 상호작용 X
+        if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
+            return "Power Restoration Required";
+
+        if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x
             return "";
+
+        if (torpedoTube.IsUnlocked) // 잠금 해제된 경우 -> 더 이상 상호작용 X, 이미 잠금 해제되었음 메시지
+            return "Already Unlocked";
 
         return "Unlock Door [E]";
     }
 
     public void Interact()
     {
+        if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
+            return;
+
+        if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x
+            return;
+
         if (torpedoTube.IsUnlocked) // 잠금 해제된 경우 -> 더 이상 상호작용 X
             return;
 
@@ -265,14 +277,45 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         currentForcePoints.Clear(); // 현재 힘 줘야 하는 위치 리스트 초기화
         CurrentCompletePointCnt = 0; // 현재 완료된 개수 초기화
 
+        // // 개수만큼 랜덤 생성
+        // for (int i = 0; i < cnt; i++)
+        // {
+        //     Vector2 randomPos = Random.insideUnitCircle.normalized * 0.55f; // 겹치지 않도록 로직 추가 필요!
+        //     Vector3 spawnPos = new Vector3(randomPos.x, 0.1f, randomPos.y);
+        //     forcePoints[i].transform.localPosition = spawnPos;
+        //     forcePoints[i].gameObject.SetActive(true);
+        //     currentForcePoints.Add(forcePoints[i]); // 현재 힘 줘야 하는 위치 리스트에 추가
+        // }
+
+        float lastAngle = Random.Range(0f, 360f); // 첫 번째 포인트의 시작 각도
+        float minAngleGap = 90f; // 두 포인트 사이의 최소 각도 차이 (90도 이상 떨어지게)
+
         // 개수만큼 랜덤 생성
         for (int i = 0; i < cnt; i++)
         {
-            Vector2 randomPos = Random.insideUnitCircle.normalized * 0.55f; // 겹치지 않도록 로직 추가 필요!
-            Vector3 spawnPos = new Vector3(randomPos.x, 0.1f, randomPos.y);
+            float angle;
+
+            if (i == 0)
+            {
+                angle = lastAngle;
+            }
+            else
+            {
+                // 겹치지 않도록 최소 90도 이상 떨어지도록 다음 각도 설정
+                float randomOffset = Random.Range(minAngleGap, 360f - minAngleGap);
+                angle = (lastAngle + randomOffset) % 360f;
+            }
+
+            // 각도를 좌표로 변환
+            float radian = angle * Mathf.Deg2Rad;
+            float radius = 0.55f;
+            Vector3 spawnPos = new Vector3(Mathf.Cos(radian) * radius, 0.1f, Mathf.Sin(radian) * radius);
+
             forcePoints[i].transform.localPosition = spawnPos;
             forcePoints[i].gameObject.SetActive(true);
-            currentForcePoints.Add(forcePoints[i]); // 현재 힘 줘야 하는 위치 리스트에 추가
+            currentForcePoints.Add(forcePoints[i]);
+
+            lastAngle = angle;
         }
     }
 
