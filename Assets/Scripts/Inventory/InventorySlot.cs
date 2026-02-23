@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 /// <summary> 인벤토리 슬롯 하나를 관리하고 UI 제어
 /// <para> - 슬롯에 아이템 객체와 개수를 저장하고 접근을 제공 </para>
@@ -36,9 +36,9 @@ public class InventorySlot : MonoBehaviour
     /// <para> - 중첩 가능한 아이템을 추가하는 경우 개수 업데이트 </para>
     /// <para> - 아이템 개수가 0개 이하가 된 경우 슬롯 초기화 </para>
     /// </summary>
-    public void UpdateItemCount(int newCount)
+    public void UpdateItemCount(int count)
     {
-        _itemCount = newCount;
+        _itemCount += count;
         if (_itemCount <= 0)
         {
             ClearSlot();
@@ -69,14 +69,16 @@ public class InventorySlot : MonoBehaviour
     }
 
     /// <summary>
-    /// 슬롯 데이터 및 UI 초기화
+    /// 슬롯 데이터 및 UI 업데이트
     /// </summary>
     public void ClearSlot()
     {
         _item = null;
         _itemCount = 0;
 
-        ClearSlotUI();
+        itemImage.sprite = null;
+        SetColor(0f);
+        itemCountText.text = "";
     }
 
     /// <summary>
@@ -85,37 +87,26 @@ public class InventorySlot : MonoBehaviour
     /// </summary>
     private void UpdateSlotUI()
     {
-        if (_item != null)
-        {
-            itemImage.sprite = _item.ItemImage;
-            var color = itemImage.color;
-            color.a = 1f;
-            itemImage.color = color;
+        itemImage.sprite = _item.ItemImage;
+        SetColor(1f);
 
-            if (_item.CanOverlap)
-            {
-                itemCountText.text = _itemCount.ToString();
-            }
-            else
-            {
-                itemCountText.text = "";
-            }
+        if (_item.CanOverlap)
+        {
+            itemCountText.text = _itemCount.ToString();
         }
         else
         {
-            ClearSlotUI();
+            itemCountText.text = "";
         }
     }
 
     /// <summary>
-    /// 슬롯의 UI 초기화
+    /// 아이템 이미지의 투명도 설정
     /// </summary>
-    private void ClearSlotUI()
+    private void SetColor(float alpha)
     {
-        itemImage.sprite = null;
         var color = itemImage.color;
-        color.a = 0f;
+        color.a = alpha;
         itemImage.color = color;
-        itemCountText.text = "";
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine.Animations.Rigging;
 
 public class ItemEquipController : MonoBehaviour
 {
+    [Header("아이템 장착 위치 및 오른손 IK")]
     [SerializeField] private Transform itemViewRoot; // 아이템을 들고 있는 위치
     [SerializeField] private TwoBoneIKConstraint rightHandIK; // 오른손 IK
     private GameObject _heldItemObject; // 현재 장착된 아이템 오브젝트
@@ -20,8 +21,8 @@ public class ItemEquipController : MonoBehaviour
     /// </summary>
     public void EquipItem(Item item)
     {
-        if (item == null || item.ItemPrefab == null) return;
         UnequipItem();
+        if (item == null || item.ItemPrefab == null) return;
 
         _heldItemData = item;
         _heldItemObject = Instantiate(item.ItemPrefab, itemViewRoot);
