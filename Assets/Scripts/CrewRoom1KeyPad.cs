@@ -119,7 +119,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         }
 
         _playerInput.currentActionMap.Disable();
-        string[] allowedActions = { "ToggleInventory", "THold", "SlotKeyPress", "ItemUse", "ReturnToSlot", "SelectScrew", "RemoveScrew", "ExitKeyPad" };
+        string[] allowedActions = { "THold", "SlotKeyPress", "ItemUse", "SelectScrew", "RemoveScrew", "ExitKeyPad" };
         foreach (string action in allowedActions)
         {
             _playerInput.actions[action].Enable();
