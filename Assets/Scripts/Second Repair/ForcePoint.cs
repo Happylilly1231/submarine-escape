@@ -1,14 +1,17 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ForcePoint : MonoBehaviour
 {
     [SerializeField] private TorpedoTubeHandle torpedoTubeHandle;
+    [SerializeField] private SpriteRenderer keyIconBackgroundRenderer;
+    [SerializeField] private SpriteRenderer keyIconTextRenderer;
 
-    public float CurrentAngleAmount { get; private set; } // 범위: 0 ~ CurrentRange
+    public float CurrentAngleAmount { get; private set; } // 범위: -startAngle ~ CurrentRange (예: 현재 구간 - [100 ~ 300도] -> -100 ~ +200)
     public float Gauge { get; private set; } // 범위: 0 ~ 1
+    public InputAction ForceKey { get; set; }
 
     private float _increaseAmount = 50f;
     private float _decreaseAmount = 5f;
@@ -35,6 +38,9 @@ public class ForcePoint : MonoBehaviour
         Gauge = 0f;
         enalbeTimer = 0f;
         transform.GetChild(0).localScale = new Vector3(0f, 0f, 1f);
+        ForceKey.started += torpedoTubeHandle.OnForceKeyStarted;
+        ForceKey.canceled += torpedoTubeHandle.OnForceKeyCanceled;
+        SetKeyIconActive(true);
 
         CancelForce(torpedoTubeHandle.ForcePointCounts[torpedoTubeHandle.CurrentForcePartIndex]);
     }
@@ -79,16 +85,15 @@ public class ForcePoint : MonoBehaviour
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }
 
-            Debug.Log("증가 " + Gauge);
             yield return null;
         }
 
         // 게이지 채우기 성공
-        Debug.Log("게이지 채우기 완료");
         torpedoTubeHandle.CurrentCompletePointCnt++; // 완료 개수 1 증가
         gameObject.SetActive(false); // 안 보이게 하기
         torpedoTubeHandle.CurrentPressingForcePoint = null;
-        Debug.Log("게이지 채우기 완료 Current Angle: " + CurrentAngleAmount + " / " + torpedoTubeHandle.CurrentAngle);
+        ForceKey.started -= torpedoTubeHandle.OnForceKeyStarted;
+        ForceKey.canceled -= torpedoTubeHandle.OnForceKeyCanceled;
     }
 
     private IEnumerator CancelForceCoroutine(int cnt)
@@ -122,8 +127,20 @@ public class ForcePoint : MonoBehaviour
                 _circleTransform.localScale = new Vector3(scale, scale, 1f);
             }
 
-            Debug.Log("감소");
             yield return null;
         }
+    }
+
+    public void SetKeyIconActive(bool isActive)
+    {
+        float alpha = isActive ? 1f : 0.1f;
+
+        Color color = Color.white;
+        color.a = alpha;
+        keyIconBackgroundRenderer.color = color;
+
+        color = Color.black;
+        color.a = alpha;
+        keyIconTextRenderer.color = color;
     }
 }

@@ -75,9 +75,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         base.StartPuzzle();
 
-        Click.started += OnClickStarted; // 클릭 시작 사용
-        Click.canceled += OnClickCanceled; // 클릭 끝 사용
-        Point.performed += OnPoint;
+        // Click.started += OnClickStarted; // 클릭 시작 사용
+        // Click.canceled += OnClickCanceled; // 클릭 끝 사용
+        // Point.performed += OnPoint;
         torpedoTube.OnUnlocked += ExitPuzzle; // 완전한 잠금 해제 시 퍼즐 종료
 
         torpedoTubeUnlockUI.SetActive(true); // UI 켜기
@@ -96,9 +96,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        Click.started -= OnClickStarted;
-        Click.canceled -= OnClickCanceled;
-        Point.performed -= OnPoint;
+        // Click.started -= OnClickStarted;
+        // Click.canceled -= OnClickCanceled;
+        // Point.performed -= OnPoint;
         torpedoTube.OnUnlocked -= ExitPuzzle;
 
         StopAllCoroutines();
@@ -112,49 +112,101 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     #endregion
 
     #region 입력 이벤트 함수
-    private void OnClickStarted(InputAction.CallbackContext context)
+    // private void OnClickStarted(InputAction.CallbackContext context)
+    // {
+    //     // 현재 힘 줘야 하는 위치 중 한 곳을 누르면 -> 회전 각도 증가, 게이지 증가
+    //     Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+    //     if (Physics.Raycast(ray, out RaycastHit hit))
+    //     {
+    //         ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
+    //         if (forcePoint != null && currentForcePoints.Contains(forcePoint))
+    //         {
+    //             CurrentPressingForcePoint = forcePoint;
+    //             CurrentPressingForcePoint.StartForce(_forcePointCounts[_currentForcePartIndex]);
+    //         }
+    //     }
+    // }
+
+    // private void OnClickCanceled(InputAction.CallbackContext context)
+    // {
+    //     if (CurrentPressingForcePoint != null)
+    //     {
+    //         CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
+    //         CurrentPressingForcePoint = null;
+    //     }
+    // }
+
+    // public override void OnPoint(InputAction.CallbackContext context)
+    // {
+    //     if (CurrentPressingForcePoint != null)
+    //     {
+    //         Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+    //         if (Physics.Raycast(ray, out RaycastHit hit))
+    //         {
+    //             ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
+    //             if (forcePoint == null || CurrentPressingForcePoint != forcePoint)
+    //             {
+    //                 CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
+    //                 CurrentPressingForcePoint = null;
+    //             }
+    //         }
+    //         else
+    //         {
+    //             CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
+    //             CurrentPressingForcePoint = null;
+    //         }
+    //     }
+    // }
+
+    public void OnForceKeyStarted(InputAction.CallbackContext context)
     {
-        // 현재 힘 줘야 하는 위치 중 한 곳을 누르면 -> 회전 각도 증가, 게이지 증가
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        if (Physics.Raycast(ray, out RaycastHit hit))
-        {
-            ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
-            if (forcePoint != null && currentForcePoints.Contains(forcePoint))
-            {
-                CurrentPressingForcePoint = forcePoint;
-                CurrentPressingForcePoint.StartForce(_forcePointCounts[_currentForcePartIndex]);
-            }
-        }
+        if (CurrentPressingForcePoint != null)
+            return;
+
+        if (context.action == KeyA)
+            StartForceKey(0);
+        else if (context.action == KeyD)
+            StartForceKey(1);
     }
 
-    private void OnClickCanceled(InputAction.CallbackContext context)
+    public void OnForceKeyCanceled(InputAction.CallbackContext context)
     {
         if (CurrentPressingForcePoint != null)
         {
-            CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-            CurrentPressingForcePoint = null;
+            bool isKeyA = context.action == KeyA && CurrentPressingForcePoint == currentForcePoints[0];
+            bool isKeyD = context.action == KeyD && CurrentPressingForcePoint == currentForcePoints[1];
+
+            if (isKeyA)
+                CancelForceKey(0);
+            else if (isKeyD)
+                CancelForceKey(1);
         }
     }
 
-    public override void OnPoint(InputAction.CallbackContext context)
+    private void StartForceKey(int currentId)
     {
-        if (CurrentPressingForcePoint != null)
+        CurrentPressingForcePoint = currentForcePoints[currentId];
+
+        currentForcePoints[currentId].SetKeyIconActive(true);
+
+        for (int i = 0; i < currentForcePoints.Count; i++)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
-                if (forcePoint == null || CurrentPressingForcePoint != forcePoint)
-                {
-                    CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-                    CurrentPressingForcePoint = null;
-                }
-            }
-            else
-            {
-                CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-                CurrentPressingForcePoint = null;
-            }
+            if (i == currentId) continue;
+            currentForcePoints[i].SetKeyIconActive(false);
+        }
+
+        CurrentPressingForcePoint.StartForce(_forcePointCounts[_currentForcePartIndex]);
+    }
+
+    private void CancelForceKey(int currentId)
+    {
+        CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
+        CurrentPressingForcePoint = null;
+
+        for (int i = 0; i < currentForcePoints.Count; i++)
+        {
+            if (i == currentId) continue;
+            currentForcePoints[i].SetKeyIconActive(true);
         }
     }
     #endregion
@@ -246,6 +298,13 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
             yield return null;
         }
+        KeyA.performed -= OnForceKeyStarted;
+        KeyA.canceled -= OnForceKeyCanceled;
+        if (_forcePointCounts[_currentForcePartIndex] == 2)
+        {
+            KeyD.performed -= OnForceKeyStarted;
+            KeyD.canceled -= OnForceKeyCanceled;
+        }
 
         if (_currentForcePartIndex == _targetAngles.Length - 1)
         {
@@ -277,16 +336,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         currentForcePoints.Clear(); // 현재 힘 줘야 하는 위치 리스트 초기화
         CurrentCompletePointCnt = 0; // 현재 완료된 개수 초기화
 
-        // // 개수만큼 랜덤 생성
-        // for (int i = 0; i < cnt; i++)
-        // {
-        //     Vector2 randomPos = Random.insideUnitCircle.normalized * 0.55f; // 겹치지 않도록 로직 추가 필요!
-        //     Vector3 spawnPos = new Vector3(randomPos.x, 0.1f, randomPos.y);
-        //     forcePoints[i].transform.localPosition = spawnPos;
-        //     forcePoints[i].gameObject.SetActive(true);
-        //     currentForcePoints.Add(forcePoints[i]); // 현재 힘 줘야 하는 위치 리스트에 추가
-        // }
-
         float lastAngle = Random.Range(0f, 360f); // 첫 번째 포인트의 시작 각도
         float minAngleGap = 90f; // 두 포인트 사이의 최소 각도 차이 (90도 이상 떨어지게)
 
@@ -312,6 +361,10 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             Vector3 spawnPos = new Vector3(Mathf.Cos(radian) * radius, 0.1f, Mathf.Sin(radian) * radius);
 
             forcePoints[i].transform.localPosition = spawnPos;
+            if (i == 0)
+                forcePoints[i].ForceKey = KeyA;
+            else if (i == 1)
+                forcePoints[i].ForceKey = KeyD;
             forcePoints[i].gameObject.SetActive(true);
             currentForcePoints.Add(forcePoints[i]);
 
