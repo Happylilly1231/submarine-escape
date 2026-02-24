@@ -90,6 +90,11 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
         // torpedoTube.SetLockingDogOutlinesShow(true); // 잠금장치 아웃라인 보이기
 
+        for (int i = 0; i < forcePoints.Length; i++)
+        {
+            forcePoints[i].FastDecreaseAmount = 0f;
+        }
+
         StartCoroutine(StartHandleRotateCoroutine());
     }
 
@@ -207,6 +212,19 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         for (int i = 0; i < currentForcePoints.Count; i++)
         {
             if (i == currentId) continue;
+            currentForcePoints[i].SetKeyIconActive(true);
+        }
+    }
+
+    public void CompleteForce(ForcePoint forcePoint)
+    {
+        // 게이지 채우기 성공
+        CurrentCompletePointCnt++; // 완료 개수 1 증가
+        forcePoint.gameObject.SetActive(false); // 안 보이게 하기
+        CurrentPressingForcePoint = null;
+        for (int i = 0; i < currentForcePoints.Count; i++)
+        {
+            if (currentForcePoints[i] == forcePoint) continue;
             currentForcePoints[i].SetKeyIconActive(true);
         }
     }
@@ -366,6 +384,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
                 forcePoints[i].ForceKey = KeyA;
             else if (i == 1)
                 forcePoints[i].ForceKey = KeyD;
+            forcePoints[i].FastDecreaseAmount += 350f;
             forcePoints[i].gameObject.SetActive(true);
             currentForcePoints.Add(forcePoints[i]);
 
