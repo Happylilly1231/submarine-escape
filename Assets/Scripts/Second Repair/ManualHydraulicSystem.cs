@@ -14,6 +14,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     [SerializeField] private TextMeshProUGUI topInfoText;
 
     protected override bool IsHoverRequired => true;
+    protected override bool IsMouseRequired => true;
 
     private float _currentProgress = 0f; // 0 ~ 100
     private bool _isLeverMoving = false;

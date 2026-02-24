@@ -33,6 +33,7 @@ public abstract class PuzzleController : MonoBehaviour
 
     // 호버
     protected abstract bool IsHoverRequired { get; } // 호버 필요한지 여부
+    protected abstract bool IsMouseRequired { get; } // 마우스 필요한지 여부
     private LayerMask hoverableLayerMask; // 호버 가능 레이어 마스크(Hoverable 레이어)
     private HoverInteractable _currentHover; // 현재 호버
     public HoverInteractable CurrentHover => _currentHover;
@@ -74,7 +75,7 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="viewPoint"></param>
     public virtual void ActivatePuzzle()
     {
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
+        SubmarineInGameManager.instance.SetPuzzleFocus(true, IsMouseRequired);
         SubmarineInGameManager.instance.SetPlayerGeoActive(false);
 
         Sequence seq = DOTween.Sequence();

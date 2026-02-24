@@ -14,6 +14,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     [SerializeField] private Image progressImage; // 진행도 이미지
 
     protected override bool IsHoverRequired => false;
+    protected override bool IsMouseRequired => false;
 
     public List<ForcePoint> currentForcePoints = new List<ForcePoint>(); // 현재 힘 줘야 하는 위치 리스트
 

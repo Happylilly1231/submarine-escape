@@ -266,14 +266,27 @@ public class SubmarineInGameManager : MonoBehaviour
     /// 퍼즐용 포커스 여부 설정
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
-    public void SetPuzzleFocus(bool isFocus)
+    /// <param name="isCursorRequired">커서 보이기 여부</param>
+    public void SetPuzzleFocus(bool isFocus, bool isCursorRequired = false)
     {
         // 해제는 포커스와 반대로 작동
         _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
-        _haveToShowCursor = isFocus; // 포커스 -> 커서 보여야 함
-        GameManager.instance.SetCursorVisible(isFocus); // 포커스 -> 커서 보이기
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
         _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+        // 포커스 시작하는데 커서 써야 하면 -> 커서 보이기
+        if (isFocus && isCursorRequired)
+        {
+            _haveToShowCursor = true; // 포커스 -> 커서 보여야 함
+            GameManager.instance.SetCursorVisible(true); // 포커스 -> 커서 보이기
+        }
+
+        // 포커스 해제하는데 커서 쓰고 있었으면 -> 커서 숨기기
+        if (!isFocus && _haveToShowCursor)
+        {
+            _haveToShowCursor = false;
+            GameManager.instance.SetCursorVisible(false);
+        }
 
         // 포커스 -> 상호작용 감지 텍스트 클리어
         if (isFocus)

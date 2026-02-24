@@ -25,6 +25,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     [SerializeField] private Transform ejectViewPoint; // 나사 튀어나올 때 볼 위치
 
     protected override bool IsHoverRequired => true;
+    protected override bool IsMouseRequired => true;
 
     // 아웃라인
     private Outline _torpedoOutline;
