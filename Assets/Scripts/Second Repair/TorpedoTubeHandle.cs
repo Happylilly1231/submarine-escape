@@ -12,9 +12,10 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     [SerializeField] private ForcePoint[] forcePoints; // 힘 줘야 하는 위치 배열(풀링)
     [SerializeField] private GameObject torpedoTubeUnlockUI; // 잠금 해제 UI
     [SerializeField] private Image progressImage; // 진행도 이미지
+    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
 
     protected override bool IsHoverRequired => false;
-    protected override bool IsMouseRequired => false;
+    protected override bool IsMouseRequiredAtFirst => false;
 
     public List<ForcePoint> currentForcePoints = new List<ForcePoint>(); // 현재 힘 줘야 하는 위치 리스트
 
@@ -47,6 +48,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+            return "Auto Mode";
+
         if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x
             return "";
 
@@ -59,6 +63,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     public void Interact()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
+            return;
+
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x
@@ -76,9 +83,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         base.StartPuzzle();
 
-        // Click.started += OnClickStarted; // 클릭 시작 사용
-        // Click.canceled += OnClickCanceled; // 클릭 끝 사용
-        // Point.performed += OnPoint;
         torpedoTube.OnUnlocked += ExitPuzzle; // 완전한 잠금 해제 시 퍼즐 종료
 
         torpedoTubeUnlockUI.SetActive(true); // UI 켜기
@@ -102,9 +106,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        // Click.started -= OnClickStarted;
-        // Click.canceled -= OnClickCanceled;
-        // Point.performed -= OnPoint;
         torpedoTube.OnUnlocked -= ExitPuzzle;
 
         StopAllCoroutines();
@@ -113,84 +114,42 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             forcePoints[i].gameObject.SetActive(false);
         }
         torpedoTubeUnlockUI.SetActive(false); // UI 끄기
-        // torpedoTube.SetLockingDogOutlinesShow(false); // 잠금장치 아웃라인 숨기기
     }
     #endregion
 
     #region 입력 이벤트 함수
-    // private void OnClickStarted(InputAction.CallbackContext context)
-    // {
-    //     // 현재 힘 줘야 하는 위치 중 한 곳을 누르면 -> 회전 각도 증가, 게이지 증가
-    //     Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-    //     if (Physics.Raycast(ray, out RaycastHit hit))
-    //     {
-    //         ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
-    //         if (forcePoint != null && currentForcePoints.Contains(forcePoint))
-    //         {
-    //             CurrentPressingForcePoint = forcePoint;
-    //             CurrentPressingForcePoint.StartForce(_forcePointCounts[_currentForcePartIndex]);
-    //         }
-    //     }
-    // }
-
-    // private void OnClickCanceled(InputAction.CallbackContext context)
-    // {
-    //     if (CurrentPressingForcePoint != null)
-    //     {
-    //         CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-    //         CurrentPressingForcePoint = null;
-    //     }
-    // }
-
-    // public override void OnPoint(InputAction.CallbackContext context)
-    // {
-    //     if (CurrentPressingForcePoint != null)
-    //     {
-    //         Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-    //         if (Physics.Raycast(ray, out RaycastHit hit))
-    //         {
-    //             ForcePoint forcePoint = hit.collider.GetComponent<ForcePoint>();
-    //             if (forcePoint == null || CurrentPressingForcePoint != forcePoint)
-    //             {
-    //                 CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-    //                 CurrentPressingForcePoint = null;
-    //             }
-    //         }
-    //         else
-    //         {
-    //             CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
-    //             CurrentPressingForcePoint = null;
-    //         }
-    //     }
-    // }
-
-    public void OnForceKeyStarted(InputAction.CallbackContext context)
+    public void OnForceKeyAxis(InputAction.CallbackContext context)
     {
+        // 현재 입력값 읽기 (-1, 0, 1)
+        float value = context.ReadValue<float>();
+
+        // 아무것도 안 누른 상태 (Canceled)
+        if (value == 0)
+        {
+            if (CurrentPressingForcePoint != null)
+            {
+                // 현재 누르고 있던 ID 찾기 (A는 0번, D는 1번)
+                int lastId = (CurrentPressingForcePoint == currentForcePoints[0]) ? 0 : 1;
+                CancelForceKey(lastId);
+            }
+            return;
+        }
+
+        // 키를 새로 누른 상태 (Started/Performed)
+        int currentId = (value < 0) ? 0 : 1; // -1이면 A(0), 1이면 D(1)
+
+        // 이미 다른 키를 누르고 있다면 무시 (기존 로직 유지)
         if (CurrentPressingForcePoint != null)
             return;
 
-        if (context.action == KeyA)
-            StartForceKey(0);
-        else if (context.action == KeyD)
-            StartForceKey(1);
-    }
-
-    public void OnForceKeyCanceled(InputAction.CallbackContext context)
-    {
-        if (CurrentPressingForcePoint != null)
-        {
-            bool isKeyA = context.action == KeyA && CurrentPressingForcePoint == currentForcePoints[0];
-            bool isKeyD = context.action == KeyD && CurrentPressingForcePoint == currentForcePoints[1];
-
-            if (isKeyA)
-                CancelForceKey(0);
-            else if (isKeyD)
-                CancelForceKey(1);
-        }
+        StartForceKey(currentId);
     }
 
     private void StartForceKey(int currentId)
     {
+        if (currentId >= _forcePointCounts[_currentForcePartIndex] || !currentForcePoints[currentId].gameObject.activeSelf)
+            return;
+
         CurrentPressingForcePoint = currentForcePoints[currentId];
 
         currentForcePoints[currentId].SetKeyIconActive(true);
@@ -206,6 +165,9 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
     private void CancelForceKey(int currentId)
     {
+        if (currentId >= _forcePointCounts[_currentForcePartIndex] || !currentForcePoints[currentId].gameObject.activeSelf)
+            return;
+
         CurrentPressingForcePoint.CancelForce(_forcePointCounts[_currentForcePartIndex]);
         CurrentPressingForcePoint = null;
 
@@ -238,7 +200,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         // 시작: 0 ~ 100도까지 정상 회전
         yield return StartCoroutine(RotateWithUpdateProgress(100f));
-
 
         StartCoroutine(ForcePartCoroutine());
     }
@@ -317,13 +278,8 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
             yield return null;
         }
-        KeyA.performed -= OnForceKeyStarted;
-        KeyA.canceled -= OnForceKeyCanceled;
-        if (_forcePointCounts[_currentForcePartIndex] == 2)
-        {
-            KeyD.performed -= OnForceKeyStarted;
-            KeyD.canceled -= OnForceKeyCanceled;
-        }
+        ForceKey.performed -= OnForceKeyAxis;
+        ForceKey.canceled -= OnForceKeyAxis;
 
         if (_currentForcePartIndex == _targetAngles.Length - 1)
         {
@@ -380,16 +336,15 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
             Vector3 spawnPos = new Vector3(Mathf.Cos(radian) * radius, 0.1f, Mathf.Sin(radian) * radius);
 
             forcePoints[i].transform.localPosition = spawnPos;
-            if (i == 0)
-                forcePoints[i].ForceKey = KeyA;
-            else if (i == 1)
-                forcePoints[i].ForceKey = KeyD;
             forcePoints[i].FastDecreaseAmount += 350f;
             forcePoints[i].gameObject.SetActive(true);
             currentForcePoints.Add(forcePoints[i]);
 
             lastAngle = angle;
         }
+
+        ForceKey.performed += OnForceKeyAxis;
+        ForceKey.canceled += OnForceKeyAxis;
     }
 
     /// <summary>

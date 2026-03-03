@@ -108,7 +108,8 @@ namespace InnerMonsterStates
                             monster.currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
                             break;
                         case 1: // 어뢰 자동 탑재 스위치
-                            // 스위치 off 필요
+                            // 스위치 off
+                            monster.currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
                             break;
                         case 2: // 산소 자동 제어 스위치
                             // 스위치 off 필요

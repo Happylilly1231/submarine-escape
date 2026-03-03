@@ -23,9 +23,10 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     [SerializeField] private TorpedoTubeScrew torpedoTubeScrew; // 2번 어뢰 발사관의 나사
     [SerializeField] private TorpedoLoadPanelButton[] doorButtons; // 문 버튼 배열
     [SerializeField] private Transform ejectViewPoint; // 나사 튀어나올 때 볼 위치
+    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
 
     protected override bool IsHoverRequired => true;
-    protected override bool IsMouseRequired => true;
+    protected override bool IsMouseRequiredAtFirst => true;
 
     // 아웃라인
     private Outline _torpedoOutline;
@@ -60,6 +61,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     // 이벤트
     public static event Action<bool> OnSetUpButtonStateChanged; // READY 버튼 상태(활성화 여부) 변경 이벤트
     public static event Action<bool> OnLoadButtonStateChanged; // LOAD 버튼 상태(활성화 여부) 변경 이벤트
+    public static event Action<TorpedoState> OnLoaded; // 탑재 이벤트 (탑재된 어뢰 상태)
 
     public override void Start()
     {
@@ -132,7 +134,10 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
-        return "Activate Torpedo Load Panel [E]";
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+            return "Auto Mode";
+        else
+            return "Activate Torpedo Load Panel [E]";
     }
 
     /// <summary>
@@ -141,6 +146,9 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     public void Interact()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
+            return;
+
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         ActivatePuzzle(); // 패널 활성화
@@ -616,43 +624,68 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     {
         TorpedoTube.OnClosed -= ExitAfterSuccess;
 
-        // 2번 발사관 나사 안 조였는데 탑재하고 문을 닫은 경우 -> 나사 튀어나옴
-        if (torpedoTubes[_currentTorpedoTubeIndex].TorpedoTubeNum == 2 && !torpedoTubes[_currentTorpedoTubeIndex].IsNormal)
+        switch (torpedoTubes[_currentTorpedoTubeIndex].TorpedoTubeNum)
         {
-            Sequence seq = DOTween.Sequence();
-            seq.Append(Camera.main.transform.DOMove(ejectViewPoint.position, 1.5f)
-            .SetEase(Ease.OutQuad));
-
-            seq.Join(Camera.main.transform.DORotateQuaternion(ejectViewPoint.rotation, 1.5f)
-            .SetEase(Ease.OutQuad));
-
-            seq.AppendCallback(() =>
-            {
-                torpedoTubeScrew.Eject();
-            });
-
-            seq.AppendInterval(1.5f); // 나사 튀어나갈 때까지 대기
-
-            seq.OnComplete(() =>
-            {
+            case 2: // 2번 발사관
+                if (torpedoTubeScrew.IsTightened) // 나사 조인 경우 -> 정상
+                {
+                    SetInputLock(false);
+                    _isLoadCompleted = true;
+                    _isLoading = false;
+                    OnLoaded?.Invoke(TorpedoState.Normal); // 정상 탑재되었음 알리기
+                    ExitPuzzle();
+                }
+                else // 나사 조이지 않은 경우 -> 비정상
+                {
+                    ViewScrewEjectAndComplete();
+                }
+                break;
+            case 4: // 4번 발사관 -> 비정상
                 SetInputLock(false);
                 _isLoadCompleted = true;
                 _isLoading = false;
-
+                OnLoaded?.Invoke(TorpedoState.Abnormal); // 비정상 탑재되었음 알리기
                 ExitPuzzle();
-
-                torpedoTubes[_currentTorpedoTubeIndex].SetDoorOpenState(true);
-            });
+                break;
+            default:
+                Debug.Log("기획 상의 경우가 아님");
+                break;
         }
-        else
+    }
+
+    /// <summary>
+    /// 나사 튀어나가는 것 보고 탑재 완료
+    /// </summary>
+    private void ViewScrewEjectAndComplete()
+    {
+        Sequence seq = DOTween.Sequence();
+        seq.Append(Camera.main.transform.DOMove(ejectViewPoint.position, 1.5f)
+        .SetEase(Ease.OutQuad));
+
+        seq.Join(Camera.main.transform.DORotateQuaternion(ejectViewPoint.rotation, 1.5f)
+        .SetEase(Ease.OutQuad));
+
+        seq.AppendCallback(() =>
+        {
+            torpedoTubeScrew.Eject();
+        });
+
+        seq.AppendInterval(1.5f); // 나사 튀어나갈 때까지 대기
+
+        seq.OnComplete(() =>
         {
             SetInputLock(false);
             _isLoadCompleted = true;
             _isLoading = false;
 
+            OnLoaded?.Invoke(TorpedoState.Abnormal); // 비정상 탑재되었음 알리기
+
             ExitPuzzle();
-        }
+
+            torpedoTubes[_currentTorpedoTubeIndex].SetDoorOpenState(true);
+        });
     }
+
     #endregion
 
     #region 문 열기/닫기

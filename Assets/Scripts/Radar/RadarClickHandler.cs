@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 /// </summary>
 public class RadarClickHandler : MonoBehaviour, IPointerClickHandler
 {
-    [SerializeField] private RadarController _radarController;
+    [SerializeField] private RadarDisplay _radarDisplay;
     private RectTransform _radarArea;
 
     private void Start()
@@ -24,12 +24,10 @@ public class RadarClickHandler : MonoBehaviour, IPointerClickHandler
     {
         // 현재 영역 안에서 클릭 발생한 로컬 위치 가져오기
         Vector2 currentUIPos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(_radarArea, eventData.position, null, out currentUIPos);
-
-        // 클릭 대상 가져오기
-        var clicked = eventData.pointerCurrentRaycast.gameObject;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(_radarArea, eventData.position, eventData.enterEventCamera, out currentUIPos);
 
         // 레이더 컨트롤러에서 현재 선택 위치를 갱신하기 위해 클릭 대상과 로컬 위치 넘겨주기
-        _radarController.UpdateCurrentSelectPos(clicked, currentUIPos);
+        _radarDisplay.UpdateCurrentSelectUIPos(currentUIPos);
+        Debug.Log(currentUIPos);
     }
 }

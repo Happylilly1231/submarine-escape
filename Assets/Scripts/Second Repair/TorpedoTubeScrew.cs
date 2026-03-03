@@ -9,7 +9,7 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
     [SerializeField] private TorpedoTube torpedoTube; // 어뢰 발사관
     [SerializeField] private Transform ejectViewPoint; // 나사 튀어나갈 때 볼 위치
 
-    private bool _isTightened = false;
+    public bool IsTightened { get; private set; } = false;
     private float _duration = 2f;
     private bool _canInteract = true;
 
@@ -24,13 +24,13 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
 
     public bool CanInteractwithSelectedItem(Item item)
     {
-        if (_isTightened || !_canInteract) return false; // 조여졌거나 상호작용이 불가능하면 -> 상호작용 X
+        if (IsTightened || !_canInteract) return false; // 조여졌거나 상호작용이 불가능하면 -> 상호작용 X
         return item == driverItem; // 조이려면 -> 드라이버 아이템 필요
     }
 
     public string GetInteractText()
     {
-        if (_isTightened || !_canInteract) // 조여졌거나 상호작용이 불가능하면 -> 상호작용 X
+        if (IsTightened || !_canInteract) // 조여졌거나 상호작용이 불가능하면 -> 상호작용 X
             return "";
 
         // 조이지 않았으면 - 드라이버가 선택되어있을 때 -> 나사 조이기 / 선택 안됨 -> 드라이버 필요 메시지
@@ -39,7 +39,7 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        if (_isTightened) // 조여졌으면 -> 상호작용 X
+        if (IsTightened) // 조여졌으면 -> 상호작용 X
             return;
 
         // 드라이버가 선택되어있을 때 -> 나사 조이기
@@ -79,8 +79,7 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
         transform.DOLocalRotate(new Vector3(0, 0, -360f), _duration, RotateMode.LocalAxisAdd)
         .OnComplete(() =>
         {
-            _isTightened = true;
-            torpedoTube.IsNormal = true;
+            IsTightened = true;
         });
     }
 

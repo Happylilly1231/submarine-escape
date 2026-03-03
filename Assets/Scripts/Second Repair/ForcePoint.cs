@@ -12,7 +12,7 @@ public class ForcePoint : MonoBehaviour
     public float CurrentAngleAmount { get; private set; } // 범위: -startAngle ~ CurrentRange (예: 현재 구간 - [100 ~ 300도] -> -100 ~ +200)
     public float FastDecreaseAmount { get; set; } = 0f;
     public float Gauge { get; private set; } // 범위: 0 ~ 1
-    public InputAction ForceKey { get; set; }
+    // public InputAction ForceKey { get; set; }
 
     private float _increaseAmount = 100f;
     private float _decreaseAmount = 20f;
@@ -44,8 +44,6 @@ public class ForcePoint : MonoBehaviour
         Gauge = 0f;
         _enableTimer = 0f;
         transform.GetChild(0).localScale = new Vector3(0f, 0f, 1f);
-        ForceKey.started += torpedoTubeHandle.OnForceKeyStarted;
-        ForceKey.canceled += torpedoTubeHandle.OnForceKeyCanceled;
         SetKeyIconActive(true);
 
         CancelForce(torpedoTubeHandle.ForcePointCounts[torpedoTubeHandle.CurrentForcePartIndex]);
@@ -207,11 +205,5 @@ public class ForcePoint : MonoBehaviour
         color = Color.black;
         color.a = alpha;
         keyIconTextRenderer.color = color;
-    }
-
-    private void OnDisable()
-    {
-        ForceKey.started -= torpedoTubeHandle.OnForceKeyStarted;
-        ForceKey.canceled -= torpedoTubeHandle.OnForceKeyCanceled;
     }
 }

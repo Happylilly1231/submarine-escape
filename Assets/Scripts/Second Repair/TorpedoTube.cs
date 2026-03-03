@@ -15,7 +15,6 @@ public class TorpedoTube : MonoBehaviour
 
     public bool IsOpened { get; private set; } // 문 열린 여부
     public bool IsUnlocked { get; private set; } // 잠금 해제 여부
-    public bool IsNormal { get; set; } // 정상 여부
     public bool IsCloseAvailable { get; set; } // 문 닫기 가능 여부
 
     private bool _isRotating = false; // 문 회전 중 여부
@@ -29,7 +28,6 @@ public class TorpedoTube : MonoBehaviour
     {
         IsOpened = false;
         IsUnlocked = false;
-        IsNormal = false;
         IsCloseAvailable = true;
 
         if (torpedoTubeNum == 3) // 3번 발사관은 잠금해제 된 상태임

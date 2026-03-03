@@ -732,6 +732,7 @@ MonoBehaviour:
   - {fileID: 4872243115752919785}
   torpedoTubeUnlockUI: {fileID: 5615089453442977713}
   progressImage: {fileID: 337030706536225066}
+  torpedoAutoLoadSwitch: {fileID: 0}
   currentForcePoints: []
 --- !u!54 &2277766740977641243
 Rigidbody:
@@ -8034,6 +8035,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8341142548966374003, guid: 557d191b619e0964bb3de661030f9932,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 3d5e0e82209d68645bdf0296a9a780a6,
+        type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8323,7 +8330,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 3b8964dedafbe2148904c5b1ce746fc0,
+      objectReference: {fileID: 21300000, guid: bc88a859096436b459892d69816057f7,
         type: 3}
     - target: {fileID: 9062736290658307087, guid: 557d191b619e0964bb3de661030f9932,
         type: 3}

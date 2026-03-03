@@ -17,8 +17,9 @@ public class SubmarineInGameManager : MonoBehaviour
     // 정지
     private bool _isPausing = false; // 정지 중 여부
     public bool IsPausing { get => _isPausing; set => _isPausing = value; }
-    private bool _haveToShowCursor = false; // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
-    public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; }
+    // private bool _haveToShowCursor = false;
+    // public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; } // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
+    private bool _isActionMapActiveBeforePause = true; // 정지 전 액션 맵 활성화 여부
     private bool _isMapOpened = false;
     public bool IsMapOpened { get => _isMapOpened; set => _isMapOpened = value; }
 
@@ -133,7 +134,8 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     private void InitGame()
     {
-        Resume();
+        GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
+        Resume(); // 재시작
     }
 
     /// <summary>
@@ -143,6 +145,7 @@ public class SubmarineInGameManager : MonoBehaviour
     {
         Debug.Log("정지");
         _isPausing = true; // 정지 중으로 설정
+        _isActionMapActiveBeforePause = playerInput.currentActionMap.enabled;
         playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
         playerInput.actions["ToggleMenu"].Enable();
         GameManager.instance.SetCursorVisible(true); // 커서 보이기
@@ -165,14 +168,15 @@ public class SubmarineInGameManager : MonoBehaviour
         Debug.Log("재시작");
         _isPausing = false; // 정지 중 아님으로 설정
 
-        if (!_haveToShowCursor) // 현재 커서가 보여야 하는 게 아니면(퍼즐 UI 등이 켜져 있는 게 아닐 때만)
-        {
-            playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
-            GameManager.instance.SetCursorVisible(false); // 커서 숨기기
-        }
-        // _playerInput.actions["ToggleMap"].Enable(); // 맵 켜고 끄는 버튼은 활성화 필요(맵이 켜질 때는 커서가 보이는 상태라 다른 상호작용은 안되어도 끌 수는 있어야 하기 때문)
         Time.timeScale = 1.0f; // 시간 정지 해제
         AudioListener.pause = false; // 오디오 듣기 정지 해제
+
+        // 액션 맵 활성화
+        if (_isActionMapActiveBeforePause) // 정지 전에 활성화였던 경우만
+            playerInput.currentActionMap.Enable();
+
+        // 커서 숨기기
+        GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
     }
 
     /// <summary>
@@ -234,62 +238,58 @@ public class SubmarineInGameManager : MonoBehaviour
         playerGeo.SetActive(isActive);
     }
 
-    /// <summary>
-    /// UI에 포커스 여부 설정 - 플레이어 인터랙터의 퍼즐 푸는 중 여부, 플레이어 인풋 활성화 여부, 커서, 카메라, 플레이어 이동 조작
-    /// </summary>
-    /// <param name="isFocus">포커스 여부</param>
-    public void SetFocusUI(bool isFocus)
-    {
-        if (isFocus)
-        {
-            _playerInteractor.IsPuzzleActive = true;
-            _playerInteractor.ClearDetectionText();
-            playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
-            playerInput.actions["ToggleMenu"].Enable(); // 정지 버튼은 활성화 필요
-            _haveToShowCursor = true; // 커서 보여야 함으로 설정
-            GameManager.instance.SetCursorVisible(true); // 커서 보이기
-            Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가
-            player.GetComponent<PlayerMove>().SetMoveable(false); // 플레이어 이동 불가능
-        }
-        else
-        {
-            _playerInteractor.IsPuzzleActive = false;
-            playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
-            _haveToShowCursor = false; // 커서 보여야 함 아님으로 설정
-            GameManager.instance.SetCursorVisible(false); // 커서 숨기기
-            Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
-            player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능
-        }
-    }
+    // /// <summary>
+    // /// UI에 포커스 여부 설정 - 플레이어 인터랙터의 퍼즐 푸는 중 여부, 플레이어 인풋 활성화 여부, 커서, 카메라, 플레이어 이동 조작
+    // /// </summary>
+    // /// <param name="isFocus">포커스 여부</param>
+    // public void SetFocusUI(bool isFocus)
+    // {
+    //     if (isFocus)
+    //     {
+    //         _playerInteractor.IsPuzzleActive = true;
+    //         _playerInteractor.ClearDetectionText();
+    //         playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
+    //         playerInput.actions["ToggleMenu"].Enable(); // 정지 버튼은 활성화 필요
+    //         GameManager.instance.SetHaveToShowCursor(true); // 커서 보여야 함으로 설정
+    //         GameManager.instance.SetCursorVisible(true); // 커서 보이기
+    //         Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가
+    //         player.GetComponent<PlayerMove>().SetMoveable(false); // 플레이어 이동 불가능
+    //     }
+    //     else
+    //     {
+    //         _playerInteractor.IsPuzzleActive = false;
+    //         playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
+    //         GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 함 아님으로 설정
+    //         GameManager.instance.SetCursorVisible(false); // 커서 숨기기
+    //         Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
+    //         player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능
+    //     }
+    // }
 
     /// <summary>
     /// 퍼즐용 포커스 여부 설정
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
-    /// <param name="isCursorRequired">커서 보이기 여부</param>
-    public void SetPuzzleFocus(bool isFocus, bool isCursorRequired = false)
+    public void SetPuzzleFocus(bool isFocus)
     {
         // 해제는 포커스와 반대로 작동
         _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
         _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
 
-        // 포커스 시작하는데 커서 써야 하면 -> 커서 보이기
-        if (isFocus && isCursorRequired)
+        if (isFocus) // 포커스
         {
-            _haveToShowCursor = true; // 포커스 -> 커서 보여야 함
-            GameManager.instance.SetCursorVisible(true); // 포커스 -> 커서 보이기
-        }
-
-        // 포커스 해제하는데 커서 쓰고 있었으면 -> 커서 숨기기
-        if (!isFocus && _haveToShowCursor)
-        {
-            _haveToShowCursor = false;
-            GameManager.instance.SetCursorVisible(false);
-        }
-
-        // 포커스 -> 상호작용 감지 텍스트 클리어
-        if (isFocus)
+            // 상호작용 감지 텍스트 클리어
             _playerInteractor.ClearDetectionText();
+        }
+        else // 포커스 해제
+        {
+            // 커서 보여야 한다고 되어 있었으면 -> 커서 보이지 않아도 됨으로 설정(퍼즐에서 플레이로 돌아가니까), 커서 숨기기
+            if (GameManager.instance.HaveToShowCursor)
+            {
+                GameManager.instance.SetHaveToShowCursor(false);
+                GameManager.instance.SetCursorVisible(false);
+            }
+        }
     }
 }

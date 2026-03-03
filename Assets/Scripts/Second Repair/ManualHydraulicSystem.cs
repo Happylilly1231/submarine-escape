@@ -12,9 +12,10 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     [SerializeField] private Transform leverTransform;
     [SerializeField] private HydraulicSystemDoorButton[] doorButtons;
     [SerializeField] private TextMeshProUGUI topInfoText;
+    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
 
     protected override bool IsHoverRequired => true;
-    protected override bool IsMouseRequired => true;
+    protected override bool IsMouseRequiredAtFirst => true;
 
     private float _currentProgress = 0f; // 0 ~ 100
     private bool _isLeverMoving = false;
@@ -29,6 +30,10 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
 
     private void Update()
     {
+        // 정지 중일 때 -> 아무것도 안 함
+        if (SubmarineInGameManager.instance.IsPausing)
+            return;
+
         // 퍼즐이 시작되지 않았으면 -> 아무것도 안 함
         if (!IsPuzzleStarted)
             return;
@@ -62,14 +67,18 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
-        // 나중에 추가해야할 내용: 잠금 해제 하나도 안 된 경우 -> 잠금 해제부터하라는 텍스트
-
-        return "Open Torpedo Tube Door [E]";
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+            return "Auto Mode";
+        else
+            return "Open Torpedo Tube Door [E]";
     }
 
     public void Interact()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
+            return;
+
+        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         ActivatePuzzle();
