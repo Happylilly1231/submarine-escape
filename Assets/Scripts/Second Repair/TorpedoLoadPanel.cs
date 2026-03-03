@@ -451,7 +451,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         stretcherGroup.transform.localPosition = new Vector3(-3f, 0f, 6f);
         stretcher.transform.localPosition = new Vector3(0f, 0.5f, 0f);
 
-        while (!IsCloseTo(torpedo.transform.localPosition.x, -3f))
+        while (!IsCloseTo(torpedo.transform.localPosition.x, -3f, 0.2f))
         {
             torpedoPos = torpedo.transform.localPosition;
             torpedoPos.x = torpedoPos.x + 1f * _realMoveSpeed * Time.deltaTime;

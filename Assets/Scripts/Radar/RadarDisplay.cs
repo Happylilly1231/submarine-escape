@@ -14,6 +14,7 @@ public class RadarDisplay : MonoBehaviour
     [SerializeField] private TextMeshProUGUI lockedUIHeaderText; // 잠금 UI 헤더 텍스트
     [SerializeField] private TextMeshProUGUI codeInputText; // 코드 입력 텍스트
     [SerializeField] private Image enterImg; // 엔터 이미지
+    [SerializeField] private Image lockedTickPart; // 잠겼을 때 눈금 부분 이미지
     [SerializeField] private RectTransform originDot; // 원점(현재 잠수함 점)
     public RectTransform OriginDot => originDot; // 원점(현재 잠수함 점)
     [SerializeField] private RectTransform selectionIndicator; // 선택 표시
@@ -101,6 +102,7 @@ public class RadarDisplay : MonoBehaviour
 
             // 배경 색 어두운 초록색으로 변경
             lockedUI.transform.GetChild(0).GetComponent<Image>().color = new Color(0f / 255f, 90f / 255f, 20f / 255f, 200f / 255f);
+            lockedTickPart.color = Color.black;
 
             // 줄무늬 라인 숨기기
             lockedUI.transform.GetChild(1).gameObject.SetActive(false);

@@ -23,6 +23,13 @@ public class Door : MonoBehaviour, IInteractable
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
 
+    private OcclusionPortal _occlusionPortal;
+
+    private void Awake()
+    {
+        _occlusionPortal = GetComponent<OcclusionPortal>();
+    }
+
     void Start()
     {
         frontPos = frontTransform.position;
@@ -90,6 +97,8 @@ public class Door : MonoBehaviour, IInteractable
             SubmarineInGameManager.instance.AlertOn(); // 경보 발생
         }
 
+        _occlusionPortal.open = true;
+
         _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
@@ -141,6 +150,7 @@ public class Door : MonoBehaviour, IInteractable
 
                 OnDoorOpenStateChanged?.Invoke();
                 OnDoorClosed?.Invoke(this);
+                _occlusionPortal.open = false;
             });
     }
 
