@@ -150,7 +150,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         _currentProgress += _increaseAmount;
 
         // 레버 왕복 운동
-        leverTransform.DOLocalRotate(new Vector3(20f, 0f, 0f), 0.2f / 2)
+        leverTransform.DOLocalMove(new Vector3(0f, -12f, 12f), 0.2f / 2)
         .SetLoops(2, LoopType.Yoyo) // 왕복(아래로 내려갔다 다시 올라옴)
         .OnComplete(() =>
         {

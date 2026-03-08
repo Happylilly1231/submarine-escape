@@ -13,6 +13,8 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     [SerializeField] private GameObject torpedoTubeUnlockUI; // 잠금 해제 UI
     [SerializeField] private Image progressImage; // 진행도 이미지
     [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
+    [SerializeField] private string negativeKey = "z";
+    [SerializeField] private string positiveKey = "c";
 
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => false;
@@ -278,6 +280,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
             yield return null;
         }
+
         ForceKey.performed -= OnForceKeyAxis;
         ForceKey.canceled -= OnForceKeyAxis;
 
@@ -342,6 +345,12 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
             lastAngle = angle;
         }
+
+        // ForceKey 바인딩 경로 동적 변경 (어뢰 발사관마다 다르도록)
+        ForceKey.Disable(); // 기존 액션을 잠시 비활성화 (바인딩 변경을 위해 필요)
+        ForceKey.ApplyBindingOverride(1, $"<Keyboard>/{negativeKey}");
+        ForceKey.ApplyBindingOverride(2, $"<Keyboard>/{positiveKey}");
+        ForceKey.Enable(); // 액션 다시 활성화
 
         ForceKey.performed += OnForceKeyAxis;
         ForceKey.canceled += OnForceKeyAxis;
