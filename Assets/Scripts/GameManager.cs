@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
 
     private float _mouseSensitivity; // 마우스 감도
     public float MouseSensitivity => _mouseSensitivity;
+    private bool _haveToShowCursor = true;
+    public bool HaveToShowCursor => _haveToShowCursor;
 
     // 싱글톤 변수
     public static GameManager instance;
@@ -45,7 +47,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 커서 보이거나 숨기기
+    /// 커서 보이거나 숨기기 (커서 보여야 하는 중에는 숨기지 않음)
     /// </summary>
     /// <param name="visible">보이기 여부</param>
     public void SetCursorVisible(bool visible)
@@ -57,9 +59,21 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Cursor.visible = false; // 마우스 커서 숨김
-            Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+            if (!_haveToShowCursor)
+            {
+                Cursor.visible = false; // 마우스 커서 숨김
+                Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+            }
         }
+    }
+
+    /// <summary>
+    /// 커서 보여줘야하는지 여부 설정
+    /// </summary>
+    /// <param name="isShow"></param>
+    public void SetHaveToShowCursor(bool isShow)
+    {
+        _haveToShowCursor = isShow;
     }
 
     public void ToggleMenu()

@@ -12,6 +12,8 @@ public class LightingManager : MonoBehaviour
     private Light[][] _lightsArray; // Light 이차원 배열(부모 객체 index, 해당 부모의 자식 간의 index)
     private Material[][] _bulbMaterialsArray; // 전구 머티리얼 이차원 배열
 
+    public bool IsPowerOn { get; private set; } // 현재 전력 복구 여부(=불 켜져있는지 여부)
+
     public event Action<bool> OnLightChanged; // 조명 켜지거나 꺼질 때 이벤트
 
     // 싱글톤 변수
@@ -62,6 +64,8 @@ public class LightingManager : MonoBehaviour
     /// <param name="isTurnOn">조명 켜는지 여부</param>
     public void LightToggle(bool isTurnOn)
     {
+        IsPowerOn = isTurnOn;
+
         // 배열에 저장된 모든 Light 컴포넌트의 활성화 여부 설정
         for (int i = 0; i < _lightsArray.Length; i++)
         {

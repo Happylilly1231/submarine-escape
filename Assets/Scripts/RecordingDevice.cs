@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 나중에 변경할 것임!!!
 public class RecordingDevice : MonoBehaviour, IInteractable
 {
     [SerializeField] private GameObject recordingUI;
@@ -43,7 +44,7 @@ public class RecordingDevice : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        SubmarineInGameManager.instance.SetFocusUI(true);
+        SubmarineInGameManager.instance.SetPuzzleFocus(true);
 
         recordingUI.SetActive(true);
         StartCoroutine(PlayRecording());
@@ -104,7 +105,7 @@ public class RecordingDevice : MonoBehaviour, IInteractable
     /// </summary>
     public void ExitRecordingDevice()
     {
-        SubmarineInGameManager.instance.SetFocusUI(false);
+        SubmarineInGameManager.instance.SetPuzzleFocus(false);
         recordingUI.SetActive(false);
         _audioSource.Stop();
         StopAllCoroutines();

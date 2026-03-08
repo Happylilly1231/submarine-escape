@@ -8,24 +8,22 @@ using UnityEngine;
 /// </summary>
 public class RadarControlPanel : MonoBehaviour, IInteractable
 {
-    [SerializeField] private RadarController _radarController; // 레이더 컨트롤러
-    [SerializeField] private Transform radarViewPoint; // 레이더 볼 때 카메라 위치
+    [SerializeField] private RadarController radarController; // 레이더 컨트롤러
     [SerializeField] private Item toolKitItem; // 공구 상자 아이템 (파괴되어 고장났을 때 필요)
 
-    private float _duration = 1.5f; // 레이더 볼 때 카메라 이동 시간
     private bool _isPowerOn = false; // 전력 켜져 있는지 여부
     private bool _isBroken = false; // 고장 여부
 
     private ItemEquipController _itemEquipController;
     private InventoryManager _inventoryManager;
 
-    void Start()
+    private void Start()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _inventoryManager = FindObjectOfType<InventoryManager>();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         LightingManager.instance.OnLightChanged += SetPower;
     }
@@ -61,7 +59,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
 
         if (!_isBroken) // 고장 나지 않았을 때 -> 레이더 보기
         {
-            ViewRadar();
+            radarController.ActivatePuzzle();
         }
         else if (_isBroken && IsToolKitSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
         {
@@ -76,32 +74,12 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// 레이더 보기
-    /// </summary>
-    public void ViewRadar()
-    {
-        SubmarineInGameManager.instance.SetFocusUI(true);
-
-        Sequence seq = DOTween.Sequence();
-        seq.Append(Camera.main.transform.DOMove(radarViewPoint.position, _duration)
-        .SetEase(Ease.OutQuad));
-
-        seq.Join(Camera.main.transform.DORotateQuaternion(radarViewPoint.rotation, _duration)
-            .SetEase(Ease.OutQuad));
-
-        seq.OnComplete(() =>
-        {
-            _radarController.SetRadarVisible(true); // 레이더 보기
-        });
-    }
-
-    /// <summary>
     /// 전력 켜거나 끄기
     /// </summary>
     private void SetPower(bool isPowerOn)
     {
-        if (isPowerOn && !_radarController.IsUpdateStart)
-            _radarController.IsUpdateStart = true;
+        if (isPowerOn && !radarController.IsUpdateStart)
+            radarController.IsUpdateStart = true;
         _isPowerOn = isPowerOn;
     }
 
@@ -139,7 +117,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         float repairTime = 3f;
         float timer = repairTime;
 
-        SubmarineInGameManager.instance.SetFocusUI(true);
+        SubmarineInGameManager.instance.SetPuzzleFocus(true);
         while (timer > 0)
         {
             MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
@@ -150,7 +128,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         yield return new WaitForSeconds(1f);
         MessageUIController.Instance.HideMessage();
 
-        SubmarineInGameManager.instance.SetFocusUI(false);
+        SubmarineInGameManager.instance.SetPuzzleFocus(false);
         _isBroken = false;
     }
 }
