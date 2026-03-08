@@ -58,7 +58,6 @@ public class RadarLauncher : MonoBehaviour
     /// </summary>
     public void StopFireAnimationLoop()
     {
-        Debug.Log(_currentFireAnimationLoopCoroutine);
         if (_currentFireAnimationLoopCoroutine != null)
         {
             StopCoroutine(_currentFireAnimationLoopCoroutine);
@@ -123,7 +122,6 @@ public class RadarLauncher : MonoBehaviour
         // 어뢰 이동 -> 타겟에 닿으면 폭발
         while (currentExplosionTargets.Count == 0) // 폭발 가능한 타겟이 없는 동안
         {
-            Debug.Log("!!!!!!!!!!");
             // 정지 중일 때 -> 아무것도 안 함
             if (SubmarineInGameManager.instance.IsPausing)
                 yield return null;
