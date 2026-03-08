@@ -186,17 +186,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: -5.78
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.15
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -17.43
+      value: 13.08
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -803,22 +803,6 @@ MonoBehaviour:
     m_ActionName: Player/Jump[/Keyboard/space]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8734016063853228878}
-        m_TargetAssemblyTypeName: PlayerMove, Assembly-CSharp
-        m_MethodName: OnPause
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: e0253f67-5074-4012-8620-7170f5b751e0
-    m_ActionName: Player/Pause[/Keyboard/escape]
-  - m_PersistentCalls:
-      m_Calls:
       - m_Target: {fileID: 3685600775984150395}
         m_TargetAssemblyTypeName: PlayerInteractor, Assembly-CSharp
         m_MethodName: OnItemPickUp
@@ -985,6 +969,66 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: f6634892-d256-4f66-a89c-c215415e50d7
     m_ActionName: Player/PowerPuzzle[/Mouse/leftButton]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: MapViewController, Assembly-CSharp
+        m_MethodName: OnToggleMap
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: f400d86e-ab55-49d3-ae4f-284a89720e98
+    m_ActionName: Player/ToggleMap[/Keyboard/tab]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: SubmarineInGameManager, Assembly-CSharp
+        m_MethodName: OnToggleMenu
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 7e50d403-0439-457f-96ca-be2ff8fbab39
+    m_ActionName: Player/ToggleMenu[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 63b5b141-7fc6-4cad-9803-afbe0b4ba55f
+    m_ActionName: Puzzle/Click[/Mouse/leftButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 6b467f2a-5d7d-4ec7-ac4f-8ba13ff43ce6
+    m_ActionName: Puzzle/Point[/Mouse/position]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 03aaa03a-c8a1-4aab-bac2-e51639d7fd51
+    m_ActionName: Puzzle/Exit[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 9d979b7b-433d-4738-a368-42edcd36804f
+    m_ActionName: Puzzle/Space[/Keyboard/space]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 34a53334-b9d4-457f-9922-5f9aa778c4a6
+    m_ActionName: Puzzle/KeyA[/Keyboard/a]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: bb84ec35-2f49-4a61-b7ef-6e2bc6cdb671
+    m_ActionName: Puzzle/KeyD[/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 7b5dee92-146e-4733-a637-e00bf0d721d7
+    m_ActionName: Puzzle/ForceKey[/Keyboard/z,/Keyboard/c]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player
@@ -1003,7 +1047,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
-  mouseSensitivity: 1
   walkSound: {fileID: 8300000, guid: a3f47c62599349e4e8acbc97d3c69d27, type: 3}
   runSound: {fileID: 8300000, guid: bc855e9ee16542246859fff6cd89f8f7, type: 3}
   jumpLandingSound: {fileID: 8300000, guid: b241cc41f01813941a479e08fefb669f, type: 3}

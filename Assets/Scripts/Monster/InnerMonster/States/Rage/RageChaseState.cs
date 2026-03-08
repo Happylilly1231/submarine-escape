@@ -154,8 +154,8 @@ namespace InnerMonsterStates
             // 코너 ~ 다음 코너 구간마다 RayCastAll 함수로 경로 상의 문 검출 -> DoorsOnPathList에 추가
             for (int i = 0; i < corners.Length - 1; i++)
             {
-                Vector3 start = corners[i]; // 현재 코너
-                Vector3 end = corners[i + 1]; // 다음 코너
+                Vector3 start = corners[i] + Vector3.up * 1f; // 현재 코너
+                Vector3 end = corners[i + 1] + Vector3.up * 1f; // 다음 코너
                 Vector3 dir = (end - start).normalized; // 현재 코너에서 다음 코너로의 정규화된 방향
                 float dist = Vector3.Distance(start, end); // 현재 코너에서 다음 코너까지의 거리
 
