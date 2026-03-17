@@ -15,6 +15,7 @@ public class LightingManager : MonoBehaviour
     public bool IsPowerOn { get; private set; } // 현재 전력 복구 여부(=불 켜져있는지 여부)
 
     public event Action<bool> OnLightChanged; // 조명 켜지거나 꺼질 때 이벤트
+    public event Action OnLightTurnedOn; // 조명 켜질 때 이벤트
 
     // 싱글톤 변수
     public static LightingManager instance;
@@ -98,5 +99,6 @@ public class LightingManager : MonoBehaviour
 
         // 조명 켜지거나 꺼질 때 이벤트 알림
         OnLightChanged?.Invoke(isTurnOn); // 인자는 켜진 여부
+        if (isTurnOn) OnLightTurnedOn?.Invoke();
     }
 }

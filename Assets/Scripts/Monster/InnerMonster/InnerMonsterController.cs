@@ -6,6 +6,7 @@ using System.Linq;
 
 using InnerMonsterStates;
 using System;
+using DG.Tweening;
 
 public enum EAttackType
 {
@@ -48,9 +49,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public Animator Animator { get => _animator; set => _animator = value; }
     private NavMeshAgent _nav; // NavMeshAgent
     public NavMeshAgent Nav { get => _nav; set => _nav = value; }
-    private CapsuleCollider _collider; // 콜라이더
     public LayerMask doorLayer;
     public LayerMask destroyEquipmentLayer;
+    private Transform _monsterModelTransform;
+    private CapsuleCollider _collider;
 
 
     // 플레이어 관련
@@ -58,6 +60,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private PlayerStatus _playerStatus; // 플레이어 상태
     private float _distToPlayer; // 플레이어와의 거리(순찰/추적/공격 상태 결정 기준)
     public float DistToPlayer => _distToPlayer;
+    public bool IsPlayerMutationCompeleted { get; private set; } = false;
 
     // 범위 관련
     private float _fov = 150f;
@@ -83,6 +86,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool IsChaseEndDelay => _isChaseEndDelay;
     private float _chaseEndDelayTime = 3f;
     public float _chaseEndDelayTimer = 0f;
+    public bool CanChaseHitPos { get; set; } = false;
+    public Vector3 CurrentHitPos { get; private set; }
+    private Coroutine _chaseHitPosTimerCoroutine = null;
 
     // 공격
     public EAttackType currentAttackType;
@@ -138,6 +144,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 이벤트 구독
         LightingManager.instance.OnLightChanged += ChangeStatValue; // 전등 상태 변경 -> 몬스터 스탯 수치 변경
         SubmarineInGameManager.instance.OnAlertStarted += RageStart; // 경보 발생 시작 -> 폭주 시작
+        PlayerMutation.OnSpikeHitFloor += CanChaseHitSoundSource; // 플레이어 가시 생성 시 가시로 바닥 칠 때 -> 소리 난 곳으로 추적 가능으로 설정
+        PlayerMutation.OnMutationCompleted += OnMutationCompleted; // 플레이어 완전 괴물화 -> 플레이어 완전 괴물화되었음으로 설정
     }
 
     private void OnDisable()
@@ -145,6 +153,53 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 이벤트 구독 해제
         LightingManager.instance.OnLightChanged -= ChangeStatValue;
         SubmarineInGameManager.instance.OnAlertStarted -= RageStart;
+        PlayerMutation.OnSpikeHitFloor -= CanChaseHitSoundSource;
+        PlayerMutation.OnMutationCompleted -= OnMutationCompleted;
+    }
+
+    /// <summary>
+    /// 플레이어 완전 괴물화되었음으로 설정
+    /// </summary>
+    private void OnMutationCompleted()
+    {
+        IsPlayerMutationCompeleted = true;
+    }
+
+    /// <summary>
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능으로 설정
+    /// </summary>
+    private void CanChaseHitSoundSource(Vector3 hitPos)
+    {
+        CanChaseHitPos = true;
+        CurrentHitPos = hitPos;
+        _chaseHitPosTimerCoroutine = StartCoroutine(ChaseHitPosTimerCoroutine());
+    }
+
+    /// <summary>
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 (일정 시간이 지나면 더는 추적하지 않게)
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator ChaseHitPosTimerCoroutine()
+    {
+        float timer = 0f;
+        while (timer < 7f)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        Debug.Log("7초 끝!");
+        CanChaseHitPos = false;
+    }
+
+    /// <summary>
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 즉시 종료
+    /// </summary>
+    public void EndChastHitPosTimer()
+    {
+        CanChaseHitPos = false;
+        if (_chaseHitPosTimerCoroutine != null)
+            StopCoroutine(_chaseHitPosTimerCoroutine);
+        _chaseHitPosTimerCoroutine = null;
     }
 
     private void Awake()
@@ -164,12 +219,15 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 플레이어 트랜스폼 가져오기
         playerTransform = SubmarineInGameManager.instance.player.transform;
 
+        // 몬스터 모델 트랜스폼 & 콜라이더 가져오기
+        _monsterModelTransform = transform.GetChild(0);
+        _collider = _monsterModelTransform.GetComponent<CapsuleCollider>();
+
         // 컴포넌트 초기화
         _playerStat = playerTransform.GetComponent<PlayerStat>();
         _playerStatus = playerTransform.GetComponent<PlayerStatus>();
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
-        _collider = GetComponent<CapsuleCollider>();
         audioSource = GetComponent<AudioSource>();
 
         // 웨이포인트 배열 가져오기
@@ -297,6 +355,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// </summary>
     public bool CanDetect()
     {
+        // 플레이어 완전 괴물화 시 -> 더는 플레이어를 추적 & 공격 대상으로 여기지 않음
+        if (IsPlayerMutationCompeleted)
+            return false;
+
         Vector3 eyePos = transform.position + Vector3.up; // 눈높이 위치
 
         DrawVisionRays(eyePos); // 씬에서 시야 레이(좌, 중, 우) 그리기
@@ -342,25 +404,26 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     }
 
     /// <summary>
-    /// 변경 여부에 따른 콜라이더 중심 변경
-    /// <para>- 몬스터의 머리가 애니메이션 때문에 콜라이더 바깥으로 나가서 카메라에 머릿속이 보이는 현상 때문에 필요</para>
+    /// 변경 여부에 따른 몬스터 모델 중심 변경
+    /// <para>- 몬스터의 머리가 애니메이션 때문에 콜라이더 바깥으로 나가기 때문에 필요</para>
     /// </summary>
     /// <param name="isChange">변경 여부, false면 기본으로 되돌림</param>
     /// <param name="zValue">변경할 z 값(기본은 0.5f), false면 기본으로 되돌림</param>
-    public void ColliderCenterChange(bool isChange, float zValue = 0.5f)
+    public void ChangeMonsterModelCenter(bool isChange, float zValue = 0.5f)
     {
+        Vector3 centerPos = _collider.center;
         if (isChange)
         {
-            Vector3 centerPos = _collider.center;
             centerPos.z = zValue;
-            _collider.center = centerPos;
+            _monsterModelTransform.DOLocalMoveZ(-zValue, 0.5f);
         }
+
         else
         {
-            Vector3 centerPos = _collider.center;
             centerPos.z = 0f;
-            _collider.center = centerPos;
+            _monsterModelTransform.DOLocalMoveZ(0f, 0.5f);
         }
+        _collider.center = centerPos;
     }
 
     /// <summary>
@@ -399,7 +462,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// <summary>
     /// 두리번거리기 시작(추적 불가능 상태 -> Idle 상태로 전환)
     /// </summary>
-    private void StartLookAround()
+    public void StartLookAround()
     {
         _isLookingAroundAfterAction = true; // 행동 후 두리번거리는 중으로 설정
         _animator.SetBool("isLookingAround", true); // 애니메이션 파라미터 설정(-> LookingAfterAction)
@@ -548,22 +611,22 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             switch (currentAttackType)
             {
                 case EAttackType.HitAttack:
-                    AudioManager.Instance.PlaySFX(attackSounds[0]);
+                    audioSource.PlayOneShot(attackSounds[0]);
                     if (canReach)
                         HitAttack();
                     break;
                 case EAttackType.DoubleClawAttack:
-                    AudioManager.Instance.PlaySFX(attackSounds[1]);
+                    audioSource.PlayOneShot(attackSounds[1]);
                     if (canReach)
                         DoubleClawAttack();
                     break;
                 case EAttackType.JumpAttack:
-                    AudioManager.Instance.PlaySFX(attackSounds[2]);
+                    audioSource.PlayOneShot(attackSounds[2]);
                     if (canReach)
                         JumpAttack();
                     break;
                 case EAttackType.ThrowAttack:
-                    AudioManager.Instance.PlaySFX(attackSounds[3]);
+                    audioSource.PlayOneShot(attackSounds[3]);
                     ThrowAttack();
                     break;
             }
@@ -655,7 +718,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("점프 종료");
         _isJumping = false; // 점프 중 아님으로 설정
         CanMove(false); // 이동 정지
-        AudioManager.Instance.PlaySFX(jumpLandingSound);
+        audioSource.PlayOneShot(jumpLandingSound);
         if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
         {
             // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)

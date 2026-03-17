@@ -66,7 +66,7 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void Damage(float value, EEndingType cause = EEndingType.MonsterDeath)
     {
-        AudioManager.Instance.PlaySFX(damageSound);
+        AudioManager.Instance.PlayGlobalOneShot(damageSound);
         _hp -= value;
         Debug.Log($"Damage: -{value} | Cause: {cause}");
         if (_hp <= 0)

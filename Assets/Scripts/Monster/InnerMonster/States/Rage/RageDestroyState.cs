@@ -23,11 +23,11 @@ namespace InnerMonsterStates
         {
             owner.CanMove(false); // 이동 정지
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
-            owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
+            owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경
 
             owner.currentAttackType = EAttackType.RageDestroyAttack; // 현재 공격 타입 -> 폭주 파괴 공격
             owner.Animator.SetBool("isRageDestroying", true); // 폭주 파괴 애니메이션 재생
-            AudioManager.Instance.PlaySFX(owner.destroyRageSound);
+            owner.audioSource.PlayOneShot(owner.destroyRageSound);
             _timer = 0f; // 타이머 초기화
 
             // 파괴하는데 걸리는 시간 설정
@@ -83,7 +83,7 @@ namespace InnerMonsterStates
         /// </summary>
         private void RageDestroy(InnerMonsterController monster)
         {
-            AudioManager.Instance.PlaySFX(monster.destroyCompleteSound);
+            monster.audioSource.PlayOneShot(monster.destroyCompleteSound);
             // 타입에 따른 후처리
             switch (monster.currentDestroyObjType)
             {

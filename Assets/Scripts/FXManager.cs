@@ -67,6 +67,7 @@ public class FXManager : MonoBehaviour
     {
         _vignette.color.value = color;
         _vignette.intensity.value = 0.5f;
+        _vignette.smoothness.value = 0.5f;
     }
 
     /// <summary>
@@ -75,5 +76,31 @@ public class FXManager : MonoBehaviour
     public void VignetteOff()
     {
         _vignette.intensity.value = 0f;
+    }
+
+    /// <summary>
+    /// 암전
+    /// </summary>
+    public void FadeOut(Color color, float duration, System.Action onComplete = null)
+    {
+        StartCoroutine(FadeOutCoroutine(color, duration, onComplete));
+    }
+
+    private IEnumerator FadeOutCoroutine(Color color, float duration, System.Action onComplete)
+    {
+        _vignette.color.value = color;
+        _vignette.smoothness.value = 1f;
+
+        float value = 0f;
+        float speed = 1f / duration;
+        while (value < 1f)
+        {
+            _vignette.intensity.value = value;
+            value += speed * Time.deltaTime;
+            yield return null;
+        }
+        _vignette.intensity.value = 1f;
+
+        onComplete?.Invoke();
     }
 }

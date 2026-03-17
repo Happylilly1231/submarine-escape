@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +11,8 @@ public class GameTime : MonoBehaviour
 {
     public static GameTime Instance { get; private set; }
     public float TimeSinceStart { get; private set; } // 게임 시작 이후로 흐른 시간
+
+    public event Action<int> OnMutationLevelUp;
 
     private void Awake()
     {

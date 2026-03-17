@@ -163,7 +163,7 @@ public class RadarController : PuzzleController
         SelectHeight(false);
 
         // 레이더 열리는 소리
-        AudioManager.Instance.PlaySFX(radarOpenSound);
+        AudioManager.Instance.PlayGlobalOneShot(radarOpenSound);
     }
 
     public override void ExitPuzzle()
@@ -191,7 +191,7 @@ public class RadarController : PuzzleController
         _radarLauncher.StopFireAnimationLoop();
 
         // 레이더 꺼지는 소리
-        AudioManager.Instance.PlaySFX(radarCloseSound);
+        AudioManager.Instance.PlayGlobalOneShot(radarCloseSound);
     }
     #endregion
 
@@ -337,7 +337,7 @@ public class RadarController : PuzzleController
             _canType = false;
             Keyboard.current.onTextInput -= OnTextInput; // 입력 이벤트 구독 해제
 
-            AudioManager.Instance.PlaySFX(modeChangeSuccessSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeSuccessSound);
 
             // 1.5초 대기
             yield return new WaitForSeconds(1.5f);
@@ -356,7 +356,7 @@ public class RadarController : PuzzleController
             // 실패 메시지 띄우기
             _radarDisplay.UpdateUIAfterSubmit(false);
 
-            AudioManager.Instance.PlaySFX(modeChangeFailSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeFailSound);
 
             // 1.5초 대기(대기하는 동안 입력 불가)
             _canType = false;

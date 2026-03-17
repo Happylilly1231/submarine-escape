@@ -26,7 +26,7 @@ namespace InnerMonsterStates
             owner.CanMove(true); // 이동
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
             owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentTargetPos.position); // 현재 목표 위치를 향해 이동
-            owner.ColliderCenterChange(true, 0.3f); // 컨트롤러 중심 변경
+            owner.ChangeMonsterModelCenter(true, 0.3f); // 몬스터 모델 중심 변경
 
             // 경로 상의 문 리스트 얻기
             owner.StartCoroutine(GetDoorsOnPathList(owner));
@@ -34,7 +34,7 @@ namespace InnerMonsterStates
             // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
             _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
 
-            AudioManager.Instance.PlaySFX(owner.detectSound);
+            owner.audioSource.PlayOneShot(owner.detectSound);
             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
         }
 

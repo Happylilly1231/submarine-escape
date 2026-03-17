@@ -25,11 +25,21 @@ namespace InnerMonsterStates
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
             owner.ChangeFovCenter(true); // 시야각 중심 위치를 그냥 트랜스폼으로 변경
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
-            owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
+            owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경
         }
 
         public void Update(InnerMonsterController owner)
         {
+            // 공격 도중 플레이어 완전 괴물화 시 -> 바로 순찰 상태로 전환 
+            if (owner.IsPlayerMutationCompeleted)
+            {
+                owner.Animator.Play("Walk");
+                owner.ChangeState(new PatrolState());
+                // owner.Animator.Play("Idle");
+                // owner.ChangeState(new IdleState());
+                return;
+            }
+
             owner.LookAtTarget(owner.PlayerTransform.position); // 현재 플레이어 위치를 바라보도록 회전
 
             // 점프 중 -> 플레이어를 향해 이동

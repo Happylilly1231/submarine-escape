@@ -63,6 +63,9 @@ public class SubmarineInGameManager : MonoBehaviour
     private bool _isFireSuccess = false;
     public bool IsFireSuccess { get => _isFireSuccess; set => _isFireSuccess = value; }
 
+    // 현재 퍼즐
+    public PuzzleController CurrentPuzzleController { get; private set; } = null;
+
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
 
@@ -266,12 +269,33 @@ public class SubmarineInGameManager : MonoBehaviour
     //     }
     // }
 
+    public void SetFocus(bool isFocus)
+    {
+        if (CurrentPuzzleController != null)
+            CurrentPuzzleController.ExitPuzzle();
+
+        // 해제는 포커스와 반대로 작동
+        _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
+        _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+        if (isFocus) // 포커스
+        {
+            // 상호작용 감지 텍스트 클리어
+            _playerInteractor.ClearDetectionText();
+        }
+    }
+
     /// <summary>
     /// 퍼즐용 포커스 여부 설정
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
-    public void SetPuzzleFocus(bool isFocus)
+    public void SetPuzzleFocus(bool isFocus, PuzzleController puzzleController = null)
     {
+        if (isFocus)
+            CurrentPuzzleController = puzzleController;
+        else
+            CurrentPuzzleController = null;
+
         // 해제는 포커스와 반대로 작동
         _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
