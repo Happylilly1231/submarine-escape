@@ -4,6 +4,8 @@ using InnerMonsterStates;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using System.Text;
+using System;
 
 /// <summary> 인벤토리 관리자
 /// <para> - 플레이어 인벤토리 전체를 관리 </para> 
@@ -15,6 +17,7 @@ public class InventoryManager : MonoBehaviour
     [Header("인벤토리 UI 및 슬롯")]
     [SerializeField] private GameObject inventoryUI; // 인벤토리 전체 UI 오브젝트
     [SerializeField] private InventorySlot[] inventorySlots; // 인벤토리 슬롯 배열
+    [SerializeField] private TMPro.TextMeshProUGUI actionText; // 상호작용 UI - 아이템 사용, 버리기, 맵 열기 키 표시
     [Header("인벤토리 슬롯 스프라이트")]
     [SerializeField] private Sprite slotSprite; // 슬롯 기본 스프라이트
     [SerializeField] private Sprite selectedSlotSprite; // 슬롯 선택 스프라이트
@@ -25,11 +28,9 @@ public class InventoryManager : MonoBehaviour
     private int _selectedSlotIndex = -1; // 선택된 슬롯 인덱스
     public int SelectedSlotIndex => _selectedSlotIndex;
     private bool _isSwapMode = false; // T키 눌림 상태
+    private bool _hasRegisteredMap = false; // 지도 아이템 사용 여부
+    private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
-    private int _heldItemSlotIndex = -1; // 손에 들고 있는 아이템의 슬롯 인덱스
-    public int HeldItemSlotIndex => _heldItemSlotIndex;
-    private CrewRoom1KeyPad _crewRoom1KeyPad;
-    private CrewRoom1KeyPadPanel _crewRoom1KeyPadPanel;
 
     /// <summary>
     /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
@@ -37,8 +38,6 @@ public class InventoryManager : MonoBehaviour
     void Awake()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
-        _crewRoom1KeyPadPanel = FindObjectOfType<CrewRoom1KeyPadPanel>();
-        _crewRoom1KeyPad = FindObjectOfType<CrewRoom1KeyPad>();
     }
 
     /// <summary>
@@ -98,9 +97,53 @@ public class InventoryManager : MonoBehaviour
     /// </summary>
     private void SelectSlot(int slotIndex)
     {
-        if (slotIndex >= 0 && slotIndex < inventorySlots.Length) inventorySlots[slotIndex].GetComponent<UnityEngine.UI.Image>().sprite = selectedSlotSprite;
-        if (_selectedSlotIndex >= 0) inventorySlots[_selectedSlotIndex].GetComponent<UnityEngine.UI.Image>().sprite = slotSprite;
+        if (slotIndex >= 0 && slotIndex < inventorySlots.Length) inventorySlots[slotIndex].GetComponent<Image>().sprite = selectedSlotSprite;
+        if (_selectedSlotIndex >= 0) inventorySlots[_selectedSlotIndex].GetComponent<Image>().sprite = slotSprite;
         _selectedSlotIndex = slotIndex;
+        _isViewingUI = false;
+        UpdateActionText();
+    }
+
+    private void UpdateActionText()
+    {
+        StringBuilder sb = new StringBuilder();
+        Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
+
+        if (currentItem != null)
+        {
+            sb.AppendLine("Drop [Q]");
+
+            switch (currentItem.ItemType)
+            {
+                case EItemType.Toggle:
+                    sb.AppendLine("On/Off [Mouse LMB]");
+                    break;
+                case EItemType.Consumable:
+                    sb.AppendLine("Use [E]");
+                    break;
+                case EItemType.UI:
+                    if (currentItem.ItemName == "Map")
+                    {
+                        sb.AppendLine("Register Map[E]");
+                    }
+                    else if (_isViewingUI)
+                    {
+                        sb.AppendLine("Close [E]");
+                    }
+                    else
+                    {
+                        sb.AppendLine("View [E]");
+                    }
+                    break;
+                case EItemType.Wearable:
+                    sb.AppendLine("Wear [E]");
+                    break;
+            }
+        }
+
+        if (_hasRegisteredMap) sb.AppendLine("View Map [Tab]");
+
+        actionText.text = sb.ToString();
     }
 
     /// <summary>
@@ -144,6 +187,7 @@ public class InventoryManager : MonoBehaviour
         {
             inventorySlots[_selectedSlotIndex].AddItem(newItem, count);
             _itemEquipController.EquipItem(inventorySlots[_selectedSlotIndex].Item);
+            UpdateActionText();
             return true;
         }
 
@@ -178,10 +222,12 @@ public class InventoryManager : MonoBehaviour
                 return;
             }
         }
+        UpdateActionText();
     }
 
     /// <summary>
     /// E키 입력으로 아이템 사용
+    /// <para> - 손전등은 마우스 좌클릭으로 사용 </para>
     /// </summary>
     public void OnItemUse(InputAction.CallbackContext context)
     {
@@ -190,34 +236,62 @@ public class InventoryManager : MonoBehaviour
 
         var selectedSlot = inventorySlots[_selectedSlotIndex];
         if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
-        // if ((_crewRoom1KeyPad != null && _crewRoom1KeyPad.IsFocused) || (_crewRoom1KeyPadPanel != null && _crewRoom1KeyPadPanel.IsFocused))
-        // {
 
-        //     if (selectedSlot.Item.ItemName == "Flashlight") return;
-        // }
+        GameObject currentEquippedItem = _itemEquipController.HeldItemObject;
 
         switch (selectedSlot.Item.ItemType)
         {
-            case EItemType.Toggle:
-                FindAnyObjectByType<Flashlight>()?.Use();
-                break;
             case EItemType.Consumable:
-                FindAnyObjectByType<ConsumableItem>()?.Use(selectedSlot.Item);
-                // 소비 아이템은 사용 시 바로 소비
-                ConsumeItemInSlot(selectedSlot.Item);
+                if (currentEquippedItem.TryGetComponent<ConsumableItem>(out var consumable))
+                {
+                    if (consumable.Use(selectedSlot.Item))
+                    {
+                        // 소비 아이템 사용에 성공한 경우에만 인벤토리에서 개수 감소 및 장착 해제
+                        ConsumeItemInSlot(selectedSlot.Item);
+                    }
+                }
+                // if (FindAnyObjectByType<ConsumableItem>().Use(selectedSlot.Item))
+                // {
+                //     // 소비 아이템은 사용 시 바로 소비
+                //     ConsumeItemInSlot(selectedSlot.Item);
+                // }
                 break;
             case EItemType.UI:
-                FindAnyObjectByType<UIItem>()?.Use(selectedSlot.Item);
+                if (currentEquippedItem.TryGetComponent<UIItem>(out var uiItem))
+                {
+                    uiItem.Use(selectedSlot.Item, _isViewingUI);
+                }
                 if (selectedSlot.Item.ItemName == "Map")
                 {
+                    _hasRegisteredMap = true;
                     // UI 아이템 중 지도는 사용 시 바로 소비
                     ConsumeItemInSlot(selectedSlot.Item);
+                }
+                else
+                {
+                    _isViewingUI = !_isViewingUI;
                 }
                 break;
             case EItemType.Wearable:
                 //FindAnyObjectByType<WearableItem>()?.Use(selectedSlot.Item);
                 break;
         }
+
+        UpdateActionText();
+    }
+
+    /// <summary>
+    /// 마우스 좌클릭으로 손전등 사용
+    /// </summary>
+    public void OnFlashlightUse(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        if (_selectedSlotIndex < 0) return;
+
+        var selectedSlot = inventorySlots[_selectedSlotIndex];
+        if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
+
+        if (selectedSlot.Item.ItemName == "Flashlight") FindAnyObjectByType<Flashlight>()?.Use();
     }
 
     /// <summary>
@@ -230,32 +304,25 @@ public class InventoryManager : MonoBehaviour
         if (!context.performed) return;
         if (SubmarineInGameManager.instance.IsPausing) return;
 
-        InventorySlot targetSlot = null;
+        if (_selectedSlotIndex < 0) return;
 
-        // if (IsInventoryOpen)
-        // {
-        //     if (_selectedSlotIndex < 0) return;
-        //     targetSlot = inventorySlots[_selectedSlotIndex];
-        // }
-        // else
-        // {
-        //     if (_heldItemSlotIndex < 0) return;
-        //     targetSlot = inventorySlots[_heldItemSlotIndex];
-        // }
+        InventorySlot targetSlot = inventorySlots[_selectedSlotIndex];
 
         if (targetSlot == null || targetSlot.Item == null) return;
+
+        Debug.Log($"슬롯 {Array.IndexOf(inventorySlots, targetSlot) + 1} 의 아이템 버리기: {targetSlot.Item.ItemName}");
 
         Vector3 dropPosition = rightHandTransform.position + rightHandTransform.forward * 0.5f;
         GameObject droppedItemObject = Instantiate(targetSlot.Item.ItemPrefab, dropPosition, Quaternion.identity);
         StartCoroutine(ApplyRigidbody(droppedItemObject, 2f));
 
-        if (_itemEquipController.HasItem || _heldItemSlotIndex == _selectedSlotIndex)
+        if (_itemEquipController.HasItem)
         {
             _itemEquipController.UnequipItem();
-            _heldItemSlotIndex = -1;
         }
 
-        targetSlot.UpdateItemCount(targetSlot.ItemCount - 1);
+        targetSlot.UpdateItemCount(-1);
+        UpdateActionText();
     }
 
     /// <summary>
