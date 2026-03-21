@@ -58,7 +58,6 @@ public class RadarLauncher : MonoBehaviour
     /// </summary>
     public void StopFireAnimationLoop()
     {
-        Debug.Log(_currentFireAnimationLoopCoroutine);
         if (_currentFireAnimationLoopCoroutine != null)
         {
             StopCoroutine(_currentFireAnimationLoopCoroutine);

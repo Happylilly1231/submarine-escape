@@ -242,12 +242,19 @@ MonoBehaviour:
   monsterEyeRenderer: {fileID: 586870032007584580}
   originalEyeMaterial: {fileID: 2100000, guid: a540b7e0771a487438f2e7d3027d8a31, type: 2}
   redEyeMaterial: {fileID: 2100000, guid: 9249d5351ae65474e8efe670129922cd, type: 2}
+  doorLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  destroyEquipmentLayer:
+    serializedVersion: 2
+    m_Bits: 0
   wayPointsParent: {fileID: 0}
   currentIndex: 0
   _chaseEndDelayTimer: 0
   currentAttackType: 0
   currentDestroyObjType: 0
   currentDestroyObj: {fileID: 0}
+  currentDestroyPos: {x: 0, y: 0, z: 0}
   idleGrowlSound: {fileID: 8300000, guid: 55649b71726ebb84f8800e7b22af5339, type: 3}
   patrolSound: {fileID: 8300000, guid: dd257518758a0d3489ef7605ab928d64, type: 3}
   detectSound: {fileID: 8300000, guid: f6164d5f1840ca5439b5f352a9b132bb, type: 3}
