@@ -43,6 +43,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Dodge",
+                    "type": "Button",
+                    "id": "fa1e74f5-0d37-4ad2-bc82-1b2130e7e67a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "ToggleMenu",
                     "type": "Button",
                     "id": "7e50d403-0439-457f-96ca-be2ff8fbab39",
@@ -52,18 +61,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ToggleInventory",
+                    "name": "ToggleMap",
                     "type": "Button",
-                    "id": "14eac37a-29e2-49ca-a39d-c8cf936b7147",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "THold",
-                    "type": "Button",
-                    "id": "87d58dc9-8948-42ff-aef6-6c051cfca324",
+                    "id": "f400d86e-ab55-49d3-ae4f-284a89720e98",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -73,6 +73,15 @@
                     "name": "SlotKeyPress",
                     "type": "Button",
                     "id": "a640e25c-4a58-4d22-8561-d99148393bb0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "THold",
+                    "type": "Button",
+                    "id": "87d58dc9-8948-42ff-aef6-6c051cfca324",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -106,36 +115,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ReturnToSlot",
-                    "type": "Button",
-                    "id": "9ada9d3f-109f-408a-b714-4c6623d12173",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Dodge",
-                    "type": "Button",
-                    "id": "fa1e74f5-0d37-4ad2-bc82-1b2130e7e67a",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "FurnitureInteractor",
                     "type": "Button",
                     "id": "37d5485f-70be-4e26-bdd9-d2409b3cdf79",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "ToggleFlashlight",
-                    "type": "Button",
-                    "id": "a97800d3-5c25-4d9a-b23c-c7f8619fc3d2",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -187,9 +169,9 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "ToggleMap",
+                    "name": "ToggleItemUse",
                     "type": "Button",
-                    "id": "f400d86e-ab55-49d3-ae4f-284a89720e98",
+                    "id": "106c7bf8-fb7a-4cd3-b6c3-8e6e1788510d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -298,17 +280,6 @@
                 },
                 {
                     "name": "",
-                    "id": "eb6f913d-3433-45f2-a073-5d48fd83094c",
-                    "path": "<Keyboard>/i",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "ToggleInventory",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "27c30fc9-283c-4474-afa1-13ee123c67fa",
                     "path": "<Keyboard>/t",
                     "interactions": "",
@@ -408,17 +379,6 @@
                 },
                 {
                     "name": "",
-                    "id": "3cb76d72-241b-492c-9914-6bff4d23cb7d",
-                    "path": "<Keyboard>/r",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "ReturnToSlot",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "a76f8986-9d20-43fc-9324-00147ab2c89d",
                     "path": "<Keyboard>/leftCtrl",
                     "interactions": "",
@@ -436,17 +396,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "FurnitureInteractor",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "899efce5-b849-46d1-a2de-8f815f553902",
-                    "path": "<Mouse>/leftButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "ToggleFlashlight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -524,6 +473,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "ToggleMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "445316ef-6a46-4a3f-a764-0aec78b26f74",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleItemUse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

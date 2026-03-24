@@ -1283,8 +1283,8 @@ MonoBehaviour:
   hasEverOpenedEscapeDoor: 0
   destroyEquipments:
   - {fileID: 786709943}
-  - {fileID: 1359272450}
-  - {fileID: 1359272449}
+  - {fileID: 0}
+  - {fileID: 0}
   currentDestroyEquipmentIndex: 0
   player: {fileID: 1645802932}
   playerInput: {fileID: 0}
@@ -13156,7 +13156,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventoryUI: {fileID: 1927861476}
-  inventorySlotsParent: {fileID: 1927861475}
+  inventorySlots: []
+  actionText: {fileID: 0}
   slotSprite: {fileID: 366465217, guid: 2f557e3bceff815478c5d5ec65b174dd, type: 3}
   selectedSlotSprite: {fileID: 1541405501, guid: 83124cbe3ac67c647949cc8947beb0e8,
     type: 3}
@@ -14636,30 +14637,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2091598460}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1359272449 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3274923723413580944, guid: 979f3467fbce1724984d2df8e95d3485,
-    type: 3}
-  m_PrefabInstance: {fileID: 1416346148}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1359272450 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5912148854188958613, guid: 979f3467fbce1724984d2df8e95d3485,
-    type: 3}
-  m_PrefabInstance: {fileID: 1416346148}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1359272455 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2709620082973595132, guid: 979f3467fbce1724984d2df8e95d3485,
-    type: 3}
-  m_PrefabInstance: {fileID: 1416346148}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1359272450}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88899a8e4bae871449174d78ed565679, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1361137862
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24109,12 +24086,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 88268e22a7b6b37438b18de8bf17b57c, type: 3}
---- !u!1 &1927861475 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2064885379705331001, guid: 88268e22a7b6b37438b18de8bf17b57c,
-    type: 3}
-  m_PrefabInstance: {fileID: 1927861474}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1927861476 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3637630280475160503, guid: 88268e22a7b6b37438b18de8bf17b57c,
@@ -26910,7 +26881,7 @@ PrefabInstance:
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 1498089028366168768, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -26925,7 +26896,7 @@ PrefabInstance:
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 3883092296965232624, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -26950,7 +26921,7 @@ PrefabInstance:
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 4314387012644648685, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: torpedoLoadPanelCamera
@@ -26960,7 +26931,7 @@ PrefabInstance:
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 6610688353526920478, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -26975,12 +26946,12 @@ PrefabInstance:
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 8407290865548243856, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: torpedoAutoLoadSwitch
       value: 
-      objectReference: {fileID: 1359272455}
+      objectReference: {fileID: 0}
     - target: {fileID: 8542135735065912316, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_LocalPosition.x

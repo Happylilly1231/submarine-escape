@@ -280,7 +280,6 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
 
             yield return null;
         }
-
         ForceKey.performed -= OnForceKeyAxis;
         ForceKey.canceled -= OnForceKeyAxis;
 
