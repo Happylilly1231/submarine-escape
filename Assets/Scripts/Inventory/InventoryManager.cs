@@ -283,7 +283,7 @@ public class InventoryManager : MonoBehaviour
     /// <summary>
     /// 마우스 좌클릭으로 손전등 사용
     /// </summary>
-    public void OnFlashlightUse(InputAction.CallbackContext context)
+    public void OnToggleItemUse(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
         if (_selectedSlotIndex < 0) return;
