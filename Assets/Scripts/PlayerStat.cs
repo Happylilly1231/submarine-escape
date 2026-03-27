@@ -101,6 +101,11 @@ public class PlayerStat : MonoBehaviour
     public void Heal(float value)
     {
         _hp += value;
+        // 체력이 최대 체력을 넘지 않도록 제한
+        if (_hp > _maxHp)
+        {
+            _hp = _maxHp;
+        }
         UpdateHpSlider();
         Debug.Log("Heal: +" + value);
     }

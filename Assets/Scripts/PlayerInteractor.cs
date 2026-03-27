@@ -10,12 +10,10 @@ public class PlayerInteractor : MonoBehaviour
 {
     [SerializeField] private float rayDistance = 3.0f; // 상호작용 감지 거리
     [SerializeField] private Camera playerCamera; // 플레이어 카메라
-    [SerializeField] private GameObject interactorUI; // 상호작용 UI
-    [SerializeField] private TMPro.TextMeshProUGUI interactorText; // 상호작용 텍스트
+    [SerializeField] private TMPro.TextMeshProUGUI interactorText; // 상호작용 UI - 감지된 오브젝트와의 상호작용 키 표시
 
     private InventoryManager _inventoryManager; // 인벤토리 매니저
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
-    private FadeUI _fadeUI; // 페이드 UI
     private ItemPickUp _currentItem; // 현재 감지된 아이템
     private IInteractable _currentFurniture; // 현재 감지된 가구
     private RaycastHit _sphereCastHit; // SphereCast로 감지된 오브젝트 정보
@@ -27,14 +25,6 @@ public class PlayerInteractor : MonoBehaviour
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
-        _fadeUI = interactorUI.GetComponent<FadeUI>();
-
-        interactorUI.SetActive(true);
-    }
-
-    void Start()
-    {
-        _fadeUI.CanvasGroup.alpha = 0f;
     }
 
     void Update()
@@ -77,43 +67,25 @@ public class PlayerInteractor : MonoBehaviour
         if (!context.performed) return;
         if (!_canInteractable || _currentFurniture == null) return;
 
-        List<Item> candidateItems = new List<Item>();
-        if (_itemEquipController.HeldItemData != null)
-        {
-            if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual" || _itemEquipController.HeldItemData.ItemName == "Radar System Manual") return;
-            candidateItems.Add(_itemEquipController.HeldItemData);
-        }
-        if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
-        {
-            Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
-            // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
-            if (!candidateItems.Contains(slotItem))
-            {
-                candidateItems.Add(slotItem);
-            }
-        }
-
-        Item validItem = null;
         bool canInteract = false;
+        Item validItem = null;
 
-        if (candidateItems.Count > 0)
+        if (_itemEquipController.HasItem)
         {
-            foreach (Item item in candidateItems)
+            if (_currentFurniture.CanInteractwithSelectedItem(_itemEquipController.HeldItemData))
             {
-                if (_currentFurniture.CanInteractwithSelectedItem(item))
-                {
-                    validItem = item;
-                    canInteract = true;
-                    break;
-                }
+                canInteract = true;
+                validItem = _itemEquipController.HeldItemData;
+            }
+            if (_itemEquipController.HeldItemData.ItemName == "Flashlight")
+            {
+                canInteract = true;
             }
         }
-
-        // 선택된 아이템이 없거나 선택된 아이템으로 상호작용이 가능한 경우에만 상호작용 실행
         if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
         {
             _currentFurniture.Interact();
-            if (canInteract && validItem.IsConsumable)
+            if (canInteract && validItem != null && validItem.IsConsumable)
             {
                 _inventoryManager.ConsumeItemInSlot(validItem);
             }
@@ -122,6 +94,9 @@ public class PlayerInteractor : MonoBehaviour
 
     /// <summary>
     /// 플레이어 앞에 있는 아이템 또는 가구 감지
+    /// <para> - 아이템이 감지된 경우 아이템 줍기 UI 표시 </para>
+    /// <para> - 가구가 감지된 경우 상호작용 UI 표시. 가구와 상호작용이 안 되는 아이템을 든 경우 UI 표시 안됨. </para>
+    /// <para> - 아무것도 감지되지 않은 경우 UI 초기화 </para>
     /// </summary>
     private void DetectObject()
     {
@@ -135,37 +110,16 @@ public class PlayerInteractor : MonoBehaviour
 
             if (_sphereCastHit.transform.TryGetComponent(out IInteractable furniture))
             {
-                List<Item> candidateItems = new List<Item>();
-                if (_itemEquipController.HeldItemData != null)
-                {
-                    if (_itemEquipController.HeldItemData.ItemName == "KeyPad Manual" || _itemEquipController.HeldItemData.ItemName == "Radar System Manual") return;
-                    candidateItems.Add(_itemEquipController.HeldItemData);
-                }
-                if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
-                {
-                    Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
-                    // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
-                    if (!candidateItems.Contains(slotItem))
-                    {
-                        candidateItems.Add(slotItem);
-                    }
-                }
-
                 bool canInteract = false;
 
-                if (candidateItems.Count > 0)
+                if (_itemEquipController.HasItem) // 현재 장착된 아이템이 가구와 상호작용 가능한지 또는 손전등인지 확인
                 {
-                    foreach (Item selectedItem in candidateItems)
+                    if (furniture.CanInteractwithSelectedItem(_itemEquipController.HeldItemData) || _itemEquipController.HeldItemData.ItemName == "Flashlight")
                     {
-                        if (furniture.CanInteractwithSelectedItem(selectedItem))
-                        {
-                            canInteract = true;
-                            break;
-                        }
+                        canInteract = true;
                     }
                 }
-
-                // 인벤토리가 닫혀 있거나 선택된 아이템이 없거나 선택된 아이템으로 상호작용이 가능한 경우에만 상호작용 UI 표시
+                // 선택된 아이템이 없거나 선택된 아이템이 가구와 상호작용 가능한 경우 UI 표시
                 if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
                 {
                     HandleInteractable(furniture);
@@ -184,7 +138,11 @@ public class PlayerInteractor : MonoBehaviour
         if (_itemEquipController.HasItem && _itemEquipController.HeldItemObject.TryGetComponent(out ItemPickUp heldItem))
         {
             if (heldItem == item)
+            {
+                Debug.Log("현재 장착된 아이템과 감지된 아이템이 같음 - 상호작용 UI 표시 안함");
+                interactorText.text = "";
                 return;
+            }
         }
 
         _currentItem = item;
@@ -194,8 +152,6 @@ public class PlayerInteractor : MonoBehaviour
         _canInteractable = false;
 
         interactorText.text = $"{_currentItem.Item.ItemName} [F]";
-
-        _fadeUI.FadeIn();
     }
 
     /// <summary>
@@ -210,8 +166,6 @@ public class PlayerInteractor : MonoBehaviour
         _canPickUp = false;
 
         interactorText.text = furniture.GetInteractText();
-
-        _fadeUI.FadeIn();
     }
 
     /// <summary>
@@ -220,8 +174,6 @@ public class PlayerInteractor : MonoBehaviour
     private void ClearDetection()
     {
         if (!_canPickUp && !_canInteractable) return;
-
-        _fadeUI.FadeOut();
 
         interactorText.text = "";
 
