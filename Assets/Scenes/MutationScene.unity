@@ -13231,7 +13231,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventoryUI: {fileID: 1927861476}
-  inventorySlotsParent: {fileID: 1927861475}
+  inventorySlots: []
+  actionText: {fileID: 0}
   slotSprite: {fileID: 366465217, guid: 2f557e3bceff815478c5d5ec65b174dd, type: 3}
   selectedSlotSprite: {fileID: 1541405501, guid: 83124cbe3ac67c647949cc8947beb0e8,
     type: 3}
@@ -14893,18 +14894,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1416346148}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1359272455 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2709620082973595132, guid: 979f3467fbce1724984d2df8e95d3485,
-    type: 3}
-  m_PrefabInstance: {fileID: 1416346148}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1359272450}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88899a8e4bae871449174d78ed565679, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1361137862
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24359,12 +24348,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 88268e22a7b6b37438b18de8bf17b57c, type: 3}
---- !u!1 &1927861475 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2064885379705331001, guid: 88268e22a7b6b37438b18de8bf17b57c,
-    type: 3}
-  m_PrefabInstance: {fileID: 1927861474}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1927861476 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3637630280475160503, guid: 88268e22a7b6b37438b18de8bf17b57c,
@@ -25794,6 +25777,7 @@ MonoBehaviour:
     posText: {fileID: 845636411}
   deepSeaMonsterCloseSound: {fileID: 8300000, guid: f96379f363026994ea5860353fd77f3c,
     type: 3}
+  deepSeaImpactSound: {fileID: 0}
   radarOpenSound: {fileID: 8300000, guid: 3cfcd3de9dc26c245b72890a0762a68f, type: 3}
   radarCloseSound: {fileID: 8300000, guid: 73ef7b11076f6314891c0b507d4b764c, type: 3}
   modeChangeFailSound: {fileID: 8300000, guid: 18b3814c601745549bbcb151c40b8e11, type: 3}
@@ -27156,11 +27140,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 115735031}
     m_Modifications:
-    - target: {fileID: 1190761501847714159, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
     - target: {fileID: 1498089028366168768, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -27171,11 +27150,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Second Floor End Side Front
       objectReference: {fileID: 0}
-    - target: {fileID: 3163800956457153774, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
     - target: {fileID: 3883092296965232624, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -27184,7 +27158,7 @@ PrefabInstance:
     - target: {fileID: 3883092296965232624, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_VersionIndex
-      value: 94
+      value: 115
       objectReference: {fileID: 0}
     - target: {fileID: 4031955003147902768, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
@@ -27198,19 +27172,9 @@ PrefabInstance:
       objectReference: {fileID: 1342125272}
     - target: {fileID: 4314387012644648685, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
-    - target: {fileID: 4314387012644648685, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
       propertyPath: torpedoLoadPanelCamera
       value: 
       objectReference: {fileID: 1535304996}
-    - target: {fileID: 4936985899346885569, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
     - target: {fileID: 6610688353526920478, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_Mesh
@@ -27221,16 +27185,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7168793089968294976, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
-    - target: {fileID: 8407290865548243856, guid: b7b9b74ae1c28e5499466954a897c5e7,
-        type: 3}
-      propertyPath: torpedoAutoLoadSwitch
-      value: 
-      objectReference: {fileID: 1359272455}
     - target: {fileID: 8542135735065912316, guid: b7b9b74ae1c28e5499466954a897c5e7,
         type: 3}
       propertyPath: m_LocalPosition.x

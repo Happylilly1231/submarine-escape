@@ -16,7 +16,7 @@ namespace InnerMonsterStates
             owner.ChangeMonsterModelCenter(false); // 몬스터 모델 중심 기본으로 돌림
 
             owner.Animator.SetTrigger("Stagger"); // 휘청임 애니메이션 재생
-            owner.audioSource.PlayOneShot(owner.staggerSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.staggerSound);
         }
 
         public void Update(InnerMonsterController owner)

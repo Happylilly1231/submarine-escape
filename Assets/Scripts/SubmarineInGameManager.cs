@@ -269,10 +269,18 @@ public class SubmarineInGameManager : MonoBehaviour
     //     }
     // }
 
+    /// <summary>
+    /// 퍼즐 외 포커스 여부 설정(괴물화 가시 생성 보여줄 때나 심해 괴물로 인한 카메라 흔들림 등에 사용)
+    /// </summary>
+    /// <param name="isFocus"></param>
     public void SetFocus(bool isFocus)
     {
+        // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
         if (CurrentPuzzleController != null)
+        {
             CurrentPuzzleController.ExitPuzzle();
+            CurrentPuzzleController = null;
+        }
 
         // 해제는 포커스와 반대로 작동
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가

@@ -28,7 +28,6 @@ public class ElectricalBox : MonoBehaviour, IInteractable
     void Awake()
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
-        _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerCameraController = FindObjectOfType<PlayerCameraController>();
         _powerSwitch = FindObjectOfType<PowerSwitch>();

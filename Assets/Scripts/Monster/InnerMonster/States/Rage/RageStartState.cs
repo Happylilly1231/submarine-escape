@@ -20,7 +20,7 @@ namespace InnerMonsterStates
 
             owner.Animator.SetBool("isRageEnd", false);
             owner.Animator.SetTrigger("RageStart");
-            owner.audioSource.PlayOneShot(owner.rageStartSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound);
             owner.ResetAttackCoolDown(); // 쿨타임 초기화(쿨타임 상태 아닌 걸로 변경)
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
 

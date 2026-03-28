@@ -108,7 +108,9 @@ public class TorpedoTube : MonoBehaviour
         {
             OnDoorOpenStateChanged?.Invoke(isOpen);
             if (isOpen)
+            {
                 OnOpened?.Invoke();
+            }
             else
                 OnClosed?.Invoke();
 

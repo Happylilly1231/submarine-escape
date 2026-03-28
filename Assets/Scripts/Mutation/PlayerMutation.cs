@@ -12,9 +12,10 @@ public class PlayerMutation : MonoBehaviour
     [SerializeField] private Transform hitViewPoint; // 가시가 바닥을 칠 때 바닥 바라보도록 하는 위치
     [SerializeField] private Image vignetteImg;
     [SerializeField] private Transform monsterHandsTransform; // 괴물 양손 트랜스폼
+    [SerializeField] private GameObject itemOverlayCamera; // 아이템 든 거 보여주는 카메라
 
     private float _mutationTimer = 0f;
-    private float _mutationInterval = 10f; // 10분 = 600초 (임시로 30초로 함)
+    private float _mutationInterval = 600f; // 10분 = 600초
     private int _currentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
     private int _maxStage = 5;
 
@@ -132,6 +133,8 @@ public class PlayerMutation : MonoBehaviour
         Camera.main.transform.position = spawnSpikeViewPoint.position;
         Camera.main.transform.rotation = spawnSpikeViewPoint.rotation;
 
+        itemOverlayCamera.SetActive(false); // 아이템 든 거 비추는 카메라 비활성화 (3인칭에서는 우하단에 아이템이 보이지 않으므로)
+
         // 1초 기다리기
         Sequence seq = DOTween.Sequence();
         seq.AppendInterval(1f);
@@ -166,6 +169,8 @@ public class PlayerMutation : MonoBehaviour
         // 1인칭 시점으로 바뀌고 가시가 칠 바닥 즉시 클로즈업
         Camera.main.transform.position = hitViewPoint.position;
         Camera.main.transform.rotation = hitViewPoint.rotation;
+
+        itemOverlayCamera.SetActive(true); // 아이템 든 거 비추는 카메라 활성화 (1인칭으로 다시 돌아왔으므로)
 
         OnSpikeHitFloor?.Invoke(transform.position + Vector3.forward * 0.5f); // 이벤트 알림
 

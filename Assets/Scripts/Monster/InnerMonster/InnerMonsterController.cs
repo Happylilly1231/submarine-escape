@@ -310,6 +310,11 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         targetDir.y = 0;
         Debug.DrawRay(transform.position, transform.forward * 5f, Color.yellow);
         Debug.DrawRay(transform.position, targetDir * 5f, Color.white);
+        // 벡터의 제곱근 거리(sqrMagnitude)가 아주 작은 값보다 클 때만 회전 실행
+        if (targetDir.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(targetDir);
+        }
         Quaternion lookRotation = Quaternion.LookRotation(targetDir);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
     }
@@ -359,7 +364,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         if (IsPlayerMutationCompeleted)
             return false;
 
-        Vector3 eyePos = transform.position + Vector3.up; // 눈높이 위치
+        Vector3 eyePos = transform.position + Vector3.up * 1.7f; // 눈높이 위치
 
         DrawVisionRays(eyePos); // 씬에서 시야 레이(좌, 중, 우) 그리기
 
@@ -371,7 +376,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             return false;
 
         // 각도 체크
-        Vector3 dirToPlayer = (playerTransform.position - transform.position).normalized; // 플레이어를 바라보는 방향 벡터
+        Vector3 dirToPlayer = ((playerTransform.position + Vector3.up * 0.75f) - eyePos).normalized; // 플레이어를 바라보는 방향 벡터
         float angle = Vector3.Angle(_fovCenterTransform.forward, dirToPlayer); // 괴물이 앞을 바라보는 벡터와 플레이어를 바라보는 방향 벡터 사이의 각도
         if (angle > _fov * 0.5f) // 각도가 시야각의 절반을 벗어나면 ->  감지 X
             return false;
@@ -611,22 +616,22 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             switch (currentAttackType)
             {
                 case EAttackType.HitAttack:
-                    audioSource.PlayOneShot(attackSounds[0]);
+                    AudioManager.Instance.PlayGlobalOneShot(attackSounds[0]);
                     if (canReach)
                         HitAttack();
                     break;
                 case EAttackType.DoubleClawAttack:
-                    audioSource.PlayOneShot(attackSounds[1]);
+                    AudioManager.Instance.PlayGlobalOneShot(attackSounds[1]);
                     if (canReach)
                         DoubleClawAttack();
                     break;
                 case EAttackType.JumpAttack:
-                    audioSource.PlayOneShot(attackSounds[2]);
+                    AudioManager.Instance.PlayGlobalOneShot(attackSounds[2]);
                     if (canReach)
                         JumpAttack();
                     break;
                 case EAttackType.ThrowAttack:
-                    audioSource.PlayOneShot(attackSounds[3]);
+                    AudioManager.Instance.PlayGlobalOneShot(attackSounds[3]);
                     ThrowAttack();
                     break;
             }
@@ -718,7 +723,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("점프 종료");
         _isJumping = false; // 점프 중 아님으로 설정
         CanMove(false); // 이동 정지
-        audioSource.PlayOneShot(jumpLandingSound);
+        AudioManager.Instance.PlayGlobalOneShot(jumpLandingSound);
         if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
         {
             // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)

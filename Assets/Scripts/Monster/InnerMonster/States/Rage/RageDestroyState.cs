@@ -27,7 +27,7 @@ namespace InnerMonsterStates
 
             owner.currentAttackType = EAttackType.RageDestroyAttack; // 현재 공격 타입 -> 폭주 파괴 공격
             owner.Animator.SetBool("isRageDestroying", true); // 폭주 파괴 애니메이션 재생
-            owner.audioSource.PlayOneShot(owner.destroyRageSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.destroyRageSound);
             _timer = 0f; // 타이머 초기화
 
             // 파괴하는데 걸리는 시간 설정
@@ -83,7 +83,7 @@ namespace InnerMonsterStates
         /// </summary>
         private void RageDestroy(InnerMonsterController monster)
         {
-            monster.audioSource.PlayOneShot(monster.destroyCompleteSound);
+            AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound);
             // 타입에 따른 후처리
             switch (monster.currentDestroyObjType)
             {

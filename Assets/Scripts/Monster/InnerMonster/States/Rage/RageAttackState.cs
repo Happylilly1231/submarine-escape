@@ -16,7 +16,7 @@ namespace InnerMonsterStates
             owner.CanMove(false); // 이동 정지
             owner.currentAttackType = EAttackType.RageAttack; // 현재 공격 타입 -> 폭주 공격
             owner.Animator.SetTrigger("RageAttack"); // 폭주 공격 애니메이션 재생
-            owner.audioSource.PlayOneShot(owner.rageAttackSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.rageAttackSound);
             owner.ChangeFovCenter(true); // 시야각 중심 위치를 그냥 트랜스폼으로 변경
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
             owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경

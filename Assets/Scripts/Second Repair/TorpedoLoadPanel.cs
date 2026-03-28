@@ -21,9 +21,10 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     [SerializeField] private Material blackMaterial; // 검정 머티리얼(카메라 꺼졌을 때)
     [SerializeField] private TextMeshProUGUI infoText; // 정보 텍스트
     [SerializeField] private TorpedoTubeScrew torpedoTubeScrew; // 2번 어뢰 발사관의 나사
-    [SerializeField] private TorpedoLoadPanelButton[] doorButtons; // 문 버튼 배열
     [SerializeField] private Transform ejectViewPoint; // 나사 튀어나올 때 볼 위치
-    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
+
+    private TorpedoAutoLoadSwitch _torpedoAutoLoadSwitch;
+    private InventoryManager _inventoryManager;
 
     protected override bool IsHoverRequired => true;
     protected override bool IsMouseRequiredAtFirst => true;
@@ -62,6 +63,12 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     public static event Action<bool> OnSetUpButtonStateChanged; // READY 버튼 상태(활성화 여부) 변경 이벤트
     public static event Action<bool> OnLoadButtonStateChanged; // LOAD 버튼 상태(활성화 여부) 변경 이벤트
     public static event Action<TorpedoState> OnLoaded; // 탑재 이벤트 (탑재된 어뢰 상태)
+
+    private void Awake()
+    {
+        _torpedoAutoLoadSwitch = FindAnyObjectByType<TorpedoAutoLoadSwitch>();
+        _inventoryManager = FindAnyObjectByType<InventoryManager>();
+    }
 
     public override void Start()
     {
@@ -134,7 +141,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return "Auto Mode";
         else
             return "Activate Torpedo Load Panel [E]";
@@ -148,7 +155,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         ActivatePuzzle(); // 패널 활성화
@@ -169,6 +176,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.started += OnClickStarted; // 클릭 시작 사용
         Click.performed += OnClickPerformed; // 클릭 performed 사용
         Click.canceled += OnClickCanceled; // 클릭 끝 사용
+
+        _inventoryManager.CloseInventory(); // 인벤토리 숨기기
 
         if (!_isLoadCompleted)
         {
@@ -192,6 +201,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.started -= OnClickStarted;
         Click.performed -= OnClickPerformed;
         Click.canceled -= OnClickCanceled;
+
+        _inventoryManager.OpenInventory(); // 인벤토리 숨기기
 
         statUI.SetActive(true);
         joystickMoveBone.transform.localRotation = Quaternion.identity; // 조이스틱 회전 초기화
@@ -686,6 +697,13 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         });
     }
 
+    /// <summary>
+    /// 어뢰 사용해서 비활성화
+    /// </summary>
+    public void UseTorpedo()
+    {
+        torpedo.SetActive(false);
+    }
     #endregion
 
     #region 문 열기/닫기

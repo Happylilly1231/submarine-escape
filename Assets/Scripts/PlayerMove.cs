@@ -229,6 +229,7 @@ public class PlayerMove : MonoBehaviour
             // 점프 착지(점프가 끝나서 바닥에 닿은 거면) -> 점프 중 아님으로 설정
             if (_isJumping && _ySpeed <= 0f) // 점프 시작 시 바로 바닥에서 떨어지지 않을 수 있기 때문에 ySpeed가 0 이하인지도 함께 검사
             {
+                audioSource.PlayOneShot(jumpLandingSound);
                 AudioManager.Instance.PlayGlobalOneShot(jumpLandingSound);
                 _isJumping = false;
             }

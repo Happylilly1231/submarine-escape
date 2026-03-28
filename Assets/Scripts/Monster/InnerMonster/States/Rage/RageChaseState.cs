@@ -34,7 +34,7 @@ namespace InnerMonsterStates
             // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
             _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
 
-            owner.audioSource.PlayOneShot(owner.detectSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.detectSound);
             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
         }
 
