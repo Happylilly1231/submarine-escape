@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,14 +9,16 @@ public class RadarController : PuzzleController
     public RadarTarget deepSeaMonster = new RadarTarget(TargetType.DeepSeaMonster); // 심해 괴물 (데이터)
     public RadarTarget submarine2 = new RadarTarget(TargetType.Submarine2); // 다른 잠수함 (데이터)
 
+    [SerializeField] private TorpedoTube loadAvailableTorpedoTube; // 탑재 가능한 어뢰 발사관
+
     [Header("Sound")]
     [SerializeField] private AudioClip deepSeaMonsterCloseSound;
+    [SerializeField] private AudioClip deepSeaImpactSound; // 충격(흔들림) 소리
     [SerializeField] private AudioClip radarOpenSound;
     [SerializeField] private AudioClip radarCloseSound;
     [SerializeField] private AudioClip modeChangeFailSound;
     [SerializeField] private AudioClip modeChangeSuccessSound;
     [SerializeField] private AudioSource _monsterAudioSource;
-    private float _deepMonsterVolumeMaxDistance = 10f; // 최대 볼륨 되기 시작하는 거리
 
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => false;
@@ -47,6 +50,8 @@ public class RadarController : PuzzleController
     public int CurrentMonsterPeriodIndex { get; set; } = 0; // 심해 괴물 주기 인덱스(몇번째 출현인가)
     public float MonsterStartAngle { get; set; } = 90f; // 시작 각도(심해 괴물의 시작 위치 변경 시 사용)
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
+    private int _lastShakeMinute = -1; // 마지막으로 카메라가 흔들린 분(시간)
+    private float _monsterCloseTime = 300f; // 심해 괴물 가까워져서 소리 나기 시작하는 시간: 5분
 
     // 발사
     public bool IsFiring { get; set; } = false;
@@ -63,6 +68,11 @@ public class RadarController : PuzzleController
 
         deepSeaMonster.SetRadarController(this);
         submarine2.SetRadarController(this);
+    }
+
+    public override void Start()
+    {
+        base.Start();
 
         SetCurrentTorpedoState(TorpedoState.Normal);
     }
@@ -70,6 +80,7 @@ public class RadarController : PuzzleController
     private void OnEnable()
     {
         TorpedoLoadPanel.OnLoaded += SetCurrentTorpedoState;
+        loadAvailableTorpedoTube.OnDoorOpenStateChanged += SetTorpedoStateByDoor;
     }
 
     private void Update()
@@ -86,27 +97,35 @@ public class RadarController : PuzzleController
             if (IsPuzzleStarted)
                 deepSeaMonster.UpdatePosUI();
 
-            // 심해 괴물과 현 잠수함 사이의 거리에 따른 로직
-            float monsterDistance = Vector3.Distance(deepSeaMonster.CurrentPos, Vector3.zero);
-            if (_monsterTimer >= 1200f) // 20분이 되면(잠수함과의 거리가 거의 5f가 되는 시점) -> 폭발, 게임 종료
+            // 심해 괴물이 잠수함에 다가오기까지 5분 남으면
+            if (_monsterTimer >= deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - _monsterCloseTime)
             {
-                Debug.Log("폭발!!! " + _monsterTimer);
-                AudioManager.Instance.PlayDeepSeaMonsterExplosionSound(); // 폭발 소리
-                GameManager.instance.GameOver(EEndingType.SubmarineExplode);
-            }
-            else if (monsterDistance <= MaxPlanarDistance / 2) // 잠수함과 어느 정도 가까워지면 -> 소리나기 시작(가까워질수록 커짐)
-            {
-                Debug.Log("가까워지기 시작: " + _monsterTimer);
-                AudioManager.Instance.PlaySoundSafe(_monsterAudioSource, deepSeaMonsterCloseSound);
-                float v = Mathf.InverseLerp(MaxPlanarDistance / 2, _deepMonsterVolumeMaxDistance, monsterDistance);
-                _monsterAudioSource.volume = v; // 0~1
-            }
-            else // 잠수함과 거리 먼 경우 -> 소리 안 남
-            {
-                if (_monsterAudioSource.isPlaying)
+                // 현재 심해 괴물이 잠수함에 도착하는 시간이 되면(첫 주기 10분, 그 후 17분) -> 심해 괴물 잠수함에 도착, 게임 종료
+                if (_monsterTimer >= deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex])
                 {
-                    _monsterAudioSource.Stop();
-                    _monsterAudioSource.volume = 0f;
+                    Debug.Log("폭발!!! " + _monsterTimer);
+                    AudioManager.Instance.PlayDeepSeaMonsterExplosionSound(); // 폭발 소리
+                    GameManager.instance.GameOver(EEndingType.SubmarineExplode);
+                    return;
+                }
+
+                // 가까워지는 소리 재생
+                float v = Mathf.InverseLerp(deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - _monsterCloseTime, deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex], _monsterTimer); // 시간에 따라 점점 커짐(최대 소리 - 도달하는 시간대)
+                _monsterAudioSource.volume = v; // 0~1
+                AudioManager.Instance.PlaySoundSafe(_monsterAudioSource, deepSeaMonsterCloseSound);
+
+                // 1분 간격으로 카메라 흔들림
+                int currentMinute = Mathf.FloorToInt(_monsterTimer / 60f); // 현재 몬스터 시간 분 단위로 변환
+                if (currentMinute > _lastShakeMinute) // 1분 간격마다만 실행됨
+                {
+                    _lastShakeMinute = currentMinute; // 마지막으로 흔들린 분(시간)을 현재 분(시간)으로 갱신
+                    AudioManager.Instance.PlayGlobalOneShot(deepSeaImpactSound); // 충격(흔들림) 소리 재생 (볼륨 달라지지 않음)
+                    SubmarineInGameManager.instance.SetFocus(true); // 포커스 <- 카메라 흔들림을 위해서
+                    Camera.main.transform.DOShakeRotation(2f, 0.2f, 10, 90f) // 카메라 흔들림
+                    .OnComplete(() => // 끝나면
+                    {
+                        SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+                    });
                 }
             }
         }
@@ -130,6 +149,7 @@ public class RadarController : PuzzleController
     private void OnDisable()
     {
         TorpedoLoadPanel.OnLoaded -= SetCurrentTorpedoState;
+        loadAvailableTorpedoTube.OnDoorOpenStateChanged -= SetTorpedoStateByDoor;
     }
 
     #region PuzzleController
@@ -163,7 +183,7 @@ public class RadarController : PuzzleController
         SelectHeight(false);
 
         // 레이더 열리는 소리
-        AudioManager.Instance.PlaySFX(radarOpenSound);
+        AudioManager.Instance.PlayGlobalOneShot(radarOpenSound);
     }
 
     public override void ExitPuzzle()
@@ -191,7 +211,7 @@ public class RadarController : PuzzleController
         _radarLauncher.StopFireAnimationLoop();
 
         // 레이더 꺼지는 소리
-        AudioManager.Instance.PlaySFX(radarCloseSound);
+        AudioManager.Instance.PlayGlobalOneShot(radarCloseSound);
     }
     #endregion
 
@@ -337,7 +357,7 @@ public class RadarController : PuzzleController
             _canType = false;
             Keyboard.current.onTextInput -= OnTextInput; // 입력 이벤트 구독 해제
 
-            AudioManager.Instance.PlaySFX(modeChangeSuccessSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeSuccessSound);
 
             // 1.5초 대기
             yield return new WaitForSeconds(1.5f);
@@ -356,7 +376,7 @@ public class RadarController : PuzzleController
             // 실패 메시지 띄우기
             _radarDisplay.UpdateUIAfterSubmit(false);
 
-            AudioManager.Instance.PlaySFX(modeChangeFailSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeFailSound);
 
             // 1.5초 대기(대기하는 동안 입력 불가)
             _canType = false;
@@ -444,6 +464,17 @@ public class RadarController : PuzzleController
     {
         CurrentTorpedoState = torpedoState;
         _radarDisplay.UpdateCurrentTorpedoStateUI();
+    }
+
+    /// <summary>
+    /// 문 열린 여부에 따른 현재 어뢰 상태 설정
+    /// </summary>
+    public void SetTorpedoStateByDoor(bool isOpen)
+    {
+        if (isOpen)
+            SetCurrentTorpedoState(TorpedoState.Unloaded);
+        else
+            SetCurrentTorpedoState(TorpedoState.Normal);
     }
 
     /// <summary>

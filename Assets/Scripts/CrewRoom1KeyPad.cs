@@ -205,7 +205,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
         if (!IsBatteryItem(heldBattery)) return;
 
         _playerInput.actions["ItemUse"].Disable();
-        _playerInput.actions["ReturnToSlot"].Disable();
+        // _playerInput.actions["ReturnToSlot"].Disable();
         _playerInput.actions["ExitKeyPad"].Disable();
         _playerInput.actions["SelectScrew"].Disable();
 
@@ -248,7 +248,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
     private void EnableActions()
     {
-        _playerInput.actions["ReturnToSlot"].Enable();
+        // _playerInput.actions["ReturnToSlot"].Enable();
         _playerInput.actions["ItemUse"].Enable();
         _playerInput.actions["ExitKeyPad"].Enable();
         _playerInput.actions["SelectScrew"].Enable();
@@ -338,7 +338,7 @@ public class CrewRoom1KeyPad : MonoBehaviour, IInteractable
 
         DG.Tweening.Sequence successSeq = DOTween.Sequence();
         successSeq.AppendInterval(0.5f);
-        successSeq.Append(DoorPivot.DORotate(new Vector3(0, -70f, 0), successDuration).SetEase(Ease.OutQuad));
+        successSeq.Append(DoorPivot.DORotate(new Vector3(0, 70f, 0), successDuration).SetEase(Ease.OutQuad));
 
         successSeq.OnComplete(() =>
         {

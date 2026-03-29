@@ -12,7 +12,8 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     [SerializeField] private Transform leverTransform;
     [SerializeField] private HydraulicSystemDoorButton[] doorButtons;
     [SerializeField] private TextMeshProUGUI topInfoText;
-    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
+
+    private TorpedoAutoLoadSwitch _torpedoAutoLoadSwitch;
 
     protected override bool IsHoverRequired => true;
     protected override bool IsMouseRequiredAtFirst => true;
@@ -26,6 +27,8 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     private void Awake()
     {
         gaugeBarSlider.gameObject.SetActive(false);
+
+        _torpedoAutoLoadSwitch = FindAnyObjectByType<TorpedoAutoLoadSwitch>();
     }
 
     private void Update()
@@ -67,7 +70,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return "Auto Mode";
         else
             return "Open Torpedo Tube Door [E]";
@@ -78,7 +81,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         ActivatePuzzle();

@@ -237,7 +237,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
 
         if (screwdriverObject == null) return;
         _isRemovingScrew = true;
-        _playerInput.actions["ReturnToSlot"].Disable();
+        // _playerInput.actions["ReturnToSlot"].Disable();
         _playerInput.actions["ItemUse"].Disable();
 
         _currentSelectedScrew.RemoveWithTool(screwdriverObject, () =>
@@ -246,7 +246,7 @@ public class CrewRoom1KeyPadPanel : MonoBehaviour, IInteractable
             _currentSelectedScrew = null;
             _itemEquipController.EquipItem(screwdriver);
             _isRemovingScrew = false;
-            _playerInput.actions["ReturnToSlot"].Enable();
+            // _playerInput.actions["ReturnToSlot"].Enable();
             _playerInput.actions["ItemUse"].Enable();
 
             if (_removedScrewCount >= screws.Length)

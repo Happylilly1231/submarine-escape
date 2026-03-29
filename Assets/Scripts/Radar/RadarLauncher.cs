@@ -203,6 +203,13 @@ public class RadarLauncher : MonoBehaviour
     private void UseTorpedo()
     {
         _radarDisplay.DeactivateOneTorpedo(_radarController.CurrentTorpedoIndex); // 현재 발사할 어뢰 UI에서 비활성화
+        Debug.Log("사용한 어뢰 인덱스: " + _radarController.CurrentTorpedoIndex);
+        if (_radarController.CurrentTorpedoIndex == 2) // 마지막 어뢰를 사용했으면
+        {
+            // 2번 어뢰 발사관 안에 있는 어뢰를 사용한 것이므로, 그곳의 어뢰 비활성화
+            FindAnyObjectByType<TorpedoLoadPanel>().UseTorpedo();
+        }
+
         _radarController.CurrentTorpedoIndex++;
         if (_radarController.CurrentTorpedoIndex < 3)
         {
@@ -286,6 +293,7 @@ public class RadarLauncher : MonoBehaviour
 
         // 재등장
         _radarController.CurrentMonsterPeriodIndex++;
+        deepSeaMonster.CurrentMonsterPeriod = deepSeaMonster.MonsterPeriods[_radarController.CurrentMonsterPeriodIndex] / 0.7712f; // (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 원하는 시간으로 맞추기 위해 0.7712f로 원하는 시간으로 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
         deepSeaMonster.IsCurrentActive = true; // 심해 괴물 위치 갱신 중으로 설정
         _radarController.MonsterStartAngle += 90f; // 시작 위치 변경을 위해 시작 각도 90 더해주기
         StartCoroutine(_radarDisplay.FadeInOut(true, deepSeaMonster, _fadeDuration)); // 심해 괴물 페이드 인되면서 나타남

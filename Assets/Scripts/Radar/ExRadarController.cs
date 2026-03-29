@@ -213,7 +213,7 @@ public class ExRadarController : MonoBehaviour
             submarine2PosText.gameObject.SetActive(false);
 
             // 레이더 열리는 소리
-            AudioManager.Instance.PlaySFX(radarOpenSound);
+            AudioManager.Instance.PlayGlobalOneShot(radarOpenSound);
         }
         else // 숨기기
         {
@@ -234,7 +234,7 @@ public class ExRadarController : MonoBehaviour
             logText.text = "";
 
             // 레이더 꺼지는 소리
-            AudioManager.Instance.PlaySFX(radarCloseSound);
+            AudioManager.Instance.PlayGlobalOneShot(radarCloseSound);
         }
     }
 
@@ -307,7 +307,7 @@ public class ExRadarController : MonoBehaviour
             _canType = false;
             Keyboard.current.onTextInput -= OnTextInput; // 입력 이벤트 구독 해제
 
-            AudioManager.Instance.PlaySFX(modeChangeSuccessSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeSuccessSound);
 
             // 1.5초 대기
             yield return new WaitForSeconds(1.5f);
@@ -324,7 +324,7 @@ public class ExRadarController : MonoBehaviour
             // 실패 메시지 띄우기
             logText.text = "[INVALID CODE]";
 
-            AudioManager.Instance.PlaySFX(modeChangeFailSound);
+            AudioManager.Instance.PlayGlobalOneShot(modeChangeFailSound);
 
             // 1.5초 대기(대기하는 동안 입력 불가)
             _canType = false;

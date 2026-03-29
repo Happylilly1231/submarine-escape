@@ -50,6 +50,14 @@ public class InventoryManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 인벤토리 활성화
+    /// </summary>
+    public void OpenInventory()
+    {
+        inventoryUI.SetActive(true);
+    }
+
+    /// <summary>
     /// T키 눌림 상태 업데이트 (슬롯 교체 기능에 사용)
     /// </summary>
     public void OnTHold(InputAction.CallbackContext context)
@@ -292,6 +300,7 @@ public class InventoryManager : MonoBehaviour
         if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
 
         if (selectedSlot.Item.ItemName == "Flashlight") FindAnyObjectByType<Flashlight>()?.Use();
+        else if (selectedSlot.Item.ItemName == "Therometer") FindAnyObjectByType<Therometer>()?.Use();
     }
 
     /// <summary>

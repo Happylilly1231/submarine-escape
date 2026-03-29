@@ -35,7 +35,6 @@ public class PlayerMove : MonoBehaviour
     private float _ySpeed = 0f; // y 속도
     private float _gravity = -9.81f; // 중력
     private bool _isJumping; // 점프 중 여부
-    public bool IsJumping => _isJumping;
     private bool _isJumpingDown = false; // 점프 하강 중 여부
     private float fallDamageSpeed = -10f;   // 이 속도보다 빠르면 데미지
 
@@ -57,11 +56,11 @@ public class PlayerMove : MonoBehaviour
 
     // 사운드
     [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip walkSound;
     [SerializeField] private AudioClip runSound;
     [SerializeField] private AudioClip jumpLandingSound;
     [SerializeField] private AudioClip climbingLadderSound;
-    private AudioSource _audioSource;
 
     void Awake()
     {
@@ -69,7 +68,6 @@ public class PlayerMove : MonoBehaviour
         _animator = GetComponent<Animator>();
         _playerStat = GetComponent<PlayerStat>();
         _playerStatus = GetComponent<PlayerStatus>();
-        _audioSource = GetComponent<AudioSource>();
     }
 
     void Start()
@@ -151,8 +149,14 @@ public class PlayerMove : MonoBehaviour
         // 정지 중 -> 이동 불가
         if (SubmarineInGameManager.instance.IsPausing) return;
 
-        // 움직임 허용 안됨 -> 이동 불가
-        if (!_canMove) return;
+        // 움직임 허용 안됨 -> 이동 불가, 단 중력에 의한 움직임은 예외
+        if (!_canMove)
+        {
+            CalculateGravity(); // 중력 연산
+            _controller.Move(Vector3.up * _ySpeed * Time.deltaTime); // y 이동만 처리
+            _animator.SetBool("isGrounded", _controller.isGrounded); // 바닥에 닿아있는지 여부 애니메이터에 넘기기(모든 y 계산이 다 끝난 뒤에 실행)
+            return;
+        }
 
         if (_isRunning)
             moveSpeed = _runSpeed * _playerStatus.SpeedScale;
@@ -225,7 +229,8 @@ public class PlayerMove : MonoBehaviour
             // 점프 착지(점프가 끝나서 바닥에 닿은 거면) -> 점프 중 아님으로 설정
             if (_isJumping && _ySpeed <= 0f) // 점프 시작 시 바로 바닥에서 떨어지지 않을 수 있기 때문에 ySpeed가 0 이하인지도 함께 검사
             {
-                AudioManager.Instance.PlaySFX(jumpLandingSound);
+                audioSource.PlayOneShot(jumpLandingSound);
+                AudioManager.Instance.PlayGlobalOneShot(jumpLandingSound);
                 _isJumping = false;
             }
 
@@ -297,13 +302,13 @@ public class PlayerMove : MonoBehaviour
         // 걷기 / 달리기 소리 재생
         if (_moveDir.magnitude < 0.1f || _isJumping)
         {
-            if (_audioSource.isPlaying)
-                _audioSource.Stop();
+            if (audioSource.isPlaying)
+                audioSource.Stop();
         }
         else if (!_isRunning)
-            AudioManager.Instance.PlaySoundSafe(_audioSource, walkSound, 0.75f);
+            AudioManager.Instance.PlaySoundSafe(audioSource, walkSound, 0.75f);
         else if (_isRunning)
-            AudioManager.Instance.PlaySoundSafe(_audioSource, runSound, 1.3f);
+            AudioManager.Instance.PlaySoundSafe(audioSource, runSound, 1.3f);
 
         // 중력 연산
         CalculateGravity();
@@ -337,7 +342,7 @@ public class PlayerMove : MonoBehaviour
 
         if (v != 0)
         {
-            AudioManager.Instance.PlaySoundSafe(_audioSource, climbingLadderSound);
+            AudioManager.Instance.PlaySoundSafe(audioSource, climbingLadderSound);
         }
     }
 
@@ -494,7 +499,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void StartClimb()
     {
-        _audioSource.Stop();
+        audioSource.Stop();
         _isClimbing = true; // 사다리 타는 중으로 설정
         _animator.SetBool("isClimbing", true);
         _animator.SetTrigger("ClimbStart");
@@ -505,7 +510,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void ExitClimb()
     {
-        _audioSource.Stop();
+        audioSource.Stop();
         _isClimbing = false; // 사다리 타는 중 아님으로 설정
         _animator.SetBool("isClimbing", false);
     }
@@ -524,9 +529,14 @@ public class PlayerMove : MonoBehaviour
             moveSpeed = _walkSpeed * _playerStatus.SpeedScale;
             _animator.SetFloat("Speed", 0f);
             _animator.SetBool("isRunning", false);
+            if (_isJumping) // 점프 중이면 -> 점프 하강
+            {
+                _isJumpingDown = true;
+                _animator.SetBool("isJumpingDown", true);
+            }
 
             // 소리 멈추기
-            _audioSource.Stop();
+            audioSource.Stop();
         }
     }
 }

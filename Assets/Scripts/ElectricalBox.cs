@@ -28,7 +28,6 @@ public class ElectricalBox : MonoBehaviour, IInteractable
     void Awake()
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
-        _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerCameraController = FindObjectOfType<PlayerCameraController>();
         _powerSwitch = FindObjectOfType<PowerSwitch>();
@@ -141,6 +140,7 @@ public class ElectricalBox : MonoBehaviour, IInteractable
             SubmarineInGameManager.instance.SetPlayerGeoActive(true);
             _playerInput.currentActionMap.Enable();
             flashlight.SetActive(false);
+            _inventoryManager.OpenInventory();
 
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;

@@ -28,19 +28,19 @@ public abstract class PuzzleController : MonoBehaviour
     protected InputAction ForceKey { get; private set; }
 
     public bool IsPuzzleStarted { get; private set; } // 현재 퍼즐 시작되었는지(활성화되는 시점 X, StartPuzzle이 실행되는 시점 O) 여부
-    private bool isInputLocked = false; // 현재 입력 잠금 여부
+    private bool _isInputLocked = false; // 현재 입력 잠금 여부
 
     // 호버
     protected abstract bool IsHoverRequired { get; } // 호버 필요한지 여부
     protected abstract bool IsMouseRequiredAtFirst { get; } // 마우스 처음에 필요한지 여부(고정값이라 Start()에서만 이것 참조, 후에는 아래 변수 참조)
     private bool _isCurrentMouseRequired; // 현재 마우스 필요한지 여부
-    private LayerMask hoverableLayerMask; // 호버 가능 레이어 마스크(Hoverable 레이어)
+    private LayerMask _hoverableLayerMask; // 호버 가능 레이어 마스크(Hoverable 레이어)
     private HoverInteractable _currentHover; // 현재 호버
     public HoverInteractable CurrentHover => _currentHover;
 
-    // 이벤트
-    public event Action OnPuzzleStarted; // 퍼즐 시작 이벤트(활성화 시점 X)
-    public event Action OnPuzzleExited; // 퍼즐 종료 이벤트
+    // // 이벤트
+    // public event Action OnPuzzleStarted; // 퍼즐 시작 이벤트(활성화 시점 X)
+    // public event Action OnPuzzleExited; // 퍼즐 종료 이벤트
 
     /// <summary>
     /// Awake - 퍼즐 액션맵의 액션 변수, Hoverable 레이어 마스크 가져오기
@@ -57,7 +57,7 @@ public abstract class PuzzleController : MonoBehaviour
         _space = playerInput.actions["Space"];
         ForceKey = playerInput.actions["ForceKey"];
 
-        hoverableLayerMask = LayerMask.GetMask("Hoverable");
+        _hoverableLayerMask = LayerMask.GetMask("Hoverable");
 
         // 커서 보여줘야하는지 여부 설정
         _isCurrentMouseRequired = IsMouseRequiredAtFirst;
@@ -88,7 +88,7 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="viewPoint"></param>
     public virtual void ActivatePuzzle()
     {
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
+        SubmarineInGameManager.instance.SetPuzzleFocus(true, this);
         SubmarineInGameManager.instance.SetPlayerGeoActive(false);
 
         Sequence seq = DOTween.Sequence();
@@ -120,7 +120,7 @@ public abstract class PuzzleController : MonoBehaviour
             GameManager.instance.SetCursorVisible(true);
         }
 
-        OnPuzzleStarted?.Invoke();
+        // OnPuzzleStarted?.Invoke();
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ public abstract class PuzzleController : MonoBehaviour
         SubmarineInGameManager.instance.SetPuzzleFocus(false);
         SubmarineInGameManager.instance.SetPlayerGeoActive(true);
 
-        OnPuzzleExited?.Invoke();
+        // OnPuzzleExited?.Invoke();
     }
 
     /// <summary>
@@ -183,12 +183,12 @@ public abstract class PuzzleController : MonoBehaviour
     {
         if (isLock)
         {
-            isInputLocked = true;
+            _isInputLocked = true;
             playerInput.DeactivateInput(); // 모든 액션 비활성화
         }
         else
         {
-            isInputLocked = false;
+            _isInputLocked = false;
             playerInput.ActivateInput(); // 모든 액션 활성화
         }
     }
@@ -199,12 +199,12 @@ public abstract class PuzzleController : MonoBehaviour
     public virtual void CheckHover(Vector2 mousePos)
     {
         // 입력 잠겨있으면 -> 호버 X
-        if (isInputLocked)
+        if (_isInputLocked)
             return;
 
         // 현재 마우스 좌표에서 레이를 쏴서 HoverInteractable 컴포넌트 가진 오브젝트 검사
         Ray ray = Camera.main.ScreenPointToRay(mousePos);
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, hoverableLayerMask)) // 기본적으로 Hoverable 레이어만 검사함
+        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, _hoverableLayerMask)) // 기본적으로 Hoverable 레이어만 검사함
         {
             if (hit.collider.TryGetComponent<HoverInteractable>(out var hoverInteractable)) // 컴포넌트 있으면
             {

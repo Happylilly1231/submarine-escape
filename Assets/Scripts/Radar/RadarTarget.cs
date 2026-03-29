@@ -24,14 +24,20 @@ public class RadarTarget
     public Vector3 CurrentPos => _currentPos;
 
     // 수치
-    private float[] _monsterPeriods = { 600f / 0.7712f, 1020f / 0.7712f, 1020f / 0.7712f, 1020f / 0.7712f }; // 심해 괴물이 다가오기까지 걸리는 시간: 10분, 17분, 17분 (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 원하는 시간으로 맞추기 위해 0.7712f로 원하는 시간으로 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
+    public float[] MonsterPeriods { get; private set; } = { 600f, 1020f, 1020f, 1020f }; // 심해 괴물이 다가오기까지 걸리는 시간: 10분, 17분, 17분, 17분
     private float _submarine2Period = 540f / 0.7712f; // 다른 잠수함 한 바퀴 주기: 9분 (괴물과 주기를 맞추기 위해 0.7712f로 똑같이 나누어줌)
     private float _maxR = 12f; // 최대 R 수치(정규화할 때 필요)
     private float _maxZ = 4f; // 최대 Z 수치(정규화할 때 필요)
 
+    public float CurrentMonsterPeriod { get; set; } // 0.771f로 나눈 것 (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 원하는 시간으로 맞추기 위해 0.7712f로 원하는 시간으로 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
+
     public RadarTarget(TargetType type)
     {
-        this._type = type;
+        _type = type;
+        if (type == TargetType.DeepSeaMonster)
+        {
+            CurrentMonsterPeriod = MonsterPeriods[0] / 0.7712f;
+        }
     }
 
     public void SetRadarController(RadarController radarController)
@@ -46,7 +52,7 @@ public class RadarTarget
         float t, R, Z, angle;
         if (_type == TargetType.DeepSeaMonster)
         {
-            t = (timer % _monsterPeriods[_radarController.CurrentMonsterPeriodIndex]) / _monsterPeriods[_radarController.CurrentMonsterPeriodIndex] * 10f; // t가 0 ~ 10이므로 그에 맞춤
+            t = (timer % CurrentMonsterPeriod) / CurrentMonsterPeriod * 10f; // t가 0 ~ 10이므로 그에 맞춤
             R = 10f - t + 2f * Mathf.Sin(3f * t);
             Z = 2f * Mathf.Sin(4f * t) * (1f - t / 10f);
             angle = _radarController.MonsterStartAngle + 5f * t;

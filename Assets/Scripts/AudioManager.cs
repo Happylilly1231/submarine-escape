@@ -44,6 +44,11 @@ public class AudioManager : MonoBehaviour
         audioMixer.SetFloat("SFX", Mathf.Log10(value) * 20f);
     }
 
+    public void SetSFXAudioSourceVolume(float volume)
+    {
+        sfxSource.volume = volume;
+    }
+
     public void PlayBGM(AudioClip clip, bool loop = true)
     {
         if (bgmSource.clip == clip) return;
@@ -54,12 +59,22 @@ public class AudioManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 한 번만 재생되는 효과음 재생(오디오 매니저의 sfxSource에서 재생됨)
+    /// 전역 오디오 한 번만 재생
     /// </summary>
-    /// <param name="clip">오디오 클립</param>
-    public void PlaySFX(AudioClip clip)
+    /// <param name="clip"></param>
+    public void PlayGlobalOneShot(AudioClip clip)
     {
         sfxSource.PlayOneShot(clip); // 한 번만 재생
+    }
+
+    /// <summary>
+    /// 전역 오디오 루프 재생(오디오 매니저의 sfxSource에서 재생됨)
+    /// </summary>
+    /// <param name="clip">오디오 클립</param>
+    public void PlayGlobalSFXLoop(AudioClip clip)
+    {
+        sfxSource.clip = clip;
+        sfxSource.Play(); // 재생
     }
 
     public void StopBGM()
@@ -89,6 +104,6 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PlayDeepSeaMonsterExplosionSound()
     {
-        PlaySFX(deepSeaMonsterExplosionSound);
+        PlayGlobalSFXLoop(deepSeaMonsterExplosionSound);
     }
 }

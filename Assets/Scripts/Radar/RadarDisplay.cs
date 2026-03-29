@@ -37,6 +37,7 @@ public class RadarDisplay : MonoBehaviour
     private void Awake()
     {
         _radarController = GetComponent<RadarController>();
+        Debug.Log(_radarController);
 
         SetLockedUIActive(false);
         SetRadarUIActive(false);

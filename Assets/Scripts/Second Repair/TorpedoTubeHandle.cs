@@ -12,9 +12,10 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     [SerializeField] private ForcePoint[] forcePoints; // 힘 줘야 하는 위치 배열(풀링)
     [SerializeField] private GameObject torpedoTubeUnlockUI; // 잠금 해제 UI
     [SerializeField] private Image progressImage; // 진행도 이미지
-    [SerializeField] private TorpedoAutoLoadSwitch torpedoAutoLoadSwitch;
     [SerializeField] private string negativeKey = "z";
     [SerializeField] private string positiveKey = "c";
+
+    private TorpedoAutoLoadSwitch _torpedoAutoLoadSwitch;
 
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => false;
@@ -37,6 +38,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     private void Awake()
     {
         torpedoTubeUnlockUI.SetActive(false);
+        _torpedoAutoLoadSwitch = FindAnyObjectByType<TorpedoAutoLoadSwitch>();
     }
 
     #region IInteratable
@@ -50,7 +52,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return "Auto Mode";
 
         if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x
@@ -67,7 +69,7 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
-        if (torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
+        if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
             return;
 
         if (torpedoTube.IsOpened) // 열렸을 때 -> 더 이상 상호작용 x

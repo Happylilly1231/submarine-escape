@@ -139,10 +139,12 @@ public class Door : MonoBehaviour, IInteractable
                             if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
                             {
                                 GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
+                                return;
                             }
                             else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
                             {
                                 GameManager.instance.GameClear(); // 탈출 성공
+                                return;
                             }
                         }
                     }
