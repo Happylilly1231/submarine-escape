@@ -19,7 +19,6 @@ public class RadarController : PuzzleController
     [SerializeField] private AudioClip modeChangeFailSound;
     [SerializeField] private AudioClip modeChangeSuccessSound;
     [SerializeField] private AudioSource _monsterAudioSource;
-    private float _deepMonsterVolumeMaxDistance = 10f; // 최대 볼륨 되기 시작하는 거리
 
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => false;
@@ -52,6 +51,7 @@ public class RadarController : PuzzleController
     public float MonsterStartAngle { get; set; } = 90f; // 시작 각도(심해 괴물의 시작 위치 변경 시 사용)
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
     private int _lastShakeMinute = -1; // 마지막으로 카메라가 흔들린 분(시간)
+    private float _monsterCloseTime = 300f; // 심해 괴물 가까워져서 소리 나기 시작하는 시간: 5분
 
     // 발사
     public bool IsFiring { get; set; } = false;
@@ -98,7 +98,7 @@ public class RadarController : PuzzleController
                 deepSeaMonster.UpdatePosUI();
 
             // 심해 괴물이 잠수함에 다가오기까지 5분 남으면
-            if (_monsterTimer >= deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - 300f)
+            if (_monsterTimer >= deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - _monsterCloseTime)
             {
                 // 현재 심해 괴물이 잠수함에 도착하는 시간이 되면(첫 주기 10분, 그 후 17분) -> 심해 괴물 잠수함에 도착, 게임 종료
                 if (_monsterTimer >= deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex])
@@ -110,7 +110,7 @@ public class RadarController : PuzzleController
                 }
 
                 // 가까워지는 소리 재생
-                float v = Mathf.InverseLerp(deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - 300f, deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex], _monsterTimer); // 시간에 따라 점점 커짐(최대 소리 - 도달하는 시간대)
+                float v = Mathf.InverseLerp(deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex] - _monsterCloseTime, deepSeaMonster.MonsterPeriods[CurrentMonsterPeriodIndex], _monsterTimer); // 시간에 따라 점점 커짐(최대 소리 - 도달하는 시간대)
                 _monsterAudioSource.volume = v; // 0~1
                 AudioManager.Instance.PlaySoundSafe(_monsterAudioSource, deepSeaMonsterCloseSound);
 
@@ -128,28 +128,6 @@ public class RadarController : PuzzleController
                     });
                 }
             }
-
-            // if (_monsterTimer >= 1200f) // 20분이 되면(잠수함과의 거리가 거의 5f가 되는 시점) -> 폭발, 게임 종료
-            // {
-            //     Debug.Log("폭발!!! " + _monsterTimer + " / " + monsterDistance);
-            //     AudioManager.Instance.PlayDeepSeaMonsterExplosionSound(); // 폭발 소리
-            //     GameManager.instance.GameOver(EEndingType.SubmarineExplode);
-            // }
-            // else if (monsterDistance <= MaxPlanarDistance / 2) // 잠수함과 어느 정도 가까워지면 -> 소리나기 시작(가까워질수록 커짐)
-            // {
-            //     Debug.Log("가까워지기 시작: " + _monsterTimer);
-            //     AudioManager.Instance.PlaySoundSafe(_monsterAudioSource, deepSeaMonsterCloseSound);
-            //     float v = Mathf.InverseLerp(MaxPlanarDistance / 2, _deepMonsterVolumeMaxDistance, monsterDistance);
-            //     _monsterAudioSource.volume = v; // 0~1
-            // }
-            // else // 잠수함과 거리 먼 경우 -> 소리 안 남
-            // {
-            //     if (_monsterAudioSource.isPlaying)
-            //     {
-            //         _monsterAudioSource.Stop();
-            //         _monsterAudioSource.volume = 0f;
-            //     }
-            // }
         }
 
         // 다른 잠수함 위치 갱신

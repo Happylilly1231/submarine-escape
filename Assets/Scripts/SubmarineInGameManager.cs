@@ -66,6 +66,10 @@ public class SubmarineInGameManager : MonoBehaviour
     // 현재 퍼즐
     public PuzzleController CurrentPuzzleController { get; private set; } = null;
 
+    // 포커스
+    private int _focusRequestCount = 0; // 포커스 요청 횟수 카운트
+    private bool _isCurrentlyFocused = false; // 현재 포커스 상태
+
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
 
@@ -241,55 +245,42 @@ public class SubmarineInGameManager : MonoBehaviour
         playerGeo.SetActive(isActive);
     }
 
-    // /// <summary>
-    // /// UI에 포커스 여부 설정 - 플레이어 인터랙터의 퍼즐 푸는 중 여부, 플레이어 인풋 활성화 여부, 커서, 카메라, 플레이어 이동 조작
-    // /// </summary>
-    // /// <param name="isFocus">포커스 여부</param>
-    // public void SetFocusUI(bool isFocus)
-    // {
-    //     if (isFocus)
-    //     {
-    //         _playerInteractor.IsPuzzleActive = true;
-    //         _playerInteractor.ClearDetectionText();
-    //         playerInput.currentActionMap.Disable(); // 상호작용 아예 막기
-    //         playerInput.actions["ToggleMenu"].Enable(); // 정지 버튼은 활성화 필요
-    //         GameManager.instance.SetHaveToShowCursor(true); // 커서 보여야 함으로 설정
-    //         GameManager.instance.SetCursorVisible(true); // 커서 보이기
-    //         Camera.main.GetComponent<PlayerCameraController>().enabled = false; // 카메라 조작 불가
-    //         player.GetComponent<PlayerMove>().SetMoveable(false); // 플레이어 이동 불가능
-    //     }
-    //     else
-    //     {
-    //         _playerInteractor.IsPuzzleActive = false;
-    //         playerInput.currentActionMap.Enable(); // 상호작용 되도록 함
-    //         GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 함 아님으로 설정
-    //         GameManager.instance.SetCursorVisible(false); // 커서 숨기기
-    //         Camera.main.GetComponent<PlayerCameraController>().enabled = true; // 카메라 조작 불가
-    //         player.GetComponent<PlayerMove>().SetMoveable(true); // 플레이어 이동 불가능
-    //     }
-    // }
-
     /// <summary>
     /// 퍼즐 외 포커스 여부 설정(괴물화 가시 생성 보여줄 때나 심해 괴물로 인한 카메라 흔들림 등에 사용)
     /// </summary>
     /// <param name="isFocus"></param>
     public void SetFocus(bool isFocus)
     {
-        // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
-        if (CurrentPuzzleController != null)
-        {
-            CurrentPuzzleController.ExitPuzzle();
-            CurrentPuzzleController = null;
-        }
+        // 카운트 업데이트
+        if (isFocus) // 포커스 요청
+            _focusRequestCount++; // 포커스 요청 카운트 1 증가
+        else // 포커스 해제 요청
+            _focusRequestCount = Mathf.Max(0, _focusRequestCount - 1); // 포커스 요청 카운트 1 감소
 
-        // 해제는 포커스와 반대로 작동
-        _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-        _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+        // 목표 포커스 상태: 포커스 요청 카운트가 1 이상이면 포커스 / 0이면 포커스 해제
+        bool targetFocusState = _focusRequestCount > 0;
 
-        if (isFocus) // 포커스
+        // 현재 포커스 상태와 목표 포커스 상태가 다를 때만 실제 수행
+        if (targetFocusState != _isCurrentlyFocused)
         {
-            // 상호작용 감지 텍스트 클리어
-            _playerInteractor.ClearDetectionText();
+            _isCurrentlyFocused = targetFocusState; // 현재 상태 업데이트
+
+            // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
+            if (CurrentPuzzleController != null)
+            {
+                CurrentPuzzleController.ExitPuzzle();
+                CurrentPuzzleController = null;
+            }
+
+            // 해제는 포커스와 반대로 작동
+            _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
+            _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+            if (isFocus) // 포커스
+            {
+                // 상호작용 감지 텍스트 클리어
+                _playerInteractor.ClearDetectionText();
+            }
         }
     }
 

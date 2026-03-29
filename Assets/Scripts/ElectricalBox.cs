@@ -140,6 +140,7 @@ public class ElectricalBox : MonoBehaviour, IInteractable
             SubmarineInGameManager.instance.SetPlayerGeoActive(true);
             _playerInput.currentActionMap.Enable();
             flashlight.SetActive(false);
+            _inventoryManager.OpenInventory();
 
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;

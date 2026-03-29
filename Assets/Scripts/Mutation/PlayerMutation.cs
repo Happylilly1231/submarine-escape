@@ -143,6 +143,7 @@ public class PlayerMutation : MonoBehaviour
         seq.AppendCallback(() =>
         {
             spike.SetActive(true);
+            spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
         });
 
         // 2초 기다리기 (등 가시 움직이는 거 보여주는 중)

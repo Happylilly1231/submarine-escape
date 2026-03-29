@@ -5,12 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // 나중에 변경할 것임!!!
-public class RecordingDevice : MonoBehaviour, IInteractable
+public class RecordingDevice : PuzzleController, IInteractable
 {
     [SerializeField] private GameObject recordingUI;
     [SerializeField] private TextMeshProUGUI recordingText;
     [SerializeField] private Button skipButton;
-    [SerializeField] private Button exitButton;
 
     private const string RECORDING_TEXT = "z좌표 -25 ~ -50에서 순회하고 있는 다른 잠수함 발견.\n비정상적인 패턴을 가진 점 발견. 순회하면서 접근 중이다. 통신 실패...\n근처 잠수함에 해당 타겟에 대한 정보를 요청... ... ...\n*(기록이 비정상적으로 종료되었습니다.)";
     private bool _isTypingCompleted = false; // 한 번이라도 타이핑이 완료되었는지 여부
@@ -18,20 +17,28 @@ public class RecordingDevice : MonoBehaviour, IInteractable
     // 사운드
     [Header("Sound")]
     [SerializeField] private AudioClip glitchSound;
-    [SerializeField] private AudioSource _audioSource;
+    private AudioSource _audioSource;
 
-    private void Start()
+    protected override bool IsHoverRequired => false;
+    protected override bool IsMouseRequiredAtFirst => true;
+
+    private void Awake()
     {
-        // 버튼 클릭 이벤트 함수 할당
-        skipButton.onClick.AddListener(SkipTyping);
-        exitButton.onClick.AddListener(ExitRecordingDevice);
-
-        // 건너뛰기 버튼 처음엔 비활성화
-        skipButton.gameObject.SetActive(false);
-
         _audioSource = GetComponent<AudioSource>();
     }
 
+    public override void Start()
+    {
+        base.Start();
+
+        // 버튼 클릭 이벤트 함수 할당
+        skipButton.onClick.AddListener(SkipTyping);
+
+        // 건너뛰기 버튼 처음엔 비활성화
+        skipButton.gameObject.SetActive(false);
+    }
+
+    #region IInteractable
     public bool CanInteractwithSelectedItem(Item item)
     {
         return false;
@@ -44,7 +51,14 @@ public class RecordingDevice : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
+        ActivatePuzzle();
+    }
+    #endregion
+
+    #region PuzzleController
+    public override void StartPuzzle()
+    {
+        base.StartPuzzle();
 
         recordingUI.SetActive(true);
         StartCoroutine(PlayRecording());
@@ -52,6 +66,17 @@ public class RecordingDevice : MonoBehaviour, IInteractable
             skipButton.gameObject.SetActive(true);
     }
 
+    public override void ExitPuzzle()
+    {
+        base.ExitPuzzle();
+
+        recordingUI.SetActive(false);
+        _audioSource.Stop();
+        StopAllCoroutines();
+    }
+    #endregion
+
+    #region 퍼즐용 함수
     /// <summary>
     /// 녹음 파일 재생(타이핑)
     /// </summary>
@@ -99,15 +124,5 @@ public class RecordingDevice : MonoBehaviour, IInteractable
         recordingText.text = RECORDING_TEXT;
         _audioSource.Stop();
     }
-
-    /// <summary>
-    /// 종료
-    /// </summary>
-    public void ExitRecordingDevice()
-    {
-        SubmarineInGameManager.instance.SetPuzzleFocus(false);
-        recordingUI.SetActive(false);
-        _audioSource.Stop();
-        StopAllCoroutines();
-    }
+    #endregion
 }

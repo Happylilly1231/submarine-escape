@@ -851,17 +851,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.78
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 13.08
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -1528,22 +1528,6 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnToggleInventory
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 14eac37a-29e2-49ca-a39d-c8cf936b7147
-    m_ActionName: Player/ToggleInventory[/Keyboard/i]
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
         m_MethodName: OnTHold
         m_Mode: 0
         m_Arguments:
@@ -1606,22 +1590,6 @@ MonoBehaviour:
     m_ActionName: Player/ItemDrop[/Keyboard/q]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnReturnToSlot
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 9ada9d3f-109f-408a-b714-4c6623d12173
-    m_ActionName: Player/ReturnToSlot[/Keyboard/r]
-  - m_PersistentCalls:
-      m_Calls:
       - m_Target: {fileID: 8734016063853228878}
         m_TargetAssemblyTypeName: PlayerMove, Assembly-CSharp
         m_MethodName: OnDodge
@@ -1652,10 +1620,6 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 37d5485f-70be-4e26-bdd9-d2409b3cdf79
     m_ActionName: Player/FurnitureInteractor[/Keyboard/e]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: a97800d3-5c25-4d9a-b23c-c7f8619fc3d2
-    m_ActionName: Player/ToggleFlashlight[/Mouse/leftButton]
   - m_PersistentCalls:
       m_Calls: []
     m_ActionId: 7434ddfa-749c-4a49-99db-d31a1fe78de8
@@ -1708,6 +1672,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 7e50d403-0439-457f-96ca-be2ff8fbab39
     m_ActionName: Player/ToggleMenu[/Keyboard/escape]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+        m_MethodName: OnToggleItemUse
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 106c7bf8-fb7a-4cd3-b6c3-8e6e1788510d
+    m_ActionName: Player/FlashlightUse[/Mouse/leftButton]
   - m_PersistentCalls:
       m_Calls: []
     m_ActionId: 63b5b141-7fc6-4cad-9803-afbe0b4ba55f
@@ -1870,7 +1850,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rayDistance: 2.5
   playerCamera: {fileID: 0}
-  interactorUI: {fileID: 0}
   interactorText: {fileID: 0}
   IsPuzzleActive: 0
 --- !u!114 &999883879645691311
@@ -1939,6 +1918,7 @@ MonoBehaviour:
   hitViewPoint: {fileID: 420835078358644712}
   vignetteImg: {fileID: 0}
   monsterHandsTransform: {fileID: 3938990211804927758}
+  itemOverlayCamera: {fileID: 0}
   mutationAudioSource: {fileID: 3539139798179444966}
   spikeHitSound: {fileID: 8300000, guid: 5ff17ec0746f6fd498f1eb8138cf8ad5, type: 3}
   tinnitusSound: {fileID: 8300000, guid: 6b051d56d7ccefb4b8b0ca5c892cdc53, type: 3}
