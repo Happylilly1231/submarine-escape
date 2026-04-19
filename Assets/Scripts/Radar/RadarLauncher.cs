@@ -286,7 +286,7 @@ public class RadarLauncher : MonoBehaviour
         deepSeaMonster.posText.text = "";
 
         // 후퇴
-        yield return StartCoroutine(_radarDisplay.FadeInOut(false, deepSeaMonster, _fadeDuration)); // 심해 괴물 페이드 아웃되면서 물러남(코루틴 완료될 때까지 대기)
+        StartCoroutine(_radarDisplay.FadeInOut(false, deepSeaMonster, _fadeDuration)); // 심해 괴물 페이드 아웃되면서 물러남(코루틴 완료될 때까지 대기)
 
         // 대기
         yield return new WaitForSeconds(_monsterWaitTime); // 심해 괴물 다시 나타날 때까지 대기 시간만큼 대기

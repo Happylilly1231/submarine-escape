@@ -180,7 +180,7 @@ public class RadarController : PuzzleController
 
         // 선택 여부 초기화
         SelectPlanarPos(false);
-        SelectHeight(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
 
         // 레이더 열리는 소리
         AudioManager.Instance.PlayGlobalOneShot(radarOpenSound);

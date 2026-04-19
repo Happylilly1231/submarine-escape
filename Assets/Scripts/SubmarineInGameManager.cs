@@ -245,6 +245,11 @@ public class SubmarineInGameManager : MonoBehaviour
         playerGeo.SetActive(isActive);
     }
 
+    public void SetCameraControllerEnable(bool isEnable)
+    {
+        _playerCameraController.enabled = isEnable;
+    }
+
     /// <summary>
     /// 퍼즐 외 포커스 여부 설정(괴물화 가시 생성 보여줄 때나 심해 괴물로 인한 카메라 흔들림 등에 사용)
     /// </summary>
@@ -280,6 +285,12 @@ public class SubmarineInGameManager : MonoBehaviour
             {
                 // 상호작용 감지 텍스트 클리어
                 _playerInteractor.ClearDetectionText();
+
+                playerInput.DeactivateInput(); // 모든 액션 비활성화
+            }
+            else
+            {
+                playerInput.ActivateInput(); // 모든 액션 활성화
             }
         }
     }

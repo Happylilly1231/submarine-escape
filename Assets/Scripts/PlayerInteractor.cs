@@ -21,10 +21,14 @@ public class PlayerInteractor : MonoBehaviour
     private bool _canInteractable = false; // 가구 상호작용 가능 여부
     public bool IsPuzzleActive = false; // 플레이어가 퍼즐을 풀고 있는 상태
 
+    private int detectLayerMask; // 감지 레이어 (괴물 제외하기 위해 만듦)
+
     void Awake()
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
+
+        detectLayerMask = ~LayerMask.GetMask("Monster"); // 괴물은 감지 레이어에서 제외
     }
 
     void Update()
@@ -100,7 +104,7 @@ public class PlayerInteractor : MonoBehaviour
     /// </summary>
     private void DetectObject()
     {
-        if (Physics.SphereCast(playerCamera.transform.position, 0.1f, playerCamera.transform.forward, out _sphereCastHit, rayDistance))
+        if (Physics.SphereCast(playerCamera.transform.position, 0.1f, playerCamera.transform.forward, out _sphereCastHit, rayDistance, detectLayerMask))
         {
             if (_sphereCastHit.transform.TryGetComponent(out ItemPickUp item))
             {
@@ -194,7 +198,8 @@ public class PlayerInteractor : MonoBehaviour
     /// </summary>
     private void TryPickUpItem()
     {
-        if (_inventoryManager.AddItemToInventory(_currentItem.Item))
+        IStatableItem statableItem = _currentItem.GetComponent<IStatableItem>();
+        if (_inventoryManager.AddItemToInventory(_currentItem.Item, 1, statableItem))
         {
             Debug.Log(_currentItem.Item.ItemName + " 획득");
             Destroy(_currentItem.gameObject);

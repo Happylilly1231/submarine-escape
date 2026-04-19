@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.UI;
 
 /// <summary>
 /// 효과 관리
@@ -13,6 +14,7 @@ public class FXManager : MonoBehaviour
     [SerializeField] private Volume volume; // 볼륨
     private Bloom _bloom; // 발광
     private Vignette _vignette; // 비네트
+    public Image fadeImage;
 
     // 싱글톤 변수
     public static FXManager instance;

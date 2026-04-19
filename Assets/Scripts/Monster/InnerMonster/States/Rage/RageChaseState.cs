@@ -146,7 +146,11 @@ namespace InnerMonsterStates
         {
             // 경로 계산 완료 대기
             while (monster.Nav.pathPending)
+            {
+                yield return monster.WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
                 yield return null;
+            }
 
             // 경로의 코너 배열 가져오기
             Vector3[] corners = monster.Nav.path.corners;
