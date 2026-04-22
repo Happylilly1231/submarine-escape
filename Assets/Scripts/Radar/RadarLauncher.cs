@@ -279,9 +279,6 @@ public class RadarLauncher : MonoBehaviour
         // 심해 괴물 위치 갱신 중 아님으로 설정
         deepSeaMonster.IsCurrentActive = false;
 
-        // 심해 괴물 타이머 0부터 다시 시작하도록 초기화
-        _radarController.ResetMonsterTimer();
-
         // 심해 괴물 좌표 텍스트 초기화
         deepSeaMonster.posText.text = "";
 
@@ -292,6 +289,7 @@ public class RadarLauncher : MonoBehaviour
         yield return new WaitForSeconds(_monsterWaitTime); // 심해 괴물 다시 나타날 때까지 대기 시간만큼 대기
 
         // 재등장
+        _radarController.CurrentMonsterAppearTime = GameTime.Instance.TimeSinceStart;
         _radarController.CurrentMonsterPeriodIndex++;
         deepSeaMonster.CurrentMonsterPeriod = deepSeaMonster.MonsterPeriods[_radarController.CurrentMonsterPeriodIndex] / 0.7712f; // (잠수함과의 거리가 5f 되는 시점이 전체 시간의 0.771f 정도이기 때문에 해당 시점을 원하는 시간으로 맞추기 위해 0.7712f로 원하는 시간으로 나누어준다.(약간의 널널함을 주기 위해 0.0002f 더함))
         deepSeaMonster.IsCurrentActive = true; // 심해 괴물 위치 갱신 중으로 설정

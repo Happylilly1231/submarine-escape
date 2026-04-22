@@ -48,7 +48,7 @@ public class SubmarineInGameManager : MonoBehaviour
     private GameObject playerGeo;
     private PlayerInteractor _playerInteractor;
     private PlayerCameraController _playerCameraController;
-    private PlayerMove _playerMove;
+    public PlayerMove playerMove { get; private set; }
 
     // 내부 괴물
     public Transform innerMonsterTransform;
@@ -111,7 +111,7 @@ public class SubmarineInGameManager : MonoBehaviour
         playerInput = player.GetComponent<PlayerInput>(); // 플레이어 입력 컴포넌트 가져오기
         _playerInteractor = player.GetComponent<PlayerInteractor>(); // 플레이어 인터랙터 컴포넌트 가져오기
         _playerCameraController = Camera.main.GetComponent<PlayerCameraController>(); // 플레이어 카메라 컨트롤러 컴포넌트 가져오기
-        _playerMove = player.GetComponent<PlayerMove>(); // 플레이어 이동 컴포넌트 가져오기
+        playerMove = player.GetComponent<PlayerMove>(); // 플레이어 이동 컴포넌트 가져오기
 
         InitGame();
     }
@@ -251,9 +251,9 @@ public class SubmarineInGameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 퍼즐 외 포커스 여부 설정(괴물화 가시 생성 보여줄 때나 심해 괴물로 인한 카메라 흔들림 등에 사용)
+    /// 포커스 여부 설정
     /// </summary>
-    /// <param name="isFocus"></param>
+    /// <param name="isFocus">포커스 여부</param>
     public void SetFocus(bool isFocus)
     {
         // 카운트 업데이트
@@ -270,6 +270,8 @@ public class SubmarineInGameManager : MonoBehaviour
         {
             _isCurrentlyFocused = targetFocusState; // 현재 상태 업데이트
 
+            GameTime.Instance.SetPause(isFocus); // 포커스 -> 게임 시간 정지
+
             // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
             if (CurrentPuzzleController != null)
             {
@@ -279,7 +281,7 @@ public class SubmarineInGameManager : MonoBehaviour
 
             // 해제는 포커스와 반대로 작동
             _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-            _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+            playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
 
             if (isFocus) // 포커스
             {
@@ -296,9 +298,10 @@ public class SubmarineInGameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 퍼즐용 포커스 여부 설정
+    /// 퍼즐 포커스 여부 설정
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
+    /// <param name="puzzleController">퍼즐 컨트롤러</param>
     public void SetPuzzleFocus(bool isFocus, PuzzleController puzzleController = null)
     {
         if (isFocus)
@@ -309,7 +312,7 @@ public class SubmarineInGameManager : MonoBehaviour
         // 해제는 포커스와 반대로 작동
         _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-        _playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+        playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
 
         if (isFocus) // 포커스
         {

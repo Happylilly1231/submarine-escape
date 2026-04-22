@@ -2100,7 +2100,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 172
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -4205,7 +4205,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 229
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -6310,7 +6310,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 235
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -24313,7 +24313,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 40
+  m_VersionIndex: 391
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -26418,7 +26418,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 253
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -108545,7 +108545,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 46
+  m_VersionIndex: 403
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -110650,7 +110650,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 352
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -110721,17 +110721,17 @@ PrefabInstance:
     - target: {fileID: 3525930202882045831, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -1.67
       objectReference: {fileID: 0}
     - target: {fileID: 3525930202882045831, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 6.4
       objectReference: {fileID: 0}
     - target: {fileID: 3525930202882045831, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 9.89
       objectReference: {fileID: 0}
     - target: {fileID: 3525930202882045831, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
@@ -110772,6 +110772,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5500364292800428771, guid: 7dce92202495a0244abce2807779cb0f,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8240519620362234109, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
@@ -110822,6 +110827,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 7159698847401511517}
+    - targetCorrespondingSourceObject: {fileID: 399666631778376190, guid: 7dce92202495a0244abce2807779cb0f,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7674393337724764321}
     - targetCorrespondingSourceObject: {fileID: 2298016233642609591, guid: 7dce92202495a0244abce2807779cb0f,
         type: 3}
       insertIndex: -1
@@ -112855,7 +112864,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 52
+  m_VersionIndex: 412
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -112916,3 +112925,24 @@ MonoBehaviour:
   - {fileID: 5008913955090006639}
   - {fileID: 2018431494026906518}
   - {fileID: 357177111952889114}
+--- !u!135 &7674393337724764321
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6912158523128303654}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.15
+  m_Center: {x: 0, y: 0, z: 0}

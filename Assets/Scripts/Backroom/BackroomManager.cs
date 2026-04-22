@@ -128,7 +128,6 @@ public class BackroomManager : MonoBehaviour
     private void SelectRandomEntity()
     {
         _currentEntityId = Random.Range(0, 2);
-        _currentEntityId = 1;
         switch (_currentEntityId)
         {
             case 0:

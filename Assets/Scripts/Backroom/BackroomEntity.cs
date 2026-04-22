@@ -12,10 +12,11 @@ public class BackroomEntity : MonoBehaviour
     {
         BackroomManager.Instance.MoveToStartPos(); // 백룸 시작 위치로 이동
         Sequence seq = DOTween.Sequence();
+        SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
         seq.Append(FXManager.instance.fadeImage.DOFade(0f, 2f)); // 페이드 아웃
-        seq.OnComplete(() =>
-        {
-            SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
-        });
+        // seq.OnComplete(() =>
+        // {
+        //     SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+        // });
     }
 }

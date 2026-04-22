@@ -12,6 +12,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
     [SerializeField] private Item bioDataExtractorItem; // 생체 데이터 추출기 아이템
     [SerializeField] private Transform extractPos; // 추출 위치(생체 데이터 추출기 아이템이 위치할 루트 트랜스폼)
     [SerializeField] private Transform viewPoint;
+    [SerializeField] private Transform skullViewPoint;
 
     private ItemEquipController _itemEquipController;
     private InventoryManager _inventoryManager;
@@ -79,6 +80,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         _innerMonsterController.CanMove(false);
         _monsterAnimatorSpeed = _innerMonsterController.Animator.speed;
         _innerMonsterController.Animator.speed = 0f;
+        _innerMonsterController.audioSource.Pause();
 
         // 3. 추출기 아이템 관련 로직
         // 현재 들고 있는 아이템의 오브젝트(카메라 밑에 생성된 프리팹)를 현재 생체 데이터 추출기 오브젝트로 설정
@@ -91,7 +93,8 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         _currentExtractorObj.transform.localRotation = Quaternion.identity; // 회전값 초기화 (부모와 동일하게)
         _statableItemManager.RestoreItemState(_currentExtractorObj, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
         // 3-3. 해당 아이템 프리팹 오브젝트는 못 줍게 변경
-        _currentExtractorObj.GetComponent<Collider>().enabled = false; // 아이템 못 줍게 콜라이더 컴포넌트 비활성화
+        _currentExtractorObj.GetComponent<BoxCollider>().enabled = false; // 아이템 못 줍게 콜라이더 컴포넌트 비활성화
+        _currentExtractorObj.GetComponent<SphereCollider>().enabled = false; // 아이템 못 줍게 콜라이더 컴포넌트 비활성화
 
         // 4. 연출
         Sequence seq = DOTween.Sequence();
@@ -108,16 +111,56 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         // // 플런저(피스톤 막대 부분) 당기기
         // seq.Append(bioDataExtractorPlungerObj.transform.DOLocalMoveZ(-2f, 1f));
 
-        // 위의 해골들을 바라보도록 보도록 회전
-        Vector3 currentRotation = viewPoint.rotation.eulerAngles;
-        currentRotation.x = -20f;
-        seq.Append(Camera.main.transform.DORotateQuaternion(Quaternion.Euler(currentRotation), 2f)
-        .SetEase(Ease.OutQuad));
+        // 비네트 효과
+        FXManager.instance.Vignette.color.value = Color.black;
+        seq.Append(DOTween.To(() => FXManager.instance.Vignette.intensity.value,
+            x => FXManager.instance.Vignette.intensity.value = x, 0.5f, 3f)
+            .SetEase(Ease.OutQuad));
+
+        float waveTime = 1.5f; // 한 번 출렁이는 시간
+        int loopCount = 4;     // 0.5초 * 6번 = 총 3초
+
+        // 1. 카메라 Z축 회전 (좌우로 흔들흔들)
+        // 3도 정도를 2초 동안 왕복하며 무한 반복(Yoyo)
+        seq.Join(transform.DOLocalRotate(new Vector3(0, 0, 3f), waveTime)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(loopCount, LoopType.Yoyo));
+        // 2. FOV 울렁거림 (숨쉬는 듯한 시야) ⚓
+        seq.Join(Camera.main.DOFieldOfView(50f, waveTime)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(loopCount, LoopType.Yoyo));
+        // 3. 색수차(Chromatic Aberration) 강도 조절
+        // 0.2에서 0.8 사이를 왔다갔다 하며 정신없는 느낌 연출
+        seq.Join(DOTween.To(() => FXManager.instance.Chromatic.intensity.value, x => FXManager.instance.Chromatic.intensity.value = x, 0.8f, waveTime)
+            .SetEase(Ease.InOutFlash)
+            .SetLoops(loopCount, LoopType.Yoyo));
+        // 4. 렌즈 왜곡 (꿀렁거리는 느낌의 핵심!)
+        seq.Join(DOTween.To(() => FXManager.instance.Distortion.intensity.value, x => FXManager.instance.Distortion.intensity.value = x, -0.2f, waveTime)
+            .SetEase(Ease.InOutQuad)
+            .SetLoops(loopCount, LoopType.Yoyo));
+
+        // // 위의 해골들을 바라보도록 보도록 회전
+        // Vector3 currentRotation = viewPoint.rotation.eulerAngles;
+        // currentRotation.x = -20f;
+        // seq.Append(Camera.main.transform.DORotateQuaternion(Quaternion.Euler(currentRotation), 2f)
+        // .SetEase(Ease.OutQuad));
+
+        // 해골 모습 보는 위치로 카메라 이동
+        seq.Join(Camera.main.transform.DOMove(skullViewPoint.position, 1.5f)
+        .SetEase(Ease.OutQuad)
+        .SetDelay(3f));
+        seq.Join(Camera.main.transform.DORotateQuaternion(skullViewPoint.rotation, 1.5f)
+        .SetEase(Ease.OutQuad)
+        .SetDelay(3f));
 
         // 빨려 들어가며 암전 (FOV 감소와 동시에 Fade In)
         seq.Append(Camera.main.DOFieldOfView(20f, 3f).SetEase(Ease.InExpo));
-        seq.Join(FXManager.instance.fadeImage.DOFade(1f, 3f)); // 화면이 완전히 검게 변함
+        seq.Join(FXManager.instance.fadeImage.DOFade(1f, 2f)); // 화면이 완전히 검게 변함
 
+        seq.AppendCallback(() =>
+        {
+            FXManager.instance.VignetteOff();
+        });
         // 잠시 정적 (완전 암전 상태)
         seq.AppendInterval(0.5f);
 
@@ -162,23 +205,27 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         // 주사기 빼기
         seq.Append(_currentExtractorObj.transform.DOLocalMoveX(0f, 1f));
 
-        // // 주사기 튀어나옴
-        // seq.Append(bioDataExtractorObj.transform.DOLocalMoveZ(1f, 1f));
-
-        // 완료 시 로직
-        seq.OnComplete(() =>
+        seq.AppendCallback(() =>
         {
             // 아이템 관련
             _currentExtractorObj.GetComponent<Collider>().enabled = true; // 아이템 다시 주을 수 있게 콜라이더 컴포넌트 활성화
+            _currentExtractorObj.GetComponent<SphereCollider>().enabled = true; // 아이템 다시 주을 수 있게 콜라이더 컴포넌트 활성화
             _currentExtractorObj = null; // 현재 추출기 아이템 초기화(추출 끝났으므로)
 
             // 상태
             SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
             _innerMonsterController.IsBeingExtracted = false; // 추출 중 아님으로 설정
+        });
 
+        seq.AppendInterval(2f); // 약간의 대기 시간 (괴물이 정지한 채로 있음 - 추출기 아이템 줍기 쉽도록)
+
+        // 완료 시 로직
+        seq.OnComplete(() =>
+        {
             // 괴물 정지 해제
             _innerMonsterController.CanMove(true);
             _innerMonsterController.Animator.speed = _monsterAnimatorSpeed;
+            _innerMonsterController.audioSource.UnPause();
 
             Debug.Log("추출 완료!");
         });
