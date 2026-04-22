@@ -52,6 +52,7 @@ public class RadarController : PuzzleController
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
     private int _lastShakeMinute = -1; // 마지막으로 카메라가 흔들린 분(시간)
     private float _monsterCloseTime = 300f; // 심해 괴물 가까워져서 소리 나기 시작하는 시간: 5분
+    public float CurrentMonsterAppearTime { get; set; } = 0f; // 현재 심해 괴물 등장 시간
 
     // 발사
     public bool IsFiring { get; set; } = false;
@@ -92,7 +93,7 @@ public class RadarController : PuzzleController
         // 심해 괴물 타이머 계산 (보여지는 중 아닐 때는 사라졌을 때이므로 계산 X) & 위치 갱신
         if (deepSeaMonster.IsCurrentActive)
         {
-            _monsterTimer += Time.deltaTime;
+            _monsterTimer = GameTime.Instance.TimeSinceStart - CurrentMonsterAppearTime;
             deepSeaMonster.UpdatePosition(_monsterTimer);
             if (IsPuzzleStarted)
                 deepSeaMonster.UpdatePosUI();
@@ -120,12 +121,15 @@ public class RadarController : PuzzleController
                 {
                     _lastShakeMinute = currentMinute; // 마지막으로 흔들린 분(시간)을 현재 분(시간)으로 갱신
                     AudioManager.Instance.PlayGlobalOneShot(deepSeaImpactSound); // 충격(흔들림) 소리 재생 (볼륨 달라지지 않음)
-                    SubmarineInGameManager.instance.SetFocus(true); // 포커스 <- 카메라 흔들림을 위해서
-                    Camera.main.transform.DOShakeRotation(2f, 0.2f, 10, 90f) // 카메라 흔들림
-                    .OnComplete(() => // 끝나면
+                    if (DOTween.IsTweening(Camera.main.transform))
                     {
-                        SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
-                    });
+                        SubmarineInGameManager.instance.SetFocus(true); // 포커스 <- 카메라 흔들림을 위해서
+                        Camera.main.transform.DOShakeRotation(2f, 0.2f, 10, 90f) // 카메라 흔들림
+                            .OnComplete(() => // 끝나면
+                            {
+                                SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+                            });
+                    }
                 }
             }
         }
@@ -183,7 +187,7 @@ public class RadarController : PuzzleController
 
         // 선택 여부 초기화
         SelectPlanarPos(false);
-        SelectHeight(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
 
         // 레이더 열리는 소리
         AudioManager.Instance.PlayGlobalOneShot(radarOpenSound);
@@ -482,12 +486,12 @@ public class RadarController : PuzzleController
             SetCurrentTorpedoState(TorpedoState.Normal);
     }
 
-    /// <summary>
-    /// 괴물 타이머 초기화
-    /// </summary>
-    public void ResetMonsterTimer()
-    {
-        _monsterTimer = 0f;
-    }
+    // /// <summary>
+    // /// 괴물 타이머 초기화
+    // /// </summary>
+    // public void ResetMonsterTimer()
+    // {
+    //     _monsterTimer = 0f;
+    // }
     #endregion
 }

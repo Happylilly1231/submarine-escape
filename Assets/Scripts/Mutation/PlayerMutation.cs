@@ -50,27 +50,29 @@ public class PlayerMutation : MonoBehaviour
 
         // 괴물 손 비활성화
         monsterHandsTransform.gameObject.SetActive(false);
+
+        GameTime.Instance.ReserveEvent(_mutationInterval, SpawnSpike, true);
     }
 
-    private void Update()
-    {
-        // 정지 중 -> 아무것도 X
-        if (SubmarineInGameManager.instance.IsPausing)
-            return;
+    // private void Update()
+    // {
+    //     // 정지 중 -> 아무것도 X
+    //     if (SubmarineInGameManager.instance.IsPausing)
+    //         return;
 
-        // 타이머 증가
-        _mutationTimer += Time.deltaTime;
+    //     // 타이머 증가
+    //     _mutationTimer += Time.deltaTime;
 
-        // 10분마다 단계 증가
-        if (_mutationTimer >= _mutationInterval && _currentStage < _maxStage)
-        {
-            _currentStage++; // 단계 증가
-            _mutationTimer = 0f; // 타이머 초기화
+    //     // 10분마다 단계 증가
+    //     if (_mutationTimer >= _mutationInterval && _currentStage < _maxStage)
+    //     {
+    //         _currentStage++; // 단계 증가
+    //         _mutationTimer = 0f; // 타이머 초기화
 
-            // 가시 생성
-            SpawnSpike();
-        }
-    }
+    //         // 가시 생성
+    //         SpawnSpike();
+    //     }
+    // }
 
     /// <summary>
     /// 완전 괴물화
@@ -123,6 +125,8 @@ public class PlayerMutation : MonoBehaviour
     /// </summary>
     private void SpawnSpike()
     {
+        _currentStage++; // 단계 증가
+
         // 현재 가시
         GameObject spike = spikes[_currentStage - 2];
 

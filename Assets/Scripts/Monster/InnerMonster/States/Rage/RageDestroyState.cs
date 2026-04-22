@@ -153,6 +153,8 @@ namespace InnerMonsterStates
 
             yield return null; // 한 프레임 대기 <- 문 NavMeshObstacle 활성화와 순찰 상태에서 경로 계산이 똑같은 프레임에 일어날 경우 Obstacle 인식 제대로 안되는 버그 해결
 
+            yield return monster.WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
             // 순찰 상태로 전환
             monster.ChangeState(new PatrolState());
         }

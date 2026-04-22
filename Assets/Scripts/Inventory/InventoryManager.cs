@@ -32,6 +32,7 @@ public class InventoryManager : MonoBehaviour
     private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
+    private StatableItemManager _statableItemManager; // 개별 상태를 가지는 아이템 관리하는 매니저
 
     /// <summary>
     /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
@@ -40,6 +41,7 @@ public class InventoryManager : MonoBehaviour
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerInteractor = FindObjectOfType<PlayerInteractor>();
+        _statableItemManager = GetComponent<StatableItemManager>();
     }
 
     /// <summary>
@@ -96,7 +98,7 @@ public class InventoryManager : MonoBehaviour
         else if (!_isSwapMode && _selectedSlotIndex != slotIndex) // 슬롯 선택 및 선택된 슬롯에 있는 아이템 들기
         {
             SelectSlot(slotIndex);
-            _itemEquipController.EquipItem(inventorySlots[slotIndex].Item);
+            _itemEquipController.EquipItem(inventorySlots[slotIndex].Item, inventorySlots[slotIndex].ItemInstanceNum);
         }
         else if (!_isSwapMode && _selectedSlotIndex == slotIndex) // 아이템 회수
         {
@@ -253,12 +255,10 @@ public class InventoryManager : MonoBehaviour
 
         var tempItem = selectedSlot.Item;
         var tempCount = selectedSlot.ItemCount;
+        var tempItemInstanceNum = selectedSlot.ItemInstanceNum;
 
-        selectedSlot.SetSlot(swapSlot.Item, swapSlot.ItemCount);
-        swapSlot.SetSlot(tempItem, tempCount);
-
-        _itemEquipController.EquipItem(inventorySlots[selectedSlotIndex].Item);
-        UpdateActionText();
+        selectedSlot.SetSlot(swapSlot.Item, swapSlot.ItemCount, swapSlot.ItemInstanceNum);
+        swapSlot.SetSlot(tempItem, tempCount, tempItemInstanceNum);
     }
 
     /// <summary> 인벤토리에 아이템 추가
@@ -267,7 +267,7 @@ public class InventoryManager : MonoBehaviour
     /// <para> - 빈 슬롯이 없으면 아이템 추가 실패 </para>
     /// </summary>
     /// <returns>인벤토리에 아이템 추가 성공 여부</returns>
-    public bool AddItemToInventory(Item newItem, int count = 1)
+    public bool AddItemToInventory(Item newItem, int count = 1, IStatableItem statableItem = null)
     {
         if (newItem.CanOverlap)
         {
@@ -281,11 +281,29 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
+        // 개별 상태 저장 아이템의 경우
+        if (statableItem != null)
+        {
+            // 해당 아이템이 아직 개별 상태 저장 딕셔너리에 올라가 있지 않다면 -> 딕셔너리에 등록
+            if (statableItem.ItemInstanceNum == 0)
+            {
+                // 개별 상태 저장 딕셔너리에 현재 아이템 인스턴스 상태 데이터 등록
+                _statableItemManager.RegisterItemState(statableItem);
+            }
+        }
+
         // 선택된 슬롯이 비어있는 경우 해당 슬롯에 추가 및 아이템 들기
         if (_selectedSlotIndex >= 0 && inventorySlots[_selectedSlotIndex].Item == null)
         {
-            inventorySlots[_selectedSlotIndex].AddItem(newItem, count);
-            _itemEquipController.EquipItem(inventorySlots[_selectedSlotIndex].Item);
+            if (statableItem != null)
+            {
+                inventorySlots[_selectedSlotIndex].AddItem(newItem, count, statableItem.ItemInstanceNum); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
+            }
+            else
+            {
+                inventorySlots[_selectedSlotIndex].AddItem(newItem, count);
+            }
+            _itemEquipController.EquipItem(inventorySlots[_selectedSlotIndex].Item, inventorySlots[_selectedSlotIndex].ItemInstanceNum);
             UpdateActionText();
             return true;
         }
@@ -430,6 +448,8 @@ public class InventoryManager : MonoBehaviour
         Vector3 dropPosition = rightHandTransform.position + rightHandTransform.forward * 0.5f;
         GameObject droppedItemObject = Instantiate(targetSlot.Item.ItemPrefab, dropPosition, Quaternion.identity);
         StartCoroutine(ApplyRigidbody(droppedItemObject, 2f));
+
+        _statableItemManager.RestoreItemState(droppedItemObject, targetSlot.ItemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
 
         if (_itemEquipController.HasItem)
         {
