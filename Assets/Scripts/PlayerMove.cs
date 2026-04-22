@@ -473,7 +473,7 @@ public class PlayerMove : MonoBehaviour
                 break;
 
             // 다음 프레임에 갈 위치 예측
-            Vector3 move = dir.normalized * 3f * _playerStatus.SpeedScale * Time.deltaTime;
+            Vector3 move = dir.normalized * 3f * Time.deltaTime;
             Vector3 nextPos = transform.position + move;
 
             // 다음 위치에 괴물이 있으면 -> 갈 수 없음 => 안전한 시작 위치로 롤백 후 아예 종료
@@ -505,6 +505,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void StartClimb()
     {
+        _ySpeed = 0f; // 추가: 중력 누적 초기화
         Debug.Log("사다리 타기 시작!");
         audioSource.Stop();
         _isClimbing = true; // 사다리 타는 중으로 설정
@@ -517,6 +518,7 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void ExitClimb()
     {
+        _ySpeed = 0f; // 추가: 중력 누적 초기화
         audioSource.Stop();
         _isClimbing = false; // 사다리 타는 중 아님으로 설정
         _animator.SetBool("isClimbing", false);
