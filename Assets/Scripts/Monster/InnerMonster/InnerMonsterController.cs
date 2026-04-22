@@ -118,6 +118,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private bool _isLookingAroundAfterAction = false;
     public bool IsLookingAroundAfterAction => _isLookingAroundAfterAction;
 
+    // 생체 데이터 추출
+    public bool IsBeingExtracted { get; set; } = false; // 추출 당하는 중
+    public WaitUntil WaitUntilNotBeingExtracted { get; set; } // 대기 조건
+
     // 이벤트
     public static event Action<InnerMonsterController> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
 
@@ -184,6 +188,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         float timer = 0f;
         while (timer < 7f)
         {
+            yield return WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
             timer += Time.deltaTime;
             yield return null;
         }
@@ -209,6 +215,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
         doorLayer = LayerMask.GetMask("Door");
         destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
+
+        WaitUntilNotBeingExtracted = new WaitUntil(() => !IsBeingExtracted);
     }
 
     private void Start()
@@ -242,8 +250,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     private void Update()
     {
-        // 게임 정지 중일 때 -> 작동 X
-        if (SubmarineInGameManager.instance.IsPausing)
+        // 게임 정지 중일 때 or 추출 당하는 중 -> 작동 X
+        if (SubmarineInGameManager.instance.IsPausing || IsBeingExtracted)
             return;
 
         // 플레이어와의 거리 계산

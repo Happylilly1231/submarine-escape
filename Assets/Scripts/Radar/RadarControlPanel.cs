@@ -79,7 +79,10 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     private void SetPower(bool isPowerOn)
     {
         if (isPowerOn && !radarController.IsUpdateStart)
+        {
             radarController.IsUpdateStart = true;
+            radarController.CurrentMonsterAppearTime = GameTime.Instance.TimeSinceStart;
+        }
         _isPowerOn = isPowerOn;
     }
 

@@ -15,10 +15,10 @@ public class Door : MonoBehaviour, IInteractable
 
     public bool isOpened = false; // 열려있는지 변수
     private Transform _doorAxis;
-    //private float _openAngle = -90f; // 목표 회전각
     private float _openDuration = 1f; // 여는 시간
     private bool _isMoving = false;
     public bool isLocked;
+    public bool isAdditionalLocked = false; // 추가적으로 잠금됨
 
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
@@ -44,7 +44,9 @@ public class Door : MonoBehaviour, IInteractable
     /// <returns></returns>
     public string GetInteractText()
     {
-        if (_isMoving || isLocked) return "";
+        if (_isMoving) return "";
+        if (isLocked) return "Locked";
+        if (isAdditionalLocked) return "Still Locked";
         return isOpened ? "close [E]" : "open [E]";
     }
 
@@ -53,7 +55,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked) return;
+        if (_isMoving || isLocked || isAdditionalLocked) return;
 
         if (!isOpened)
         {
@@ -155,34 +157,4 @@ public class Door : MonoBehaviour, IInteractable
                 _occlusionPortal.open = false;
             });
     }
-
-    // public void ToggleDoor()
-    // {
-    //     StopAllCoroutines();
-    //     StartCoroutine(ToggleDoorCoroutine());
-    // }
-
-    // IEnumerator ToggleDoorCoroutine()
-    // {
-    //     float time = 0f;
-    //     Quaternion startRot = _doorAxis.localRotation; // 시작 각도(현재 각도)
-    //     float targetRotY = isOpened ? 0f : _openAngle; // 열려있는지 여부에 따라 닫거나 열기
-    //     Quaternion endRot = Quaternion.Euler(0, targetRotY, 0); // 끝 각도(목표 각도)
-
-    //     // 부드럽게 회전
-    //     while (time < _openDuration)
-    //     {
-    //         time += Time.deltaTime;
-    //         float t = Mathf.SmoothStep(0, 1, time / _openDuration);
-    //         _doorAxis.localRotation = Quaternion.Slerp(startRot, endRot, t); // 부드럽게 회전
-    //         yield return null;
-    //     }
-    //     _doorAxis.localRotation = endRot;
-
-    //     isOpened = !isOpened;
-    //     OnDoorOpenStateChanged?.Invoke();
-
-    //     if (!isOpened)
-    //         OnDoorClosed?.Invoke(this);
-    // }
 }
