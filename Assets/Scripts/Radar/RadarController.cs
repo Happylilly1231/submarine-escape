@@ -175,6 +175,9 @@ public class RadarController : PuzzleController
             Point.performed += OnPoint;
         }
 
+        inventoryManager.CloseInventory();
+        itemEquipController.UnequipItem(); // 아이템 장착 해제
+
         // 레이더 UI 활성화
         _radarDisplay.SetRadarUIActive(true);
 
@@ -202,6 +205,8 @@ public class RadarController : PuzzleController
             Click.canceled -= OnClickCanceled;
             Point.performed -= OnPoint;
         }
+
+        inventoryManager.OpenInventory();
 
         // UI 비활성화
         _radarDisplay.SetLockedUIActive(false);

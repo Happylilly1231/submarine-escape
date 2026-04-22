@@ -178,9 +178,14 @@ public class SubmarineInGameManager : MonoBehaviour
         Time.timeScale = 1.0f; // 시간 정지 해제
         AudioListener.pause = false; // 오디오 듣기 정지 해제
 
-        // 액션 맵 활성화
-        if (_isActionMapActiveBeforePause) // 정지 전에 활성화였던 경우만
-            playerInput.currentActionMap.Enable();
+        // 액션 맵 복구 로직
+        playerInput.actions["ToggleMenu"].Disable();
+        // 퍼즐 중이라면 Puzzle 맵 활성화
+        if (CurrentPuzzleController != null) playerInput.SwitchCurrentActionMap("Puzzle");
+        // 일반 상태라면 Player 맵 활성화
+        else playerInput.SwitchCurrentActionMap("Player");
+        // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
+        playerInput.actions.FindActionMap("Permanent")?.Enable();
 
         // 커서 숨기기
         GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)

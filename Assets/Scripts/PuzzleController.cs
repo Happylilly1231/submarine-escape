@@ -25,6 +25,8 @@ public abstract class PuzzleController : MonoBehaviour
     public InputAction Exit => _exit;
     private InputAction _space; // 스페이스
     public InputAction Space => _space;
+    private InputAction _keyE; // E 키
+    public InputAction KeyE => _keyE;
     protected InputAction ForceKey { get; private set; }
 
     public bool IsPuzzleStarted { get; private set; } // 현재 퍼즐 시작되었는지(활성화되는 시점 X, StartPuzzle이 실행되는 시점 O) 여부
@@ -37,6 +39,9 @@ public abstract class PuzzleController : MonoBehaviour
     private LayerMask _hoverableLayerMask; // 호버 가능 레이어 마스크(Hoverable 레이어)
     private HoverInteractable _currentHover; // 현재 호버
     public HoverInteractable CurrentHover => _currentHover;
+
+    protected InventoryManager inventoryManager; // 인벤토리 매니저 참조
+    protected ItemEquipController itemEquipController; // 아이템 장착 컨트롤러 참조
 
     // // 이벤트
     // public event Action OnPuzzleStarted; // 퍼즐 시작 이벤트(활성화 시점 X)
@@ -55,12 +60,16 @@ public abstract class PuzzleController : MonoBehaviour
         _point = playerInput.actions["Point"];
         _exit = playerInput.actions["Exit"];
         _space = playerInput.actions["Space"];
+        _keyE = playerInput.actions["KeyE"];
         ForceKey = playerInput.actions["ForceKey"];
 
         _hoverableLayerMask = LayerMask.GetMask("Hoverable");
 
         // 커서 보여줘야하는지 여부 설정
         _isCurrentMouseRequired = IsMouseRequiredAtFirst;
+
+        inventoryManager = FindObjectOfType<InventoryManager>();
+        itemEquipController = FindObjectOfType<ItemEquipController>();
 
         // if (IsHoverRequired)
         //     SetHoverObjsPuzzleController();
@@ -98,6 +107,8 @@ public abstract class PuzzleController : MonoBehaviour
         seq.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
         .SetEase(Ease.OutQuad));
 
+        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
+
         seq.OnComplete(() =>
         {
             StartPuzzle(); // 퍼즐 시작
@@ -111,6 +122,10 @@ public abstract class PuzzleController : MonoBehaviour
     {
         IsPuzzleStarted = true;
         playerInput.SwitchCurrentActionMap("Puzzle");
+
+        // 퍼즐로 전환하더라도 Permanent 맵은 계속 살아있게함
+        playerInput.actions.FindActionMap("Permanent")?.Enable();
+
         _exit.performed += OnExit;
         if (IsHoverRequired) _point.performed += OnPoint; // 호버 필요할 때만 미리 구독
 
@@ -129,9 +144,12 @@ public abstract class PuzzleController : MonoBehaviour
     public virtual void ExitPuzzle()
     {
         IsPuzzleStarted = false;
-        playerInput.SwitchCurrentActionMap("Player");
         _exit.performed -= OnExit;
         if (IsHoverRequired) _point.performed -= OnPoint; // 호버 필요할 때만 미리 구독해두었던 것 해제
+
+        playerInput.SwitchCurrentActionMap("Player");
+
+        playerInput.actions.FindActionMap("Permanent")?.Enable();
 
         // if (_isCurrentMouseRequired)
         // {
@@ -148,6 +166,8 @@ public abstract class PuzzleController : MonoBehaviour
 
         SubmarineInGameManager.instance.SetPuzzleFocus(false);
         SubmarineInGameManager.instance.SetPlayerGeoActive(true);
+
+        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
 
         // OnPuzzleExited?.Invoke();
     }
