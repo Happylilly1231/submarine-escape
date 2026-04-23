@@ -7,7 +7,6 @@ public class DatabaseMonitor : InteractableBase
     [SerializeField] private DatabaseMonitorController monitorController; // 모니터 컨트롤러
 
     private bool _isPowerOn = false; // 전력 켜져 있는지 여부
-    private bool _isBroken = false; // 고장 여부
 
     private void OnEnable()
     {

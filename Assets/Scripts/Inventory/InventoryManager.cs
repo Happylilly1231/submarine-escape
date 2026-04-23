@@ -125,6 +125,8 @@ public class InventoryManager : MonoBehaviour
     /// </summary>
     public void UpdateActionText()
     {
+        if (_playerInteractor == null || actionText == null) return;
+
         StringBuilder sb = new StringBuilder();
 
         // 실험기구 조작 가이드
