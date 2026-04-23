@@ -18,6 +18,7 @@ public class PlayerMutation : MonoBehaviour
     private float _mutationInterval = 600f; // 10분 = 600초
     private int _currentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
     private int _maxStage = 5;
+    private bool _isCured = false; // 완전 치료 상태
 
     private float[] _vignetteTimes = { 1f, 2f, 5f, 10f };
     private float[] _temperatures = { 37f, 38f, 40f, 42f, 44f };
@@ -238,6 +239,7 @@ public class PlayerMutation : MonoBehaviour
     /// <returns>현재 체온</returns>
     public float GetCurrentTemperature()
     {
+        if (_isCured) return 36.5f; // 치료 후 정상 체온
         if (_currentStage == _maxStage) return 44.0f;
 
         return Mathf.Floor(Mathf.Lerp(_temperatures[_currentStage - 1], _temperatures[_currentStage], _mutationTimer / _mutationInterval) * 10f) / 10f;
@@ -247,6 +249,50 @@ public class PlayerMutation : MonoBehaviour
     {
         LightingManager.instance.OnLightTurnedOn -= ReactLightOrSound;
         SubmarineInGameManager.instance.OnAlertStarted -= ReactLightOrSound;
+    }
+
+    /// <summary>
+    /// 치료제 투여 처리
+    /// </summary>
+    /// <param name="isSuccess">성공(치료) 여부</param>
+    public void InjectSerum(bool isSuccess)
+    {
+        if (isSuccess)
+        {
+            // 괴물화 중단 및 초기화
+            Debug.Log("<color=green>치료제 투여 성공: 괴물화 진행이 억제<color>");
+
+            // 괴물화 중단 기능 구현 필요
+            // 진행 타이머를 초기화하여 다음 단계 진행을 늦춤
+            _isCured = true;
+            _mutationTimer = 0f;
+
+            StopMutationEffects();
+        }
+        else
+        {
+            // 괴물화 가속 (즉시 다음 단계 스폰)
+            Debug.Log("<color=red>치료제 투여 실패: 괴물화가 가속<color>");
+
+            // 최종 단계가 아닐 때만 즉시 다음 단계 스폰 함수 호출
+            if (_currentStage < _maxStage)
+            {
+                SpawnSpike();
+            }
+        }
+    }
+
+    private void StopMutationEffects()
+    {
+        // 모든 가시 비활성화 (이미 돋아난 가시가 있다면 제거)
+        foreach (var spike in spikes)
+        {
+            spike.SetActive(false);
+        }
+
+        // 사운드 및 비네트 즉시 종료
+        mutationAudioSource.Stop();
+        vignetteImg.gameObject.SetActive(false);
     }
 }
 

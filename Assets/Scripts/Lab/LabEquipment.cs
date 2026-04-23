@@ -83,9 +83,6 @@ public abstract class LabEquipment : MonoBehaviour
                 petri.Slots[i].sample = tubeSamples[i];
             }
 
-            // 페트리 접시를 '결과물 상태'로 표시하기 위한 변수가 필요할 수 있습니다.
-            // petri.MarkAsResult(); // 아래 2번 항목에서 설명
-
             SampleSlotUIManager.Instance.UpdateSampleUI();
             return;
         }
@@ -111,7 +108,7 @@ public abstract class LabEquipment : MonoBehaviour
                 petriDish.Remove(i);
             }
         }
-        // 주사기에 시험관을 넣을 때 (샘플만 옮기기)
+        // 주사기에 시험관을 넣을 때
         else if (this is Syringe syringe && obj is TestTube tube)
         {
             // 시험관 안의 모든 샘플 가져오기
@@ -131,8 +128,7 @@ public abstract class LabEquipment : MonoBehaviour
             {
                 tube.Remove(i);
             }
-
-            // 주의: 이 방식은 시험관 오브젝트는 그대로 손에 들려 있고 데이터만 빠져나갑니다.
+            syringe.IsSuccess = tube.IsSuccess;
         }
         // 일반 샘플 넣기
         else if (obj is Item item) slots[slotIdx].sample = item;
