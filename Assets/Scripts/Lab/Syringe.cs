@@ -5,18 +5,35 @@ using UnityEngine;
 public class Syringe : LabEquipment
 {
     public override bool IsGrabbable => true;
-    public override int MaxSlots => 1;
+    public override int MaxSlots
+    {
+        get
+        {
+            if (slots == null) return 1;
+
+            int count = 0;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (!slots[i].IsEmpty) count = i + 1;
+            }
+            // 최소 1개는 보이게 설정
+            return Mathf.Max(1, count);
+        }
+    }
     public override EAcceptableType AcceptedTypes => EAcceptableType.TestTube; // 시험관만 넣을 수 있음
     protected override Vector3 gripPositionOffset => new Vector3(0.31f, -0.12f, 0.46f);
     protected override Vector3 gripRotationOffset => new Vector3(57.4f, -81.85f, 0);
     protected override Vector3 slotScaleOffset => new Vector3(0.01f, 0.01f, 0.01f);
+
+    public bool IsSuccess = false;
 
     [Header("Syringe Visuals")]
     [SerializeField] private GameObject liquidVisual; // 주사기 안의 액체
 
     protected override void Awake()
     {
-        base.Awake();
+        slots = new SlotData[6];
+        for (int i = 0; i < slots.Length; i++) slots[i] = new SlotData();
         // 시작 시에는 주사기가 비어있으므로 비활성화
         if (liquidVisual != null) liquidVisual.SetActive(false);
     }

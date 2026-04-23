@@ -14,6 +14,8 @@ public class PlayerInteractor : MonoBehaviour
 
     private InventoryManager _inventoryManager; // 인벤토리 매니저
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
+    private PlayerMutation _playerMutation; // 플레이어 괴물화
+
     private ItemPickUp _currentItem; // 현재 감지된 아이템
     private LabEquipment _currentEquipment; // 현재 감지된 실험기구
     public LabEquipment CurrentEquipment => _currentEquipment;
@@ -33,6 +35,7 @@ public class PlayerInteractor : MonoBehaviour
     {
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
+        _playerMutation = FindObjectOfType<PlayerMutation>();
 
         detectLayerMask = ~LayerMask.GetMask("Monster"); // 괴물은 감지 레이어에서 제외
     }
@@ -93,6 +96,15 @@ public class PlayerInteractor : MonoBehaviour
     {
         if (!context.performed) return;
 
+        // 주사기를 손에 든 경우
+        if (_heldEquipment != null)
+        {
+            if (_heldEquipment is Syringe syringe)
+            {
+                _playerMutation.InjectSerum(syringe.IsSuccess);
+            }
+        }
+
         // 1. 실험기구와 상호작용 중인 경우 
         if (_currentEquipment != null)
         {
@@ -137,6 +149,10 @@ public class PlayerInteractor : MonoBehaviour
                 {
                     // 페트리 접시인 경우: 샘플만 옮기고 손에서 해제하지 않음
                     if (_heldEquipment is PetriDish && _currentEquipment is TestTube)
+                    {
+                        _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                    }
+                    else if (_heldEquipment is TestTube && _currentEquipment is Syringe)
                     {
                         _currentEquipment.Insert(selectedIdx, _heldEquipment);
                     }
