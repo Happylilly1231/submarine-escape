@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// 레이더 조작 패널
 /// </summary>
-public class RadarControlPanel : MonoBehaviour, IInteractable
+public class RadarControlPanel : InteractableBase
 {
     [SerializeField] private RadarController radarController; // 레이더 컨트롤러
     [SerializeField] private Item toolKitItem; // 공구 상자 아이템 (파괴되어 고장났을 때 필요)
@@ -14,13 +14,11 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     private bool _isPowerOn = false; // 전력 켜져 있는지 여부
     private bool _isBroken = false; // 고장 여부
 
-    private ItemEquipController _itemEquipController;
-    private InventoryManager _inventoryManager;
+    private InventoryManager inventoryManager;
 
     private void Start()
     {
-        _itemEquipController = FindObjectOfType<ItemEquipController>();
-        _inventoryManager = FindObjectOfType<InventoryManager>();
+        inventoryManager = FindObjectOfType<InventoryManager>();
     }
 
     private void OnEnable()
@@ -28,7 +26,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         LightingManager.instance.OnLightChanged += SetPower;
     }
 
-    public bool CanInteractwithSelectedItem(Item item)
+    public override bool CanInteractwithSelectedItem(Item item)
     {
         if (!_isBroken) return false; // 고장 나지 않았을 때는 X
         return item == toolKitItem; // 고장 났을 때는 공구 상자 선택 여부에 따름
@@ -37,7 +35,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     /// <summary>
     /// 상호작용 UI에 표시할 텍스트
     /// </summary>
-    public string GetInteractText()
+    public override string GetInteractText()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
@@ -46,13 +44,13 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
             return "View Radar [E]";
 
         // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
-        return IsToolKitSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
+        return IsRequiredItemSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
     }
 
     /// <summary>
     /// 플레이어가 E키를 입력할 때 레이더 화면을 띄우거나 끔
     /// </summary>
-    public void Interact()
+    public override void Interact()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
@@ -61,7 +59,7 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         {
             radarController.ActivatePuzzle();
         }
-        else if (_isBroken && IsToolKitSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
+        else if (_isBroken && IsRequiredItemSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
         {
             StartCoroutine(Repair());
         }
@@ -87,24 +85,6 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// 공구 상자 선택되었는지 여부
-    /// </summary>
-    private bool IsToolKitSelected()
-    {
-        Item selectedItem = null;
-        if (_itemEquipController.HeldItemData != null)
-        {
-            selectedItem = _itemEquipController.HeldItemData;
-        }
-        else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
-        {
-            selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
-        }
-
-        return CanInteractwithSelectedItem(selectedItem);
-    }
-
-    /// <summary>
     /// 고장 
     /// </summary>
     public void Broke()
@@ -121,6 +101,9 @@ public class RadarControlPanel : MonoBehaviour, IInteractable
         float timer = repairTime;
 
         SubmarineInGameManager.instance.SetPuzzleFocus(true);
+
+        inventoryManager.UpdateActionText();
+
         while (timer > 0)
         {
             MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
