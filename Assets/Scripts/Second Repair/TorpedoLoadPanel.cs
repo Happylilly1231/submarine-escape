@@ -24,7 +24,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     [SerializeField] private Transform ejectViewPoint; // 나사 튀어나올 때 볼 위치
 
     private TorpedoAutoLoadSwitch _torpedoAutoLoadSwitch;
-    private InventoryManager _inventoryManager;
+    //private InventoryManager _inventoryManager;
 
     protected override bool IsHoverRequired => true;
     protected override bool IsMouseRequiredAtFirst => true;
@@ -67,7 +67,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     private void Awake()
     {
         _torpedoAutoLoadSwitch = FindAnyObjectByType<TorpedoAutoLoadSwitch>();
-        _inventoryManager = FindAnyObjectByType<InventoryManager>();
+        //_inventoryManager = FindAnyObjectByType<InventoryManager>();
     }
 
     public override void Start()
@@ -177,7 +177,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.performed += OnClickPerformed; // 클릭 performed 사용
         Click.canceled += OnClickCanceled; // 클릭 끝 사용
 
-        _inventoryManager.CloseInventory(); // 인벤토리 숨기기
+        inventoryManager.CloseInventory(); // 인벤토리 숨기기
 
         if (!_isLoadCompleted)
         {
@@ -202,7 +202,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         Click.performed -= OnClickPerformed;
         Click.canceled -= OnClickCanceled;
 
-        _inventoryManager.OpenInventory(); // 인벤토리 숨기기
+        inventoryManager.OpenInventory(); // 인벤토리 숨기기
 
         statUI.SetActive(true);
         joystickMoveBone.transform.localRotation = Quaternion.identity; // 조이스틱 회전 초기화

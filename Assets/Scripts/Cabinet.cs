@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public enum CabinetLockType
 {
@@ -12,7 +11,7 @@ public enum CabinetLockType
 /// <summary>
 /// 캐비넷을 열고 닫을 수 있도록 하는 Interactable 컴포넌트
 /// </summary>
-public class Cabinet : MonoBehaviour, IInteractable
+public class Cabinet : InteractableBase
 {
     [SerializeField] private CabinetLockType lockType; // 캐비넷 잠금 유형
     [SerializeField] private Item keyItem; // 열쇠 아이템 (KeyRequired일 때 필요)
@@ -24,14 +23,6 @@ public class Cabinet : MonoBehaviour, IInteractable
     private bool _isMoving = false; // 이동 여부
     private Quaternion _closedRot; // 초기 회전값
     private Quaternion _openRot; // 열린 후 회전값
-    private ItemEquipController _itemEquipController;
-    private InventoryManager _inventoryManager;
-
-    void Awake()
-    {
-        _itemEquipController = FindObjectOfType<ItemEquipController>();
-        _inventoryManager = FindObjectOfType<InventoryManager>();
-    }
 
     void Start()
     {
@@ -42,7 +33,7 @@ public class Cabinet : MonoBehaviour, IInteractable
     /// <summary>
     /// 상호작용 UI에 표시할 텍스트
     /// </summary>
-    public string GetInteractText()
+    public override string GetInteractText()
     {
         if (_isOpen) return "close [E]";
 
@@ -51,7 +42,7 @@ public class Cabinet : MonoBehaviour, IInteractable
             case CabinetLockType.None:
                 return "open [E]";
             case CabinetLockType.KeyRequired:
-                return IsKeySelected() ? "open [E]" : "Locked (Need Key)";
+                return IsRequiredItemSelected() ? "open [E]" : "Locked (Need Key)";
         }
 
         return "";
@@ -60,10 +51,10 @@ public class Cabinet : MonoBehaviour, IInteractable
     /// <summary>
     /// 플레이어가 E키를 입력할 때 캐비넷을 열거나 닫음
     /// </summary>
-    public void Interact()
+    public override void Interact()
     {
         if (_isMoving) return;
-        if (lockType == CabinetLockType.KeyRequired && IsKeySelected())
+        if (lockType == CabinetLockType.KeyRequired && IsRequiredItemSelected())
         {
             lockType = CabinetLockType.None; // 열쇠 사용 후 잠금 해제
         }
@@ -103,43 +94,9 @@ public class Cabinet : MonoBehaviour, IInteractable
     /// <summary>
     /// 플레이어가 열쇠를 소지하고 있는지 확인
     /// </summary>
-    public bool CanInteractwithSelectedItem(Item item)
+    public override bool CanInteractwithSelectedItem(Item item)
     {
         if (lockType == CabinetLockType.None) return false;
         return item == keyItem;
-    }
-
-    private bool IsKeySelected()
-    {
-        List<Item> candidateItems = new List<Item>();
-        if (_itemEquipController.HeldItemData != null)
-        {
-            candidateItems.Add(_itemEquipController.HeldItemData);
-        }
-        if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
-        {
-            Item slotItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
-            // 손에 든 아이템과 슬롯 아이템이 중복되지 않을 때만 추가
-            if (!candidateItems.Contains(slotItem))
-            {
-                candidateItems.Add(slotItem);
-            }
-        }
-
-        bool canInteract = false;
-
-        if (candidateItems.Count > 0)
-        {
-            foreach (Item item in candidateItems)
-            {
-                if (CanInteractwithSelectedItem(item))
-                {
-                    canInteract = true;
-                    break;
-                }
-            }
-        }
-
-        return canInteract;
     }
 }

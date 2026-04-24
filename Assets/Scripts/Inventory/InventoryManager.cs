@@ -31,6 +31,7 @@ public class InventoryManager : MonoBehaviour
     private bool _hasRegisteredMap = false; // 지도 아이템 사용 여부
     private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
+    private PlayerInteractor _playerInteractor;
     private StatableItemManager _statableItemManager; // 개별 상태를 가지는 아이템 관리하는 매니저
 
     /// <summary>
@@ -39,6 +40,7 @@ public class InventoryManager : MonoBehaviour
     void Awake()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
+        _playerInteractor = FindObjectOfType<PlayerInteractor>();
         _statableItemManager = GetComponent<StatableItemManager>();
     }
 
@@ -84,6 +86,9 @@ public class InventoryManager : MonoBehaviour
     {
         if (!context.performed) return;
 
+        var activePuzzle = FindObjectOfType<KeyPadController>();
+        if (activePuzzle != null && activePuzzle.IsActionProcessing) return;
+
         int slotIndex = context.control.name[0] - '1';
 
         if (_isSwapMode && _selectedSlotIndex >= 0) // 슬롯 교체
@@ -114,44 +119,129 @@ public class InventoryManager : MonoBehaviour
         UpdateActionText();
     }
 
-    private void UpdateActionText()
+    /// <summary>
+    /// 액션 텍스트 업데이트
+    /// <para> - 선택된 아이템과 현재 퍼즐 상호작용 상태에 따라 표시할 텍스트 결정 </para>
+    /// </summary>
+    public void UpdateActionText()
     {
-        StringBuilder sb = new StringBuilder();
-        Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
+        if (_playerInteractor == null || actionText == null) return;
 
+        StringBuilder sb = new StringBuilder();
+
+        // 실험기구 조작 가이드
+        if (SampleSlotUIManager.Instance.IsActive)
+        {
+            // 슬롯 선택
+            if (SampleSlotUIManager.Instance.MaxSlotCnt > 1) sb.AppendLine("Select Slot [Mouse Wheel]");
+
+            // 슬롯이 비었다면
+            if (SampleSlotUIManager.Instance.IsSelectedSlotEmpty())
+            {
+                Item heldItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
+
+                if (_playerInteractor.IsHoldingEquipment &&
+                    _playerInteractor.HeldEquipment is TestTube tube && tube.IsResultTube &&
+                    _playerInteractor.CurrentEquipment is PetriDish)
+                {
+                    sb.AppendLine("Pour Solution [E]");
+                }
+                else
+                {
+                    // 인벤토리 슬롯에 있는 샘플 넣기
+                    if (heldItem != null && heldItem.ItemType == EItemType.Sample)
+                    {
+                        sb.AppendLine("Insert Sample [E]");
+                    }
+                    // 실험기구를 손에 들고 있다면 넣기
+                    if (_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.CanInsert(_playerInteractor.HeldEquipment))
+                    {
+                        sb.AppendLine("Insert Equipment [E]");
+                    }
+                }
+            }
+            else // 슬롯에 무언가 들어있을 때
+            {
+                // 현미경 확대 가이드
+                if (_playerInteractor.CurrentEquipment is Microscope microscope)
+                {
+                    if (!microscope.Slots[0].IsEmpty) sb.AppendLine("Observe [E]");
+                }
+                // 슬롯에 무언가 들어있다면 꺼내기 가이드
+                if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge1)
+                {
+                    if (!centrifuge1.IsOperating) sb.AppendLine("Withdraw [R]");
+                }
+                else if (_playerInteractor.CurrentEquipment is TestTube testTube)
+                {
+                    if (!testTube.IsResultTube) sb.AppendLine("Withdraw [R]");
+                }
+                else if (_playerInteractor.CurrentEquipment is PetriDish petriDish)
+                {
+                    if (!petriDish.ContainsResult) sb.AppendLine("Withdraw [R]");
+                }
+                else sb.AppendLine("Withdraw [R]");
+            }
+
+            // 실험기구 들기 가이드
+            if (!_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.IsGrabbable)
+            {
+                sb.AppendLine("Grab Equipment [G]");
+            }
+
+            if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge)
+            {
+                if (centrifuge.CanStartOperation() && !centrifuge.IsOperating)
+                {
+                    sb.AppendLine("Run Operation [E]");
+                }
+            }
+        }
+
+        // 실험기구를 들고 있는 상태라면 놓기 가이드
+        if (_playerInteractor.IsHoldingEquipment)
+        {
+            sb.AppendLine("Place Equipment [G]");
+        }
+
+        Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
         if (currentItem != null)
         {
-            sb.AppendLine("Drop [Q]");
-
             switch (currentItem.ItemType)
             {
                 case EItemType.Toggle:
-                    sb.AppendLine("On/Off [Mouse LMB]");
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null) sb.AppendLine("On/Off [Mouse LMB]");
                     break;
                 case EItemType.Consumable:
-                    sb.AppendLine("Use [E]");
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
+                        sb.AppendLine("Use [E]");
+                    break;
+                case EItemType.Puzzle: // 퍼즐 상호작용 중이라면 표시
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController != null)
+                    {
+                        if (currentItem.ItemName == "Hammer") sb.AppendLine("Repair Engine [Space]");
+                        else if (currentItem.ItemName == "Screwdriver") sb.AppendLine("Remove Screw [E]");
+                        else if (currentItem.ItemName.Contains("Battery")) sb.AppendLine("Exchange Battery [E]");
+                    }
                     break;
                 case EItemType.UI:
-                    if (currentItem.ItemName == "Map")
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
                     {
-                        sb.AppendLine("Register Map[E]");
-                    }
-                    else if (_isViewingUI)
-                    {
-                        sb.AppendLine("Close [E]");
-                    }
-                    else
-                    {
-                        sb.AppendLine("View [E]");
+                        if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
+                        else if (_isViewingUI) sb.AppendLine("Close [E]");
+                        else sb.AppendLine("View [E]");
                     }
                     break;
                 case EItemType.Wearable:
-                    sb.AppendLine("Wear [E]");
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
+                        sb.AppendLine("Wear [E]");
                     break;
             }
         }
 
         if (_hasRegisteredMap) sb.AppendLine("View Map [Tab]");
+        if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
+            sb.AppendLine("Drop [Q]");
 
         actionText.text = sb.ToString();
     }
@@ -248,10 +338,10 @@ public class InventoryManager : MonoBehaviour
                 var targetSlot = inventorySlots[i];
                 targetSlot.UpdateItemCount(-1);
                 _itemEquipController.UnequipItem();
+                UpdateActionText();
                 return;
             }
         }
-        UpdateActionText();
     }
 
     /// <summary>
@@ -318,10 +408,25 @@ public class InventoryManager : MonoBehaviour
         if (_selectedSlotIndex < 0) return;
 
         var selectedSlot = inventorySlots[_selectedSlotIndex];
-        if (selectedSlot.Item == null || selectedSlot.Item.ItemPrefab == null) return;
+        GameObject currentEquippedItem = _itemEquipController.HeldItemObject;
 
-        if (selectedSlot.Item.ItemName == "Flashlight") FindAnyObjectByType<Flashlight>()?.Use();
-        else if (selectedSlot.Item.ItemName == "Therometer") FindAnyObjectByType<Therometer>()?.Use();
+        if (currentEquippedItem == null) return;
+
+        if (selectedSlot.Item.ItemName == "Flashlight")
+        {
+            // 손에 든 오브젝트에서 Flashlight 컴포넌트를 찾음
+            if (currentEquippedItem.TryGetComponent<Flashlight>(out var flashlight))
+            {
+                flashlight.Use();
+            }
+        }
+        else if (selectedSlot.Item.ItemName == "Thermometer")
+        {
+            if (currentEquippedItem.TryGetComponent<Therometer>(out var thermometer))
+            {
+                thermometer.Use();
+            }
+        }
     }
 
     /// <summary>
