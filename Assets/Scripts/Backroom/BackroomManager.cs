@@ -5,53 +5,49 @@ using UnityEngine.UI;
 
 public class BackroomManager : MonoBehaviour
 {
+    [Header("백룸 구성")]
     [SerializeField] private GameObject totalBackroom; // 백룸 전체
-    [SerializeField] private Transform startPos;
-    [SerializeField] private Portal[] leftEntrances1;
-    [SerializeField] private Portal[] rightEntrances1;
-    [SerializeField] private Portal[] leftEntrances2;
-    [SerializeField] private Portal[] rightEntrances2;
-    [SerializeField] private Image fadeImg;
+    [SerializeField] private Transform startPos; // 시작 위치
+    [SerializeField] private Portal[] leftEntrances; // 왼쪽 입구 포탈들
+    [SerializeField] private Portal[] rightEntrances; // 오른쪽 입구 포탈들
+    public List<Portal> allRandomRoomPortals; // 모든 랜덤 방 포탈
+    private List<RoomType> _map1Composition = new List<RoomType> {
+        RoomType.Maze, RoomType.Large, RoomType.Puzzle2, RoomType.Puzzle3, RoomType.Blocked, RoomType.Blocked
+    }; // 맵 구성 정의
+
+    // 엔티티
     private BigSkull[] _bigSkulls; // 거대 해골 배열
     private SunkenSkullPoint[] _sunkenSkullPoints; // 가라앉은 해골 배열
     private BackroomEntity[] _selectedEntities; // 선택된 엔티티 배열
-    public Image waterSurfaceImg; // 수면 이미지 - 가라앉은 해골에서 사용
-
-    public List<Portal> allRandomRoomPortals; // 모든 랜덤 방 포탈
-
     private int _currentEntityId;
     public int CurrentEntityId => _currentEntityId;
 
-    // 맵 구성 정의
-    private List<RoomType> _map1Composition = new List<RoomType> {
-        RoomType.Maze, RoomType.Large, RoomType.Puzzle2, RoomType.Puzzle3, RoomType.Blocked, RoomType.Blocked
-    };
-    private List<RoomType> _map2Composition = new List<RoomType> {
-        RoomType.CornerLeft, RoomType.CornerRight, RoomType.CornerLeftWithDoor, RoomType.CornerRightWithDoor, RoomType.Blocked, RoomType.Blocked
-    };
-
-    // 탈출
-    public Vector3 originalPos; // 백룸 들어오기 전 위치
-    [SerializeField] private Portal escapePortal;
-    public Portal EscapePortal => escapePortal; // 탈출 포탈
-    [SerializeField] private InnerMonsterSpinalCord innerMonsterSpinalCord; // 괴물 척수(등 부분)
-
-    // 이벤트
-
-    // 긴 복도 이벤트
+    [Header("긴 복도 이벤트")]
     [SerializeField] private Portal longCorridorPortal;
     [SerializeField] private Portal mazeRoomExitPortal;
     [SerializeField] private Portal puzzleRoom1Portal;
     [SerializeField] private GameObject longCorridorDoorWall; // 문 벽
     [SerializeField] private GameObject longCorridorDoorNotExistWall; // 문 없어질 때 대신 생기는 벽
-    public bool isLongCorridorTargetPortalChanged = false;
+    public bool isLongCorridorTargetPortalChanged { get; set; } = false;
 
-    // 퍼즐 방1 해결 이벤트
-    [SerializeField] private Door largeCenterRoomDoor;
-    [SerializeField] private Light largeCenterRoomDoorLight;
-    private int _approachingSkullCount = 0;
+    [Header("퍼즐1")]
+    [SerializeField] private Door largeCenterRoomDoor; // 비대 중앙 방 문
+    [SerializeField] private Light largeCenterRoomDoorLight; // 비대 중앙 방 문 천장 조명 빛
+    private int _approachingSkullCount = 0; // 플레이어가 닿은(흡수한) 해골(영혼) 수
 
+    // 퍼즐2
     private EscapePasswordPuzzleController _escapePasswordPuzzleController;
+
+    [Header("탈출")]
+    [SerializeField] private Portal escapePortal; // 탈출 포탈
+    [SerializeField] private InnerMonsterSpinalCord innerMonsterSpinalCord; // 괴물 척수(등 부분)
+    public Portal EscapePortal => escapePortal; // 탈출 포탈
+    public Vector3 originalPos { get; set; } // 백룸 들어오기 전 위치
+
+    [Header("기타")]
+    public Image waterSurfaceImg; // 수면 이미지 - 가라앉은 해골에서 사용
+
+    public bool isPlayingBackroom { get; private set; } = false; // 백룸 플레이 중 여부
 
     public static BackroomManager Instance { get; private set; }
 
@@ -105,13 +101,15 @@ public class BackroomManager : MonoBehaviour
     public void EnterBackroom()
     {
         totalBackroom.SetActive(true); // 백룸 활성화
-        SetupBackroom(1); // 백룸 구성(백룸 진입할 때마다 랜덤)
+        SetupBackroom(); // 백룸 구성(백룸 진입할 때마다 랜덤)
         SelectRandomEntity(); // 현재 백룸에 나올 엔티티 랜덤 선택
         _escapePasswordPuzzleController.SetUpPuzzle(); // 비밀번호 퍼즐 구성
         MoveToStartPos(); // 시작 위치로 이동
 
         largeCenterRoomDoor.isLocked = true;
         largeCenterRoomDoor.isAdditionalLocked = true;
+
+        isPlayingBackroom = true;
     }
 
     /// <summary>
@@ -152,13 +150,10 @@ public class BackroomManager : MonoBehaviour
     /// <summary>
     /// 백룸 구성
     /// </summary>
-    /// <param name="mapNumber"></param>
-    public void SetupBackroom(int mapNumber)
+    public void SetupBackroom()
     {
         // 1. 현재 맵 구성 & 입구들 결정
-        List<RoomType> currentComp = (mapNumber == 1) ? _map1Composition : _map2Composition;
-        Portal[] leftEntrances = (mapNumber == 1) ? leftEntrances1 : rightEntrances1;
-        Portal[] rightEntrances = (mapNumber == 1) ? rightEntrances1 : rightEntrances2;
+        List<RoomType> currentComp = _map1Composition;
 
         // 2. 현재 맵 구성 셔플
         ShuffleList(currentComp);
@@ -201,7 +196,7 @@ public class BackroomManager : MonoBehaviour
         ConnectPortals(leftEntrances, leftRoomPool);
         ConnectPortals(rightEntrances, rightRoomPool);
 
-        Debug.Log($"Map {mapNumber} Setup Complete!");
+        Debug.Log($"Backrooom Map Setup Complete!");
     }
 
     /// <summary>
@@ -240,11 +235,13 @@ public class BackroomManager : MonoBehaviour
     /// </summary>
     public void EscapeBackroom(PlayerMove playerMove)
     {
+        isPlayingBackroom = false;
+
         SubmarineInGameManager.instance.SetFocus(true);
 
         Sequence seq = DOTween.Sequence();
 
-        seq.Join(fadeImg.DOFade(1f, 1.5f)); // 화면이 완전히 검게 변함
+        seq.Join(FXManager.instance.fadeImage.DOFade(1f, 1.5f)); // 화면이 완전히 검게 변함
 
         // 잠시 정적 (완전 암전 상태)
         seq.AppendInterval(0.5f);
@@ -272,7 +269,7 @@ public class BackroomManager : MonoBehaviour
         // 잠시 정적 (완전 암전 상태)
         seq.AppendInterval(1f);
 
-        seq.Append(fadeImg.DOFade(0f, 1f)); // 다시 밝아짐
+        seq.Append(FXManager.instance.fadeImage.DOFade(0f, 1f)); // 다시 밝아짐
 
         seq.OnComplete(() =>
         {

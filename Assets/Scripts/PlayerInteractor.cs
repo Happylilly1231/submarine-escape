@@ -188,32 +188,22 @@ public class PlayerInteractor : MonoBehaviour
 
             if (_itemEquipController.HasItem)
             {
-                // 2. 일반 가구와 상호작용 중인 경우
-                if (_canInteractable && _currentFurniture != null)
+                if (_currentFurniture.CanInteractwithSelectedItem(_itemEquipController.HeldItemData))
                 {
-                    bool canInteract = false;
-                    Item validItem = null;
-
-                    if (_itemEquipController.HasItem)
-                    {
-                        if (_currentFurniture.CanInteractwithSelectedItem(_itemEquipController.HeldItemData))
-                        {
-                            canInteract = true;
-                            validItem = _itemEquipController.HeldItemData;
-                        }
-                        if (_itemEquipController.HeldItemData.ItemName == "Flashlight")
-                        {
-                            canInteract = true;
-                        }
-                    }
-                    if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
-                    {
-                        _currentFurniture.Interact();
-                        if (canInteract && validItem != null && validItem.IsConsumable)
-                        {
-                            _inventoryManager.ConsumeItemInSlot(validItem);
-                        }
-                    }
+                    canInteract = true;
+                    validItem = _itemEquipController.HeldItemData;
+                }
+                if (_itemEquipController.HeldItemData.ItemName == "Flashlight")
+                {
+                    canInteract = true;
+                }
+            }
+            if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
+            {
+                _currentFurniture.Interact();
+                if (canInteract && validItem != null && validItem.IsConsumable)
+                {
+                    _inventoryManager.ConsumeItemInSlot(validItem);
                 }
             }
         }
