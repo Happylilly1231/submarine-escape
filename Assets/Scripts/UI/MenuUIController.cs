@@ -19,7 +19,8 @@ public class MenuUIController : MonoBehaviour
     private int _currentIndex = -1;
     private GameObject[] tabButtons;
     private GameObject[] tabPanels;
-    private Color _highLightColor = new Color(190f / 255f, 163f / 255f, 58f / 255f);
+    private Color _originalColor = new Color(227f / 255f, 231f / 255f, 232f / 255f, 1f);
+    private Color _highLightColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
 
     public static MenuUIController instance;
 
@@ -46,6 +47,9 @@ public class MenuUIController : MonoBehaviour
         {
             tabPanels[i] = tabPanelRoot.transform.GetChild(i).gameObject;
         }
+
+        // 디버깅 UI 비활성화
+        SetActiveDebuggingUI(false);
     }
 
     private void Start()
@@ -68,6 +72,15 @@ public class MenuUIController : MonoBehaviour
         exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
     }
 
+    /// <summary>
+    /// 디버깅 UI 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive"></param>
+    public void SetActiveDebuggingUI(bool isActive)
+    {
+        tabButtons[tabButtons.Length - 1].SetActive(isActive);
+    }
+
     public void OpenTab(int index)
     {
         if (_currentIndex == index) return;
@@ -75,8 +88,8 @@ public class MenuUIController : MonoBehaviour
         if (_currentIndex >= 0)
         {
             tabPanels[_currentIndex].SetActive(false);
-            tabButtons[_currentIndex].transform.GetChild(0).GetComponent<Image>().color = Color.white;
-            tabButtons[_currentIndex].transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = Color.white;
+            tabButtons[_currentIndex].transform.GetChild(0).GetComponent<Image>().color = _originalColor;
+            tabButtons[_currentIndex].transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = _originalColor;
         }
 
         tabPanels[index].SetActive(true);

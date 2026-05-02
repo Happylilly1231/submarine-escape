@@ -32,7 +32,6 @@ public class InventoryManager : MonoBehaviour
     private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
-    private StatableItemManager _statableItemManager; // 개별 상태를 가지는 아이템 관리하는 매니저
 
     /// <summary>
     /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
@@ -41,7 +40,6 @@ public class InventoryManager : MonoBehaviour
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerInteractor = FindObjectOfType<PlayerInteractor>();
-        _statableItemManager = GetComponent<StatableItemManager>();
     }
 
     /// <summary>
@@ -196,12 +194,24 @@ public class InventoryManager : MonoBehaviour
                     sb.AppendLine("Run Operation [E]");
                 }
             }
+            if (_playerInteractor.CurrentEquipment is PetriDish petriDish1)
+            {
+                if (!petriDish1.isMonsterBloodMixed && petriDish1.isMonsterBloodDropped && !petriDish1.isMixing)
+                {
+                    sb.AppendLine("Mix [E]");
+                }
+            }
         }
 
         // 실험기구를 들고 있는 상태라면 놓기 가이드
         if (_playerInteractor.IsHoldingEquipment)
         {
             sb.AppendLine("Place Equipment [G]");
+
+            if (_playerInteractor.HeldEquipment is Syringe syringe)
+            {
+                if (syringe.HasContent) sb.AppendLine("Use Cure [E]");
+            }
         }
 
         Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
@@ -290,7 +300,7 @@ public class InventoryManager : MonoBehaviour
             if (statableItem.ItemInstanceNum == 0)
             {
                 // 개별 상태 저장 딕셔너리에 현재 아이템 인스턴스 상태 데이터 등록
-                _statableItemManager.RegisterItemState(statableItem);
+                StatableItemManager.Instance.RegisterItemState(statableItem);
             }
         }
 
@@ -315,7 +325,14 @@ public class InventoryManager : MonoBehaviour
         {
             if (slot.Item == null)
             {
-                slot.AddItem(newItem, count);
+                if (statableItem != null)
+                {
+                    slot.AddItem(newItem, count, statableItem.ItemInstanceNum); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
+                }
+                else
+                {
+                    slot.AddItem(newItem, count);
+                }
                 return true;
             }
         }
@@ -451,7 +468,7 @@ public class InventoryManager : MonoBehaviour
         GameObject droppedItemObject = Instantiate(targetSlot.Item.ItemPrefab, dropPosition, Quaternion.identity);
         StartCoroutine(ApplyRigidbody(droppedItemObject, 2f));
 
-        _statableItemManager.RestoreItemState(droppedItemObject, targetSlot.ItemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
+        StatableItemManager.Instance.RestoreItemState(droppedItemObject, targetSlot.ItemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
 
         if (_itemEquipController.HasItem)
         {

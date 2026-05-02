@@ -14,8 +14,8 @@ public abstract class InteractableBase : MonoBehaviour, IInteractable
 
     protected virtual void Awake()
     {
-        _inventoryManager = FindObjectOfType<InventoryManager>();
-        _itemEquipController = FindObjectOfType<ItemEquipController>();
+        _inventoryManager = SubmarineInGameManager.instance.InventoryManager;
+        _itemEquipController = SubmarineInGameManager.instance.ItemEquipController;
     }
 
     // IInteractable 인터페이스

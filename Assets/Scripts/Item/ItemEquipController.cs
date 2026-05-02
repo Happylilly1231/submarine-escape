@@ -16,13 +16,6 @@ public class ItemEquipController : MonoBehaviour
     public Item HeldItemData => _heldItemData;
     public GameObject HeldItemObject => _heldItemObject;
 
-    private StatableItemManager _statableItemManager;
-
-    private void Awake()
-    {
-        _statableItemManager = FindObjectOfType<StatableItemManager>();
-    }
-
     /// <summary>
     /// 아이템 장착
     /// </summary>
@@ -33,7 +26,7 @@ public class ItemEquipController : MonoBehaviour
 
         _heldItemData = item;
         _heldItemObject = Instantiate(item.ItemPrefab, itemViewRoot);
-        _statableItemManager.RestoreItemState(_heldItemObject, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
+        StatableItemManager.Instance.RestoreItemState(_heldItemObject, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
 
         _heldItemObject.transform.localPosition = item.GripPositionOffset;
         _heldItemObject.transform.localRotation = Quaternion.Euler(item.GripRotationOffset);

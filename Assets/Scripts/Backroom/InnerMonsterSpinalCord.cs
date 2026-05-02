@@ -17,7 +17,6 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
     private ItemEquipController _itemEquipController;
     private InventoryManager _inventoryManager;
     private InnerMonsterController _innerMonsterController;
-    private StatableItemManager _statableItemManager;
     private GameObject _currentExtractorObj = null; // 현재 생체 데이터 추출기 오브젝트
 
     private float _monsterAnimatorSpeed;
@@ -27,7 +26,6 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _innerMonsterController = transform.parent.GetComponent<InnerMonsterController>();
-        _statableItemManager = _inventoryManager.GetComponent<StatableItemManager>();
     }
 
     public bool CanInteractwithSelectedItem(Item item)
@@ -91,7 +89,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         _currentExtractorObj = Instantiate(bioDataExtractorItem.ItemPrefab, extractPos); // 추출기 아이템 생성
         _currentExtractorObj.transform.localPosition = Vector3.zero; // 위치 초기화 (부모와 동일하게)
         _currentExtractorObj.transform.localRotation = Quaternion.identity; // 회전값 초기화 (부모와 동일하게)
-        _statableItemManager.RestoreItemState(_currentExtractorObj, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
+        StatableItemManager.Instance.RestoreItemState(_currentExtractorObj, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
         // 3-3. 해당 아이템 프리팹 오브젝트는 못 줍게 변경
         _currentExtractorObj.GetComponent<BoxCollider>().enabled = false; // 아이템 못 줍게 콜라이더 컴포넌트 비활성화
         _currentExtractorObj.GetComponent<SphereCollider>().enabled = false; // 아이템 못 줍게 콜라이더 컴포넌트 비활성화
@@ -178,6 +176,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         seq.AppendCallback(() =>
         {
             SubmarineInGameManager.instance.SetFocus(false);
+            GameTime.Instance.SetPauseInBackroom(true); // 백룸에서는 게임 시간 정지
         });
 
         // 완료 시 화면 밝아지기
@@ -193,12 +192,13 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
     public void CompleteExtractingBioData()
     {
         // 피 충전(3칸 전부 다)
-        _currentExtractorObj.GetComponent<BioDataExtractor>().Charge();
+        _currentExtractorObj.GetComponent<BioDataExtractor>().Fill();
 
         // 연출
         Sequence seq = DOTween.Sequence();
 
         // 주사기 빼는 모습 보는 위치로 카메라 이동
+        SubmarineInGameManager.instance.SetCameraControllerEnable(false); // 플레이어 카메라 컨트롤러 비활성화
         Camera.main.transform.position = viewPoint.position;
         Camera.main.transform.rotation = viewPoint.rotation;
 
@@ -214,6 +214,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
 
             // 상태
             SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+            GameTime.Instance.SetPauseInBackroom(false); // 백룸 나왔으니 게임 시간 정지 해제
             _innerMonsterController.IsBeingExtracted = false; // 추출 중 아님으로 설정
         });
 

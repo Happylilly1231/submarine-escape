@@ -41,14 +41,15 @@ public class BioDataExtractor : MonoBehaviour, IStatableItem
     }
 
     /// <summary>
-    /// 충전
+    /// 채우기(충전)
     /// </summary>
-    public void Charge()
+    public void Fill()
     {
         if (CurrentBloodSegments < bloodSegments.Length)
         {
             CurrentBloodSegments = bloodSegments.Length; // 최대로 채우기
             UpdateBloodSegments(); // 피 칸 업데이트
+            Debug.Log("피 최대 충전 완료");
         }
     }
 
@@ -62,6 +63,7 @@ public class BioDataExtractor : MonoBehaviour, IStatableItem
         {
             CurrentBloodSegments -= segment;
             UpdateBloodSegments(); // 피 칸 업데이트
+            Debug.Log("피 1칸 소모");
         }
     }
 
@@ -75,6 +77,10 @@ public class BioDataExtractor : MonoBehaviour, IStatableItem
             // 현재 순회 중인 인덱스가 현재 피가 차있는 칸보다 작으면 활성화
             bloodSegments[i].SetActive(i < CurrentBloodSegments);
         }
+
+        // 아이템 상태가 갱신되었으므로 -> 현재 아이템 상태를 딕셔너리에서도 갱신
+        if (ItemInstanceNum != 0)
+            StatableItemManager.Instance.UpdateSavedItemState(ItemInstanceNum, GetStateData());
     }
 
     /// <summary>

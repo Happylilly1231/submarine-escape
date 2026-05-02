@@ -422,9 +422,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   screwdriverPos: {x: 0.478, y: 1.188, z: 3.858}
-  rotateAmount: 720
-  moveAmount: 0.1
-  rotateDuration: 1
   outlineRenderer: {fileID: 2247968614790153535}
 --- !u!54 &1905205832637780898
 Rigidbody:
@@ -721,9 +718,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   screwdriverPos: {x: 0.478, y: 1.188, z: 3.558}
-  rotateAmount: 720
-  moveAmount: 0.1
-  rotateDuration: 1
   outlineRenderer: {fileID: 6743609286019111121}
 --- !u!54 &9034927831604477178
 Rigidbody:
@@ -927,9 +921,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   screwdriverPos: {x: 0.478, y: 1.602, z: 3.858}
-  rotateAmount: 720
-  moveAmount: 0.1
-  rotateDuration: 1
   outlineRenderer: {fileID: 7651599417967839299}
 --- !u!54 &6929100181979176005
 Rigidbody:
@@ -1133,9 +1124,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   screwdriverPos: {x: 0.478, y: 1.602, z: 3.558}
-  rotateAmount: 720
-  moveAmount: 0.1
-  rotateDuration: 1
   outlineRenderer: {fileID: 8906098633852480909}
 --- !u!54 &9105072187714930788
 Rigidbody:
@@ -1309,18 +1297,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcb7dc68b931a804e8c8bb89de1d4bba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  keyPadPanel: {fileID: 7045154006276551271}
-  screws:
-  - {fileID: 7915722235954517441}
-  - {fileID: 7833328702109226678}
-  - {fileID: 7070761102240469702}
-  - {fileID: 6660127371954704296}
-  screwdriver: {fileID: 11400000, guid: b76d71b114e9a8b458a8b49c1ccc434b, type: 2}
-  itemViewRoot: {fileID: 0}
-  flashlight: {fileID: 3709745229551508782}
-  focusViewPos: {x: 0.85, y: 1.34, z: 3.7}
-  focusViewRot: {x: 0, y: -90, z: 0}
-  duration: 1
+  screwdriverItem: {fileID: 0}
+  IsCompleted: 0
 --- !u!65 &7663875164291573938
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2389,32 +2367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f174e01bcc623f74a81887c432767fb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  batterySlots:
-  - {fileID: 4853495456029583782}
-  - {fileID: 5881125359284945272}
-  - {fileID: 9176895518593539814}
-  - {fileID: 5282531319073179755}
-  batteryItems:
-  - {fileID: 11400000, guid: 1c74496e29dfe2345af1daf366010d6b, type: 2}
-  - {fileID: 11400000, guid: 91839b92b39553949a5d3ac54a60c11c, type: 2}
-  - {fileID: 11400000, guid: 39580d64e37a49d4cbac0ab30200351b, type: 2}
-  - {fileID: 11400000, guid: ad2bbd3e2985bde408677cd316c21a78, type: 2}
-  DoorPivot: {fileID: 7445506061032066051}
-  flashlight: {fileID: 3709745229551508782}
-  keyPadPanel: {fileID: 7045154006276551271}
-  keyPadScrew:
-  - {fileID: 6044253306860242997}
-  - {fileID: 5719305875157257518}
-  - {fileID: 4640511432234455184}
-  - {fileID: 1617839819865708587}
-  focusViewPos: {x: 0.85, y: 1.34, z: 3.7}
-  focusViewRot: {x: 0, y: -90, z: 0}
-  duration: 1
-  successViewPos: {x: 3, y: 1.7, z: 3}
-  successViewRot: {x: 0, y: -80, z: 0}
-  successDuration: 2
-  audioSource: {fileID: 6540150342526747305}
-  openingDoorSound: {fileID: 8300000, guid: bbb5cc18d00165b46ab88e8fec87f9ee, type: 3}
+  IsCompleted: 0
 --- !u!54 &6904891369514464334
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3541,7 +3494,7 @@ PrefabInstance:
     - target: {fileID: 6593694248493032600, guid: 2786dfa44f873aa478bb54f2d68fcc64,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6593694248493032606, guid: 2786dfa44f873aa478bb54f2d68fcc64,
         type: 3}
@@ -5612,7 +5565,7 @@ PrefabInstance:
     - target: {fileID: 6593694248493032600, guid: 2786dfa44f873aa478bb54f2d68fcc64,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5739,12 +5692,6 @@ PrefabInstance:
 --- !u!4 &3704456300516069302 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6302908687093517655, guid: 6e48d85537815674da0bf5c2ed7b61ff,
-    type: 3}
-  m_PrefabInstance: {fileID: 7210458090898522849}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &3709745229551508782 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6299155784387731407, guid: 6e48d85537815674da0bf5c2ed7b61ff,
     type: 3}
   m_PrefabInstance: {fileID: 7210458090898522849}
   m_PrefabAsset: {fileID: 0}
@@ -6983,12 +6930,6 @@ PrefabInstance:
 --- !u!4 &3611319279897823326 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5415591242259761466, guid: 8dfe7d435da59854eb759b4e43ff87a9,
-    type: 3}
-  m_PrefabInstance: {fileID: 8734151256517919076}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &7445506061032066051 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2190491158459567463, guid: 8dfe7d435da59854eb759b4e43ff87a9,
     type: 3}
   m_PrefabInstance: {fileID: 8734151256517919076}
   m_PrefabAsset: {fileID: 0}

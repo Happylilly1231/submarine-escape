@@ -14,7 +14,6 @@ public class PlayerMutation : MonoBehaviour
     [SerializeField] private Transform monsterHandsTransform; // 괴물 양손 트랜스폼
     [SerializeField] private GameObject itemOverlayCamera; // 아이템 든 거 보여주는 카메라
 
-    private float _mutationTimer = 0f;
     private float _mutationInterval = 600f; // 10분 = 600초
     private int _currentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
     private int _maxStage = 5;
@@ -25,6 +24,8 @@ public class PlayerMutation : MonoBehaviour
 
     public static event Action<Vector3> OnSpikeHitFloor; // 가시가 바닥을 쳤을 때 이벤트 
     public static event Action OnMutationCompleted; // 괴물화 완료 이벤트
+
+    private TimerReservation _mutationTimerReservation;
 
     // 사운드
     [Header("Sound")]
@@ -52,7 +53,8 @@ public class PlayerMutation : MonoBehaviour
         // 괴물 손 비활성화
         monsterHandsTransform.gameObject.SetActive(false);
 
-        GameTime.Instance.ReserveEvent(_mutationInterval, SpawnSpike, true);
+        // 괴물화 타이머 이벤트 예약 (인게임 시간에서 괴물화 간격 시간마다 괴물화 단계 진행되도록 해줌)
+        _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, SpawnSpike, true);
     }
 
     // private void Update()
@@ -242,7 +244,7 @@ public class PlayerMutation : MonoBehaviour
         if (_isCured) return 36.5f; // 치료 후 정상 체온
         if (_currentStage == _maxStage) return 44.0f;
 
-        return Mathf.Floor(Mathf.Lerp(_temperatures[_currentStage - 1], _temperatures[_currentStage], _mutationTimer / _mutationInterval) * 10f) / 10f;
+        return Mathf.Floor(Mathf.Lerp(_temperatures[_currentStage - 1], _temperatures[_currentStage], GameTime.Instance.TimeSinceStart / _mutationInterval) * 10f) / 10f;
     }
 
     private void OnDisable()
@@ -262,11 +264,11 @@ public class PlayerMutation : MonoBehaviour
             // 괴물화 중단 및 초기화
             Debug.Log("<color=green>치료제 투여 성공: 괴물화 진행이 억제<color>");
 
-            // 괴물화 중단 기능 구현 필요
-            // 진행 타이머를 초기화하여 다음 단계 진행을 늦춤
+            // 괴물화 중단(종료)
             _isCured = true;
-            _mutationTimer = 0f;
+            GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
 
+            // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
             StopMutationEffects();
         }
         else
@@ -282,6 +284,9 @@ public class PlayerMutation : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
+    /// </summary>
     private void StopMutationEffects()
     {
         // 모든 가시 비활성화 (이미 돋아난 가시가 있다면 제거)

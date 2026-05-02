@@ -851,17 +851,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: -4.76
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 6.38
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3
+      value: 9.69
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -1544,22 +1544,6 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnSlotKeyPress
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: a640e25c-4a58-4d22-8561-d99148393bb0
-    m_ActionName: Player/SlotKeyPress[/Keyboard/1,/Keyboard/2,/Keyboard/3,/Keyboard/4,/Keyboard/5,/Keyboard/6]
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
         m_MethodName: OnItemUse
         m_Mode: 0
         m_Arguments:
@@ -1608,7 +1592,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3685600775984150395}
         m_TargetAssemblyTypeName: PlayerInteractor, Assembly-CSharp
-        m_MethodName: OnFurnitureInteractor
+        m_MethodName: OnInteractor
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1620,42 +1604,6 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 37d5485f-70be-4e26-bdd9-d2409b3cdf79
     m_ActionName: Player/FurnitureInteractor[/Keyboard/e]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 7434ddfa-749c-4a49-99db-d31a1fe78de8
-    m_ActionName: Player/SelectScrew[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 0da4c175-6e20-4126-bbde-9f91b70aa15c
-    m_ActionName: Player/RemoveScrew[/Keyboard/e]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 597483f4-dbfd-4e6d-b938-fd73f3ba7cf3
-    m_ActionName: Player/ExitKeyPad[/Keyboard/escape]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 820dafe6-1f19-4ad2-93ca-a5db197cbdee
-    m_ActionName: Player/RepairEngine[/Keyboard/space]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: f6634892-d256-4f66-a89c-c215415e50d7
-    m_ActionName: Player/PowerPuzzle[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MapViewController, Assembly-CSharp
-        m_MethodName: OnToggleMap
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: f400d86e-ab55-49d3-ae4f-284a89720e98
-    m_ActionName: Player/ToggleMap[/Keyboard/tab]
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -1716,6 +1664,90 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 7b5dee92-146e-4733-a637-e00bf0d721d7
     m_ActionName: Puzzle/ForceKey[/Keyboard/z,/Keyboard/c]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3685600775984150395}
+        m_TargetAssemblyTypeName: PlayerInteractor, Assembly-CSharp
+        m_MethodName: OnScrollWheel
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 57cff4ba-9446-4896-8a26-718b8297b65e
+    m_ActionName: Player/ScrollWheel[/Mouse/scroll]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3685600775984150395}
+        m_TargetAssemblyTypeName: PlayerInteractor, Assembly-CSharp
+        m_MethodName: OnWithdrawItem
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 12e292cc-4e04-438b-b3e7-4aea314e6c7f
+    m_ActionName: Player/WithdrawItem[/Keyboard/r]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3685600775984150395}
+        m_TargetAssemblyTypeName: PlayerInteractor, Assembly-CSharp
+        m_MethodName: OnGrab
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e05b42d4-5b64-4e05-a462-a845056ec668
+    m_ActionName: Player/Grab[/Keyboard/g]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 6e9add61-e2e2-4693-b6f6-4cde39cb9771
+    m_ActionName: Puzzle/KeyE[/Keyboard/e]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: MapViewController, Assembly-CSharp
+        m_MethodName: OnToggleMap
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 1f11af43-3f70-4fcc-aaeb-2bd8485ece71
+    m_ActionName: Permanent/ToggleMap[/Keyboard/tab]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+        m_MethodName: OnSlotKeyPress
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: a2b963fb-1428-43fe-957e-e1ebf947579f
+    m_ActionName: Permanent/SlotKeyPress[/Keyboard/1,/Keyboard/2,/Keyboard/3,/Keyboard/4,/Keyboard/5,/Keyboard/6]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player
@@ -1851,6 +1883,7 @@ MonoBehaviour:
   rayDistance: 2.5
   playerCamera: {fileID: 0}
   interactorText: {fileID: 0}
+  interactorUI: {fileID: 0}
   IsPuzzleActive: 0
 --- !u!114 &999883879645691311
 MonoBehaviour:

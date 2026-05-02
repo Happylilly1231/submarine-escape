@@ -57,10 +57,10 @@ public class SunkenSkullPoint : BackroomEntity
             SubmarineInGameManager.instance.SetCameraControllerEnable(true);
             sunkenSkull.SetActive(false); // 가라앉은 해골 비활성화
         });
-        // seq.AppendCallback(() =>
-        // {
-        //     UpdateDrawnEffects(0.5f);
-        // });
+        seq.AppendCallback(() =>
+        {
+            UpdateDrawnEffects(0.5f);
+        });
         // seq.Append(playerTransform.DOLocalMoveY(-1f, 1f)
         //     .SetRelative());
         // seq.Join(waterSurfaceImg.rectTransform.DOLocalMoveY(1f, 1f)
