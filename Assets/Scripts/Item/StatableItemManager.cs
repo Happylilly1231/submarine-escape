@@ -8,6 +8,20 @@ public class StatableItemManager : MonoBehaviour
 
     private int _idCounter = 1; // 번호를 계속 증가시키며 부여하기 위한 카운터
 
+    public static StatableItemManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     /// <summary>
     /// 해당 번호의 아이템 인스턴스의 상태를 개별 상태 저장 딕셔너리에서 가져오기
     /// </summary>
@@ -51,9 +65,25 @@ public class StatableItemManager : MonoBehaviour
             // 저장된 상태로 복원
             IItemStateData savedData = FindItemState(itemInstanceNum); // 개별 상태 저장 딕셔너리에서 현재 아이템 인스턴스의 저장된 상태 찾아오기
             statableItem.SetStateData(savedData); // 현재 아이템 인스턴스의 상태를 저장된 상태로 설정
+            statableItem.ItemInstanceNum = itemInstanceNum;
             Debug.Log("아이템 상태 복원 완료: " + statableItem.ItemInstanceNum);
         }
     }
 
+    /// <summary>
+    /// 현재 딕셔너리에 저장된 아이템 상태 갱신
+    /// </summary>
+    /// <param name="num"></param>
+    /// <param name="newData"></param>
+    public void UpdateSavedItemState(int num, IItemStateData newData)
+    {
+        if (num <= 0) return;
 
+        // 딕셔너리의 값을 최신 데이터로 교체
+        if (_itemInstanceStateDict.ContainsKey(num))
+        {
+            _itemInstanceStateDict[num] = newData;
+            Debug.Log($"[Dict Update] {num}번 아이템 데이터 갱신 완료");
+        }
+    }
 }

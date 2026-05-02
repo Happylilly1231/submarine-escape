@@ -47,6 +47,9 @@ public class MenuUIController : MonoBehaviour
         {
             tabPanels[i] = tabPanelRoot.transform.GetChild(i).gameObject;
         }
+
+        // 디버깅 UI 비활성화
+        SetActiveDebuggingUI(false);
     }
 
     private void Start()
@@ -67,6 +70,15 @@ public class MenuUIController : MonoBehaviour
         returnToTitleButton.onClick.AddListener(GameManager.instance.ReturnToTitle);
         quitButton.onClick.AddListener(GameManager.instance.QuitGame);
         exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
+    }
+
+    /// <summary>
+    /// 디버깅 UI 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive"></param>
+    public void SetActiveDebuggingUI(bool isActive)
+    {
+        tabButtons[tabButtons.Length - 1].SetActive(isActive);
     }
 
     public void OpenTab(int index)

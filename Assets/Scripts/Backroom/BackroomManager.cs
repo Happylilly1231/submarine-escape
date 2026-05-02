@@ -241,7 +241,7 @@ public class BackroomManager : MonoBehaviour
 
         Sequence seq = DOTween.Sequence();
 
-        seq.Join(FXManager.instance.fadeImage.DOFade(1f, 1.5f)); // 화면이 완전히 검게 변함
+        seq.Append(FXManager.instance.fadeImage.DOFade(1f, 1.5f)); // 화면이 완전히 검게 변함
 
         // 잠시 정적 (완전 암전 상태)
         seq.AppendInterval(0.5f);
@@ -257,13 +257,13 @@ public class BackroomManager : MonoBehaviour
 
             // 백룸 들어오기 전 위치로 이동 & 괴물 등을 바라보도록 회전
             Quaternion rotation = Quaternion.identity;
-            Vector3 direction = innerMonsterSpinalCord.transform.parent.position - playerMove.transform.position;
+            Vector3 direction = innerMonsterSpinalCord.transform.parent.position - originalPos;
             if (direction != Vector3.zero)
             {
                 rotation = Quaternion.LookRotation(direction);
             }
             playerMove.PlayerTeleport(originalPos, rotation);
-            playerMove.GetComponent<PlayerCameraController>().enabled = true; // 플레이어 카메라 컨트롤러 활성화 
+            SubmarineInGameManager.instance.SetCameraControllerEnable(true); // 플레이어 카메라 컨트롤러 활성화
         });
 
         // 잠시 정적 (완전 암전 상태)

@@ -26,6 +26,7 @@ public class Syringe : LabEquipment
     protected override Vector3 slotScaleOffset => new Vector3(0.01f, 0.01f, 0.01f);
 
     public bool IsSuccess = false;
+    public bool HasContent = false; // 현재 내용물이 있는지 여부
 
     [Header("Syringe Visuals")]
     [SerializeField] private GameObject liquidVisual; // 주사기 안의 액체
@@ -54,21 +55,28 @@ public class Syringe : LabEquipment
     {
         base.Insert(slotIdx, obj);
 
+        HasContent = true;
+
         // 내용물 활성화
-        if (liquidVisual != null)
-        {
-            liquidVisual.SetActive(true);
-        }
+        SetActiveLiquidVisual(true);
     }
 
     public override void Remove(int slotIdx)
     {
         base.Remove(slotIdx);
 
+        HasContent = false;
+
         // 시험관을 빼면 비주얼 비활성화
-        if (liquidVisual != null)
-        {
-            liquidVisual.SetActive(false);
-        }
+        SetActiveLiquidVisual(false);
+    }
+
+    /// <summary>
+    /// 비주얼 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive"></param>
+    public void SetActiveLiquidVisual(bool isActive)
+    {
+        liquidVisual.SetActive(isActive);
     }
 }

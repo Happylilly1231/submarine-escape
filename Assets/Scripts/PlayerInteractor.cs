@@ -11,6 +11,8 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private float rayDistance = 3.0f; // 상호작용 감지 거리
     [SerializeField] private Camera playerCamera; // 플레이어 카메라
     [SerializeField] private TMPro.TextMeshProUGUI interactorText; // 상호작용 UI - 감지된 오브젝트와의 상호작용 키 표시
+    [SerializeField] private GameObject interactorUI; // 상호작용 UI
+    [SerializeField] private GameObject aimUI; // 조준점 UI
 
     private InventoryManager _inventoryManager; // 인벤토리 매니저
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
@@ -37,12 +39,30 @@ public class PlayerInteractor : MonoBehaviour
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerMutation = FindObjectOfType<PlayerMutation>();
 
-        detectLayerMask = ~LayerMask.GetMask("Monster"); // 괴물은 감지 레이어에서 제외
+        detectLayerMask = ~(LayerMask.GetMask("Monster") | LayerMask.GetMask("Undectectable")); // 괴물과 감지 불가 레이어(선반 같은 경우 통째로 콜라이더가 있는데 선반 안에 아이템을 놓으면 선반 콜라이더에 가려져서 감지를 못하기 때문에 도입)는 감지 레이어에서 제외
     }
 
     void Update()
     {
         if (!IsPuzzleActive) DetectObject();
+    }
+
+    /// <summary>
+    /// 상호작용 UI 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive">활성화 여부</param>
+    public void SetActiveInteractorUI(bool isActive)
+    {
+        interactorUI.SetActive(isActive);
+    }
+
+    /// <summary>
+    /// 조준점 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive">활성화 여부</param>
+    public void SetActiveAimUI(bool isActive)
+    {
+        aimUI.SetActive(isActive);
     }
 
     /// <summary>
@@ -101,83 +121,108 @@ public class PlayerInteractor : MonoBehaviour
         {
             if (_heldEquipment is Syringe syringe)
             {
-                _playerMutation.InjectSerum(syringe.IsSuccess);
+                // 주사기 내부 데이터 삭제
+                for (int i = 0; i < syringe.Slots.Length; i++)
+                {
+                    syringe.Remove(i);
+                }
+                _playerMutation.InjectSerum(syringe.IsSuccess); // 플레이어에게 주입
+                if (_currentEquipment)
+                    if (_isHoldingEquipment)
+                    {
+                        // 내려놓기
+                        TryPlaceEquipment();
+                    }
+                _inventoryManager.UpdateActionText();
             }
         }
 
-        // 1. 실험기구와 상호작용 중인 경우 
-        if (_currentEquipment != null)
+        // 생체 데이터 추출기를 들고 있지 않을 때만 -> LabEquipment와 상호작용 가능
+        // (생체 데이터 추출기 아이템을 들고 있을 때는 페트리 접시의 IInteractable과 상호작용해야 하기 때문)
+        if (!_itemEquipController.HasItem || _itemEquipController.HeldItemData.ItemName != "Bio Data Extractor")
         {
-            int selectedIdx = SampleSlotUIManager.Instance.CurrentSelectedIdx;
+            // 1. 실험기구와 상호작용 중인 경우 
+            if (_currentEquipment != null)
+            {
+                int selectedIdx = SampleSlotUIManager.Instance.CurrentSelectedIdx;
 
-            // 현미경 카메라 뷰 전환
-            if (_currentEquipment is Microscope microscope)
-            {
-                if (!_currentEquipment.Slots[0].IsEmpty)
+                // 괴물 피 든 페트리 접시 흔들어서 내용물 섞기
+                if (_currentEquipment is PetriDish petriDish1)
                 {
-                    microscope.InteractMicroscope();
-                    _inventoryManager.UpdateActionText();
-                    return;
-                }
-            }
-            // 원심분리기 작동
-            if (_currentEquipment is Centrifuge centrifuge)
-            {
-                if (centrifuge.CanStartOperation())
-                {
-                    centrifuge.StartCentrifuge();
-                    _inventoryManager.UpdateActionText();
-                    return;
-                }
-            }
-            if (!_currentEquipment.Slots[selectedIdx].IsEmpty) return;
-
-            // 손에 실험기구를 들고 있는 경우 - 슬롯에 넣기
-            if (_isHoldingEquipment && _heldEquipment != null)
-            {
-                if (_heldEquipment is TestTube tube && tube.IsResultTube)
-                {
-                    if (_currentEquipment is PetriDish petriDish)
+                    if (!petriDish1.isMonsterBloodMixed && petriDish1.isMonsterBloodDropped)
                     {
-                        petriDish.SetAsResult(true, tube.IsSuccess, tube.IsH1, tube.IsH2S1);
-                        petriDish.Insert(0, tube);
+                        petriDish1.MixMonsterBlood();
+                    }
+                }
+                // 현미경 카메라 뷰 전환
+                if (_currentEquipment is Microscope microscope)
+                {
+                    if (!_currentEquipment.Slots[0].IsEmpty)
+                    {
+                        microscope.InteractMicroscope();
                         _inventoryManager.UpdateActionText();
                         return;
                     }
                 }
-                if (_currentEquipment.CanInsert(_heldEquipment))
+                // 원심분리기 작동
+                if (_currentEquipment is Centrifuge centrifuge)
                 {
-                    // 페트리 접시인 경우: 샘플만 옮기고 손에서 해제하지 않음
-                    if (_heldEquipment is PetriDish && _currentEquipment is TestTube)
+                    if (centrifuge.CanStartOperation())
                     {
-                        _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                        centrifuge.StartCentrifuge();
+                        _inventoryManager.UpdateActionText();
+                        return;
                     }
-                    else if (_heldEquipment is TestTube && _currentEquipment is Syringe)
+                }
+                if (!_currentEquipment.Slots[selectedIdx].IsEmpty) return;
+
+                // 손에 실험기구를 들고 있는 경우 - 슬롯에 넣기
+                if (_isHoldingEquipment && _heldEquipment != null)
+                {
+                    if (_heldEquipment is TestTube tube && tube.IsResultTube)
                     {
-                        _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                        if (_currentEquipment is PetriDish petriDish)
+                        {
+                            petriDish.SetAsResult(true, tube.IsSuccess, tube.IsH1, tube.IsH2S1);
+                            petriDish.Insert(0, tube);
+                            _inventoryManager.UpdateActionText();
+                            return;
+                        }
                     }
-                    else // 그 외 기구(시험관)는 슬롯에 넣고 손에서 해제
+                    if (_currentEquipment.CanInsert(_heldEquipment))
+                    {
+                        // 페트리 접시인 경우: 샘플만 옮기고 손에서 해제하지 않음
+                        if (_heldEquipment is PetriDish && _currentEquipment is TestTube)
+                        {
+                            _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                        }
+                        else if (_heldEquipment is TestTube && _currentEquipment is Syringe)
+                        {
+                            _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                        }
+                        else // 그 외 기구(시험관)는 슬롯에 넣고 손에서 해제
+                        {
+                            UnselectedSlot();
+                            _currentEquipment.Insert(selectedIdx, _heldEquipment);
+                            _heldEquipment = null;
+                            _isHoldingEquipment = false;
+                            SetSlotKeyEnabled(true);
+                        }
+                    }
+                }
+                // 인벤토리에서 샘플 아이템을 선택한 경우
+                else if (_itemEquipController.HasItem && _itemEquipController.HeldItemData.ItemType == EItemType.Sample)
+                {
+                    Item item = _itemEquipController.HeldItemData;
+                    if (_currentEquipment.CanInsert(item))
                     {
                         UnselectedSlot();
-                        _currentEquipment.Insert(selectedIdx, _heldEquipment);
-                        _heldEquipment = null;
-                        _isHoldingEquipment = false;
-                        SetSlotKeyEnabled(true);
+                        _currentEquipment.Insert(selectedIdx, item);
+                        _inventoryManager.ConsumeItemInSlot(item);
                     }
                 }
+                _inventoryManager.UpdateActionText();
             }
-            // 인벤토리에서 샘플 아이템을 선택한 경우
-            else if (_itemEquipController.HasItem && _itemEquipController.HeldItemData.ItemType == EItemType.Sample)
-            {
-                Item item = _itemEquipController.HeldItemData;
-                if (_currentEquipment.CanInsert(item))
-                {
-                    UnselectedSlot();
-                    _currentEquipment.Insert(selectedIdx, item);
-                    _inventoryManager.ConsumeItemInSlot(item);
-                }
-            }
-            _inventoryManager.UpdateActionText();
         }
 
         // 2. 일반 가구와 상호작용 중인 경우
@@ -318,6 +363,7 @@ public class PlayerInteractor : MonoBehaviour
     /// </summary>
     private void DetectObject()
     {
+        ClearDetection(); // 추출기 들고 페트리 접시 바라보고 있을 때 추출기 내리면 상호작용 텍스트가 안 사라져서 먼저 초기화하게 해줌
         if (Physics.SphereCast(playerCamera.transform.position, 0.1f, playerCamera.transform.forward, out _sphereCastHit, rayDistance, detectLayerMask))
         {
             // 1. 아이템 감지
@@ -328,13 +374,18 @@ public class PlayerInteractor : MonoBehaviour
                 return;
             }
 
-            // 2. 실험 기구 감지
-            if (_sphereCastHit.transform.TryGetComponent(out LabEquipment equipment))
+            // 생체 데이터 추출기를 들고 있지 않을 때만 -> LabEquipment와 상호작용 가능
+            // (생체 데이터 추출기 아이템을 들고 있을 때는 페트리 접시의 IInteractable과 상호작용해야 하기 때문)
+            if (!_itemEquipController.HasItem || _itemEquipController.HeldItemData.ItemName != "Bio Data Extractor")
             {
-                // 손에 든 기구와 동일한 기구라면 감지 무시
-                if (_heldEquipment == equipment) { ClearDetection(); return; }
-                HandleLabEquipment(equipment);
-                return;
+                // 2. 실험 기구 감지
+                if (_sphereCastHit.transform.TryGetComponent(out LabEquipment equipment))
+                {
+                    // 손에 든 기구와 동일한 기구라면 감지 무시
+                    if (_heldEquipment == equipment) { ClearDetection(); return; }
+                    HandleLabEquipment(equipment);
+                    return;
+                }
             }
 
             // 3. 가구 감지
@@ -358,7 +409,6 @@ public class PlayerInteractor : MonoBehaviour
                 }
             }
         }
-        ClearDetection();
         SampleSlotUIManager.Instance.HideSlotUI();
     }
     #endregion

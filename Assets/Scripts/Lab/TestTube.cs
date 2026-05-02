@@ -74,7 +74,7 @@ public class TestTube : LabEquipment
         bool hasH2S1 = hasMetabolicSerum && hasHardShell;
 
         // 현미경: H2-S1 복합체가 있다면 success, 없으면 false
-        IsH2S1 = !hasH2S1;
+        IsH2S1 = hasH2S1;
         // 피의 색깔: H1이 있으면 빨간색(true), 없으면 검정색(false)
         IsH1 = hasBioluminescence;
 
@@ -149,6 +149,9 @@ public class TestTube : LabEquipment
 
     public override bool CanInsert(object obj)
     {
+        // 조합 결과물인 페트리 접시는 시험관에 넣을 수 없음 (안 그러면 샘플 복제됨)
+        if (obj is PetriDish petriDish1 && petriDish1.ContainsResult)
+            return false;
         if (obj is PetriDish) return true;
         return base.CanInsert(obj);
     }

@@ -78,6 +78,12 @@ public class SubmarineInGameManager : MonoBehaviour
     [SerializeField] private AudioClip alertSound;
     private AudioSource _audioSource;
 
+    // 인벤토리 & 아이템 관련
+    [SerializeField] private InventoryManager inventoryManager;
+    public InventoryManager InventoryManager => inventoryManager;
+    [SerializeField] private ItemEquipController itemEquipController;
+    public ItemEquipController ItemEquipController => itemEquipController;
+
     // 싱글톤 변수
     public static SubmarineInGameManager instance;
 
@@ -116,6 +122,11 @@ public class SubmarineInGameManager : MonoBehaviour
         InitGame();
     }
 
+    private void OnDisable()
+    {
+        // AudioManager.Instance.StopBGM();
+    }
+
     /// <summary>
     /// Escape키 입력에 따라 메뉴 열기/열기 해제
     /// </summary>
@@ -124,15 +135,22 @@ public class SubmarineInGameManager : MonoBehaviour
         // 정지 버튼(ESC) 눌렀을 때
         if (context.performed)
         {
-            GameManager.instance.ToggleMenu();
-            if (_isPausing) // 정지 중이면
-            {
-                Resume(); // 정지 해제(플레이)
-            }
-            else // 플레이 중이면
-            {
-                Pause(); // 정지
-            }
+            ToggleMenuAndSetPause();
+        }
+    }
+
+    public void ToggleMenuAndSetPause()
+    {
+        GameManager.instance.ToggleMenu();
+        if (_isPausing) // 정지 중이면
+        {
+            _playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+            Resume(); // 정지 해제(플레이)
+        }
+        else // 플레이 중이면
+        {
+            _playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
+            Pause(); // 정지
         }
     }
 
@@ -142,6 +160,9 @@ public class SubmarineInGameManager : MonoBehaviour
     private void InitGame()
     {
         GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
+
+        // AudioManager.Instance.PlayBGM(AudioManager.Instance.fanSound);
+
         Resume(); // 재시작
     }
 
@@ -285,6 +306,7 @@ public class SubmarineInGameManager : MonoBehaviour
             }
 
             // 해제는 포커스와 반대로 작동
+            _playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
             _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
             playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
 
@@ -315,6 +337,7 @@ public class SubmarineInGameManager : MonoBehaviour
             CurrentPuzzleController = null;
 
         // 해제는 포커스와 반대로 작동
+        _playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
         _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
         _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
         playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능

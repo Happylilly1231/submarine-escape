@@ -27,6 +27,8 @@ public class GameTime : MonoBehaviour
     // 특정 시간에 실행될 액션들을 모아두는 리스트 (예약 명단)
     private List<TimerReservation> reservations = new List<TimerReservation>();
 
+    public bool isBackroomPlaying = false; // 백룸 플레이 중 여부
+
     private void Awake()
     {
         if (Instance == null)
@@ -67,18 +69,55 @@ public class GameTime : MonoBehaviour
         }
     }
 
-    public void SetPause(bool isPausing)
+    /// <summary>
+    /// 백룸에서 시간 정지 여부 설정(포커스에서도 시간 정지/해제를 하기 때문에 그거에서 풀리지 않도록 따로 함수 만들어서 해줌)
+    /// </summary>
+    /// <param name="isPause"></param>
+    public void SetPauseInBackroom(bool isPause)
     {
-        _isPausing = isPausing;
+        isBackroomPlaying = isPause;
+        _isPausing = isPause;
     }
 
-    public void ReserveEvent(float delay, Action callback, bool periodic)
+    /// <summary>
+    /// 게임 시간 정지 여부 설정
+    /// </summary>
+    /// <param name="isPause">정지 여부</param>
+    public void SetPause(bool isPause)
     {
-        reservations.Add(new TimerReservation
+        if (!isBackroomPlaying)
+            _isPausing = isPause;
+    }
+
+    /// <summary>
+    /// 이벤트 예약
+    /// </summary>
+    /// <param name="delay"></param>
+    /// <param name="callback"></param>
+    /// <param name="periodic"></param>
+    /// <returns></returns>
+    public TimerReservation ReserveEvent(float delay, Action callback, bool periodic)
+    {
+        TimerReservation newReservation = new TimerReservation
         {
             targetTime = TimeSinceStart + delay,
             action = callback,
             isPeriodic = periodic
-        });
+        };
+
+        reservations.Add(newReservation);
+        return newReservation; // 취소 가능하도록 예약 객체 반환
+    }
+
+    /// <summary>
+    /// 이벤트 취소
+    /// </summary>
+    /// <param name="reservation">예약 객체</param>
+    public void CancelEvent(TimerReservation reservation)
+    {
+        if (reservation != null && reservations.Contains(reservation))
+        {
+            reservations.Remove(reservation);
+        }
     }
 }
