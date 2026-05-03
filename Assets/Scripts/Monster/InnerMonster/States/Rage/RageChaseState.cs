@@ -87,6 +87,10 @@ namespace InnerMonsterStates
                 }
             }
 
+            Debug.Log("aaaaa: " + owner.CanAttack());
+            Debug.Log("bbbb: " + (owner.DistToPlayer < owner.RageAttackDistance));
+
+
             // 폭주 공격 상태로 전환
             if (owner.CanAttack() && owner.DistToPlayer < owner.RageAttackDistance)
             {

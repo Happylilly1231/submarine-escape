@@ -14,6 +14,7 @@ public class DebugingUIManager : MonoBehaviour
     [SerializeField] private Button unlockCrewRoomDoorButton; // 선원실 문 잠금 해제 버튼
     [SerializeField] private Button escapeBackroomButton; // 백룸 탈출 버튼
     [SerializeField] private Button fillExtractorButton; // 추출기 피 채우기 버튼
+    [SerializeField] private Button cureButton; // 치료 버튼
 
     private void Start()
     {
@@ -33,6 +34,7 @@ public class DebugingUIManager : MonoBehaviour
         unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
         escapeBackroomButton.onClick.AddListener(EscapeBackroom);
         fillExtractorButton.onClick.AddListener(FillBioDataExtractor);
+        cureButton.onClick.AddListener(CureImmediately);
     }
 
     /// <summary>
@@ -68,6 +70,27 @@ public class DebugingUIManager : MonoBehaviour
         if (SubmarineInGameManager.instance.ItemEquipController.HasItem && SubmarineInGameManager.instance.ItemEquipController.HeldItemObject.TryGetComponent(out BioDataExtractor bioDataExtractor))
         {
             bioDataExtractor.Fill();
+        }
+        else
+        {
+            Debug.Log("[Debug] ❌ 실패 - 생체 데이터 추출기 아이템을 들고 있지 않습니다!");
+        }
+    }
+
+    /// <summary>
+    /// 즉시 괴물화 치료
+    /// </summary>
+    public void CureImmediately()
+    {
+        PlayerMutation playerMutation = SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>();
+        if (!playerMutation.IsCured)
+        {
+            playerMutation.Cure();
+            Debug.Log("[Debug] ✅ 성공 - 치료 완료");
+        }
+        else
+        {
+            Debug.Log("[Debug] 이미 치료되었습니다!");
         }
     }
 }

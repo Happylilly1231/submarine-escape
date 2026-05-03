@@ -278,6 +278,11 @@ public class SubmarineInGameManager : MonoBehaviour
 
     /// <summary>
     /// 포커스 여부 설정
+    /// <para>포커스</para>
+    /// <para>- 게임 시간 정지</para>
+    /// <para>- 카메라 조작 불가</para>
+    /// <para>- 플레이어 이동 불가능</para>
+    /// <para>- 퍼즐 진행 중이었다면 종료</para>
     /// </summary>
     /// <param name="isFocus">포커스 여부</param>
     public void SetFocus(bool isFocus)
