@@ -96,6 +96,7 @@ namespace InnerMonsterStates
                 case EDestroyObjType.EscapeRoomDoor: // 탈출실 문을 파괴한 경우
                     monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
                     ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
+                    monster.ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환(아직 경보 발생 중이기 때문)
                     // 경보 끌 수 없으므로 끄지 않음
                     // 이후 탈출실에서 플레이어가 괴물에게 죽는 장면이 연출 처리될 것
                     break;

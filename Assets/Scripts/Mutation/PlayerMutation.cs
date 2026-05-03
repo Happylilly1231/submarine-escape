@@ -18,6 +18,7 @@ public class PlayerMutation : MonoBehaviour
     private int _currentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
     private int _maxStage = 5;
     private bool _isCured = false; // 완전 치료 상태
+    public bool IsCured => _isCured;
 
     private float[] _vignetteTimes = { 1f, 2f, 5f, 10f };
     private float[] _temperatures = { 37f, 38f, 40f, 42f, 44f };
@@ -54,7 +55,7 @@ public class PlayerMutation : MonoBehaviour
         monsterHandsTransform.gameObject.SetActive(false);
 
         // 괴물화 타이머 이벤트 예약 (인게임 시간에서 괴물화 간격 시간마다 괴물화 단계 진행되도록 해줌)
-        _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, SpawnSpike, true);
+        _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, () => SpawnSpike(), true);
     }
 
     // private void Update()
@@ -89,6 +90,8 @@ public class PlayerMutation : MonoBehaviour
 
         Sequence seq = DOTween.Sequence();
 
+        Quaternion playerOriginalRotation = SubmarineInGameManager.instance.player.transform.rotation;
+
         // 플레이어 포효 (마구 움직임)
         seq.Append(SubmarineInGameManager.instance.player.transform
             .DORotate(new Vector3(0, 15f, 0), 0.1f)
@@ -98,6 +101,9 @@ public class PlayerMutation : MonoBehaviour
 
         seq.AppendCallback(() =>
         {
+            // 회전값 다시 원상복구
+            SubmarineInGameManager.instance.player.transform.rotation = playerOriginalRotation;
+
             // 1인칭 시점으로 바뀌고 아래 보도록 클로즈업
             Camera.main.transform.position = hitViewPoint.position;
             Camera.main.transform.rotation = hitViewPoint.rotation;
@@ -126,9 +132,13 @@ public class PlayerMutation : MonoBehaviour
     /// <summary>
     /// 가시 생성
     /// </summary>
-    private void SpawnSpike()
+    /// <param name="isImmediate">즉각적인 완전 괴물화 여부</param>
+    public void SpawnSpike(bool isImmediate = false)
     {
-        _currentStage++; // 단계 증가
+        if (isImmediate)
+            _currentStage = _maxStage;
+        else
+            _currentStage++; // 단계 증가
 
         // 현재 가시
         GameObject spike = spikes[_currentStage - 2];
@@ -149,8 +159,23 @@ public class PlayerMutation : MonoBehaviour
         // 가시 생성(나중에 쑥 나오는 식으로 바꿀 예정, 지금은 그냥 딱 활성화됨) & 가시 마구 움직임 
         seq.AppendCallback(() =>
         {
-            spike.SetActive(true);
-            spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
+            if (isImmediate) // 완전 괴물화 -> 아직 활성화되지 않았던 가시들 전부 활성화
+            {
+                // 아직 활성화되지 않았던 가시들 전부 활성화
+                foreach (var spike in spikes)
+                {
+                    if (!spike.activeSelf)
+                    {
+                        spike.SetActive(true);
+                        spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
+                    }
+                }
+            }
+            else // 기본 괴물화 -> 가시 1개 활성화
+            {
+                spike.SetActive(true);
+                spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
+            }
         });
 
         // 2초 기다리기 (등 가시 움직이는 거 보여주는 중)
@@ -264,12 +289,7 @@ public class PlayerMutation : MonoBehaviour
             // 괴물화 중단 및 초기화
             Debug.Log("<color=green>치료제 투여 성공: 괴물화 진행이 억제<color>");
 
-            // 괴물화 중단(종료)
-            _isCured = true;
-            GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
-
-            // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
-            StopMutationEffects();
+            Cure(); // 괴물화 치료
         }
         else
         {
@@ -282,6 +302,21 @@ public class PlayerMutation : MonoBehaviour
                 SpawnSpike();
             }
         }
+    }
+
+    /// <summary>
+    /// 괴물화 치료
+    /// </summary>
+    public void Cure()
+    {
+        // 괴물화 중단(종료)
+        _isCured = true;
+        GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
+
+        // 치료 연출 구현 필요
+
+        // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
+        StopMutationEffects();
     }
 
     /// <summary>
