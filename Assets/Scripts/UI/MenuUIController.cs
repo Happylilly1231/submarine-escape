@@ -12,15 +12,21 @@ public class MenuUIController : MonoBehaviour
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
     [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private Button setDifficultyEasyButton;
+    private TextMeshProUGUI setDifficultyEasyButtonText;
+    [SerializeField] private Button setDifficultyHardButton;
+    private TextMeshProUGUI setDifficultyHardButtonText;
     [SerializeField] private Button returnToTitleButton;
     [SerializeField] private Button quitButton;
-    [SerializeField] private Button exitButton;
+    // [SerializeField] private Button exitButton;
 
     private int _currentIndex = -1;
     private GameObject[] tabButtons;
     private GameObject[] tabPanels;
     private Color _originalColor = new Color(227f / 255f, 231f / 255f, 232f / 255f, 1f);
     private Color _highLightColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    // private Color _originalButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    // private Color _selectedButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
 
     public static MenuUIController instance;
 
@@ -54,6 +60,9 @@ public class MenuUIController : MonoBehaviour
 
     private void Start()
     {
+        setDifficultyEasyButtonText = setDifficultyEasyButton.GetComponentInChildren<TextMeshProUGUI>();
+        setDifficultyHardButtonText = setDifficultyHardButton.GetComponentInChildren<TextMeshProUGUI>();
+
         // 슬라이더 수치 변경 이벤트 함수 연결
         masterVolumeSlider.onValueChanged.AddListener(AudioManager.Instance.SetMasterVolume);
         bgmSlider.onValueChanged.AddListener(AudioManager.Instance.SetBGMVolume);
@@ -69,7 +78,21 @@ public class MenuUIController : MonoBehaviour
         // 버튼 함수 연결
         returnToTitleButton.onClick.AddListener(GameManager.instance.ReturnToTitle);
         quitButton.onClick.AddListener(GameManager.instance.QuitGame);
-        exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
+        // exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
+        setDifficultyEasyButton.onClick.AddListener(() => OnClickSetDifficultyButton(setDifficultyEasyButtonText, Difficulty.Easy));
+        setDifficultyHardButton.onClick.AddListener(() => OnClickSetDifficultyButton(setDifficultyHardButtonText, Difficulty.Hard));
+
+        OnClickSetDifficultyButton(setDifficultyEasyButtonText, Difficulty.Easy);
+    }
+
+    private void OnClickSetDifficultyButton(TextMeshProUGUI buttonText, Difficulty difficulty)
+    {
+        GameManager.instance.SetDifficulty(difficulty);
+        buttonText.color = _highLightColor;
+        if (buttonText == setDifficultyEasyButtonText)
+            setDifficultyHardButtonText.color = _originalColor;
+        else
+            setDifficultyEasyButtonText.color = _originalColor;
     }
 
     /// <summary>

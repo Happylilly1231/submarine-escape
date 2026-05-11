@@ -92,7 +92,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     // 공격
     public EAttackType currentAttackType;
-    private float attackCooldownTime = 2f;
+    private float attackCooldownTime = 1f;
     private bool _isAttackCoolDown = false;
     private float _attackCoolDownTimer = 0f;
     private bool _isJumping = false; // 점프 애니메이션에서 실제 점프 중(점프 애니메이션 실행 중 X)
@@ -102,6 +102,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private float _attackForce = 1f; // 공격력
     private bool _canRangeAttack = true; // 원거리 공격 가능 여부
     public bool CanRangeAttack => _canRangeAttack;
+    public int lowerBodyLayerIndex;
 
     // 폭주
     private bool _isRageStartEnd = false;
@@ -246,6 +247,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _nav.Warp(_wayPoints[0].position); // 첫번째 웨이포인트 위치로 초기화
         _fovCenterTransform = monsterHeadTransform; // 시야각 중심 위치는 머리 기준
         ChangeState(new PatrolState()); // 처음 상태는 순찰 상태(-> Idle 상태로 전환됨)
+
+        // 하체 레이어 가져오기
+        lowerBodyLayerIndex = _animator.GetLayerIndex("LowerBody Layer");
+        _animator.SetLayerWeight(lowerBodyLayerIndex, 0f);
     }
 
     private void Update()
@@ -390,7 +395,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             return false;
 
         // 레이캐스트로 시야 거리 내 장애물 감지
-        int mask = ~LayerMask.GetMask("Monster"); // Monster 레이어만 제외
+        int mask = ~(LayerMask.GetMask("Monster") | LayerMask.GetMask("SpinalCord")); // Monster, SpinalCord 레이어 제외
         Debug.DrawRay(eyePos, dirToPlayer * _detectDistance, Color.red);
         if (Physics.Raycast(eyePos, dirToPlayer, out RaycastHit hit, _detectDistance, mask))
         {
