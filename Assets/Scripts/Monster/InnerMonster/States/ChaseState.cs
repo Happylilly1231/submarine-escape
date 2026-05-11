@@ -28,6 +28,7 @@ namespace InnerMonsterStates
         {
             owner.CanMove(true); // 이동
             owner.Nav.speed = _chaseSpeed; // 추적 속도로 변경
+            owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
             owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경
             owner.Animator.SetBool("isChasing", true);
@@ -152,6 +153,7 @@ namespace InnerMonsterStates
             owner.Animator.SetBool("isChaseWaiting", false);
             owner.StopPlaying();
             owner.Nav.updateRotation = true; // 회전 자동으로 변경
+            owner.monsterEyeRenderer.material = owner.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
         }
     }
 }

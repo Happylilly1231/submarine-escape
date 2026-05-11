@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+public enum Difficulty { Easy, Hard }
+
 /// <summary>
 /// 게임 전반의 플레이와 관련된 변수, 함수 관리
 /// </summary>
@@ -18,6 +20,9 @@ public class GameManager : MonoBehaviour
     public float MouseSensitivity => _mouseSensitivity;
     private bool _haveToShowCursor = true;
     public bool HaveToShowCursor => _haveToShowCursor;
+
+    // 현재 난이도
+    public Difficulty CurrentDifficulty { get; private set; } = Difficulty.Easy;
 
     // 싱글톤 변수
     public static GameManager instance;
@@ -101,6 +106,14 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
+
+    // 난이도 설정
+    public void SetDifficulty(Difficulty difficulty)
+    {
+        CurrentDifficulty = difficulty;
+    }
+
 
     /// <summary>
     /// 게임 시작
