@@ -4,17 +4,23 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[System.Serializable]
+public struct UserAccount
+{
+    public string id;
+    public string password;
+}
+
 public class DatabaseMonitorController : PuzzleController
 {
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => true;
 
     [SerializeField] private GameObject actionText;
+    [SerializeField] private UserAccount[] userAccounts; // 허용된 사용자 계정 목록
 
     // 로그인
     public DatabaseMonitorState CurrentState { get; private set; } = DatabaseMonitorState.Login; // 현재 모니터 상태
-    private const string CORRECT_ID = "ADMIN"; // 정답 아이디
-    private const string CORRECT_PASSWORD = "123"; // 정답 비밀번호
 
     private DatabaseMonitorDisplay _monitorDisplay;
 
@@ -110,33 +116,26 @@ public class DatabaseMonitorController : PuzzleController
     public bool TryLogin()
     {
         SetInputLock(true); // 입력 잠금
+        string inputId = _monitorDisplay.idText.text;
+        string inputPw = _monitorDisplay.pwText.text;
 
-        // 로그인 성공 여부 확인
-        if (CurrentState == DatabaseMonitorState.Login)
+        for (int i = 0; i < userAccounts.Length; i++)
         {
-            if (_monitorDisplay.idText.text == CORRECT_ID && _monitorDisplay.pwText.text == CORRECT_PASSWORD)
+            if (inputId == userAccounts[i].id && inputPw == userAccounts[i].password)
             {
-                Debug.Log("로그인 성공");
+                _monitorDisplay.SetUserIndex(i); // 로그인한 사용자 인덱스 설정
                 CurrentState = DatabaseMonitorState.Main;
 
                 _monitorDisplay.ResetLoginFields(); // 입력 필드 초기화
                 _monitorDisplay.ShowPanel(CurrentState); // 메인 패널로 전환
+                _monitorDisplay.SetUserIndex(i); // 로그인한 사용자 인덱스 설정
 
                 SetToggleMapEnabled(true); // Tab으로 맵 열기 가능
                 SetInputLock(false); // 입력 잠금 해제
                 return true;
             }
-            else
-            {
-                Debug.Log("로그인 실패");
-
-                _monitorDisplay.idText.text = ""; // 입력 필드 초기화
-                _monitorDisplay.pwText.text = "";
-
-                SetInputLock(false); // 입력 잠금 해제
-                return false;
-            }
         }
+
         SetInputLock(false); // 입력 잠금 해제
         return false;
     }
