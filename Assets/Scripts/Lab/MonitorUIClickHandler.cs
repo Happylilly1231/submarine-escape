@@ -14,7 +14,8 @@ public enum MonitorUIElement
     Leech,
     Sample1,
     Sample2,
-    Sample3
+    Sample3,
+    ExperimentRecordBtn // 실험 기록 버튼
 }
 
 public class MonitorUIClickHandler : MonoBehaviour, IPointerClickHandler

@@ -14,6 +14,7 @@ public class PlayerCameraController : MonoBehaviour
 
     private float _xRotation = 0f; // 카메라 상하 회전값
     // private float _yRotation = 0f; // 카메라 좌우 회전값
+    public bool IsIntroPlaying = false; // 인트로 시퀀스 재생 여부
 
     /// <summary>
     /// 정지 중이 아닐 때 - 마우스 좌표에 따른 카메라 회전 & 플레이어 머리 위치에서 오프셋만큼 떨어진 위치로 이동
@@ -22,6 +23,12 @@ public class PlayerCameraController : MonoBehaviour
     {
         if (!SubmarineInGameManager.instance.IsPausing) // 정지 중이 아닐 때
         {
+            if (IsIntroPlaying)
+            {
+                transform.position = playerHead.TransformPoint(cameraOffset) + playerMove.transform.forward * 0.1f;
+                transform.rotation = playerHead.rotation * Quaternion.Euler(5f, 0f, 0f);
+                return;
+            }
             _xRotation -= playerMove.MouseY; // 상하 회전값
             // _yRotation += playerMove.MouseX; // 좌우 회전값
             _xRotation = Mathf.Clamp(_xRotation, -90f, 50f); // 시야 상하 회전 범위 제한

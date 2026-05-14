@@ -1361,6 +1361,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 3539139798179444966}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4230465756468541826}
   m_SourcePrefab: {fileID: 100100000, guid: 9ba6a15d3975b8c41b1a70176a320aeb, type: 3}
 --- !u!4 &1821945857404852043 stripped
 Transform:
@@ -1884,6 +1888,7 @@ MonoBehaviour:
   playerCamera: {fileID: 0}
   interactorText: {fileID: 0}
   interactorUI: {fileID: 0}
+  aimUI: {fileID: 0}
   IsPuzzleActive: 0
 --- !u!114 &999883879645691311
 MonoBehaviour:
@@ -2052,6 +2057,22 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &4230465756468541826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8625834838806647687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b87605fb15254054da933b0baad1e68d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  statUI: {fileID: 0}
+  inventoryUI: {fileID: 0}
+  interactorUI: {fileID: 0}
+  playerCameraController: {fileID: 0}
 --- !u!4 &9006864698413549885 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,

@@ -15,15 +15,42 @@ public class Microscope : LabEquipment
 
     private MicroscopePuzzleController _puzzleController;
 
+    private bool _isPowerOn = false; // 전력 켜져 있는지 여부
+    public bool IsPowerOn => _isPowerOn;
+
     protected override void Awake()
     {
         base.Awake();
         _puzzleController = GetComponent<MicroscopePuzzleController>();
     }
 
+    private void OnEnable()
+    {
+        LightingManager.instance.OnLightChanged += SetPower;
+    }
+
+    void OnDisable()
+    {
+        LightingManager.instance.OnLightChanged -= SetPower;
+    }
+
+    /// <summary>
+    /// 전력 켜거나 끄기
+    /// </summary>
+    private void SetPower(bool isPowerOn)
+    {
+        _isPowerOn = isPowerOn;
+    }
+
+    /// <summary>
+    /// 현미경 상호작용
+    /// <para> - 전력 켜져 있을 때만 현미경 사용 가능 </para>
+    /// <para> - 슬롯에 페트리 접시가 있을 때, 해당 페트리 접시를 퍼즐 컨트롤러에 전달하고 퍼즐 활성화 </para>
+    /// </summary>
+    /// </summary>
     public void InteractMicroscope()
     {
-        if (Slots[0].IsEmpty) return;
+        if (Slots[0].IsEmpty || !_isPowerOn) return;
 
         if (_puzzleController != null && !_puzzleController.IsPuzzleStarted)
         {
