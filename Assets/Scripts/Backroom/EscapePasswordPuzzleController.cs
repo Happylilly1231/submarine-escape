@@ -89,4 +89,12 @@ public class EscapePasswordPuzzleController : MonoBehaviour
         _keypad.keypadCombo = _currentPassword;
         Debug.Log("현재 비밀번호: " + _currentPassword);
     }
+
+    /// <summary>
+    /// 퍼즐 초기화
+    /// </summary>
+    public void ResetPuzzle()
+    {
+        escapeDoorInteractableKeypad.ResetKeypad();
+    }
 }

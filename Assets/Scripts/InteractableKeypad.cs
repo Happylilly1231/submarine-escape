@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using NavKeypad;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,10 +13,12 @@ public class InteractableKeypad : PuzzleController, IInteractable
 
     private bool _isUnlocked = false;
     private Collider _collider;
+    private Keypad _keypad;
 
     private void Awake()
     {
         _collider = GetComponent<Collider>();
+        _keypad = GetComponent<Keypad>();
     }
 
     #region IInteractable
@@ -66,7 +69,7 @@ public class InteractableKeypad : PuzzleController, IInteractable
         if (Physics.Raycast(ray, out var hit))
         {
             Debug.Log(hit.collider.name);
-            if (hit.collider.TryGetComponent(out NavKeypad.KeypadButton keypadButton))
+            if (hit.collider.TryGetComponent(out KeypadButton keypadButton))
             {
                 keypadButton.PressButton();
             }
@@ -90,5 +93,24 @@ public class InteractableKeypad : PuzzleController, IInteractable
         }
 
         ExitPuzzle(); // 퍼즐 종료
+    }
+
+    /// <summary>
+    /// 키패드 초기화
+    /// </summary>
+    public void ResetKeypad()
+    {
+        _keypad.ResetKeypad();
+
+        // 잠금 해제 여부 초기화
+        _isUnlocked = false;
+        if (target != null)
+        {
+            if (target.TryGetComponent(out Door door)) // 문
+            {
+                door.SetDoorOpenState(false); // 문 닫기
+                door.isLocked = true; // 잠금됨으로 다시 설정
+            }
+        }
     }
 }
