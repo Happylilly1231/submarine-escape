@@ -12,6 +12,7 @@ public class DebugingUIManager : MonoBehaviour
     [SerializeField] private Button lightToggleButton; // 불 켜기/끄기 버튼
     [SerializeField] private Button alertButton; // 경보 발생 버튼
     [SerializeField] private Button unlockCrewRoomDoorButton; // 선원실 문 잠금 해제 버튼
+    [SerializeField] private Button enterBackroomButton; // 백룸 진입 버튼
     [SerializeField] private Button escapeBackroomButton; // 백룸 탈출 버튼
     [SerializeField] private Button fillExtractorButton; // 추출기 피 채우기 버튼
     [SerializeField] private Button cureButton; // 치료 버튼
@@ -33,6 +34,7 @@ public class DebugingUIManager : MonoBehaviour
         alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
         unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
         escapeBackroomButton.onClick.AddListener(EscapeBackroom);
+        enterBackroomButton.onClick.AddListener(EnterBackroom);
         fillExtractorButton.onClick.AddListener(FillBioDataExtractor);
         cureButton.onClick.AddListener(CureImmediately);
     }
@@ -44,6 +46,25 @@ public class DebugingUIManager : MonoBehaviour
     {
         crewRoomDoor.isLocked = false;
         Debug.Log("[Debug] ✅ 성공 - 선원실 문 잠금 해제 완료");
+    }
+
+    public void EnterBackroom()
+    {
+        if (!BackroomManager.Instance.isPlayingBackroom)
+        {
+            if (BackroomManager.Instance.InnerMonsterSpinalCord.IsBioDataExtractorSelected())
+            {
+                SubmarineInGameManager.instance.ToggleMenuAndSetPause();
+                BackroomManager.Instance.InnerMonsterSpinalCord.Interact(); // 괴물 척수 상호작용(주사기 꽂고 백룸 진입)
+                Debug.Log("[Debug] ✅ 성공 - 백룸 진입");
+            }
+            else
+            {
+                Debug.Log("[Debug] ❌ 실패 - 생체 데이터 추출기를 들고 있지 않습니다!");
+            }
+        }
+        else
+            Debug.Log("[Debug] ❌ 실패 - 이미 백룸에 있습니다!");
     }
 
     /// <summary>

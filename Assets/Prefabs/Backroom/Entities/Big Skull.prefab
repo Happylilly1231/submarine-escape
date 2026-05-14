@@ -84,6 +84,7 @@ MonoBehaviour:
   roarSoundSource: {fileID: 5721160452536591372}
   chargingSoundSource: {fileID: 1886194318648597173}
   eyePosTransform: {fileID: 3851212181235449227}
+  currentRoomType: 2
 --- !u!82 &5721160452536591372
 AudioSource:
   m_ObjectHideFlags: 0
@@ -498,6 +499,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4431965678652681243}
     m_Modifications:
+    - target: {fileID: 1659931730229848908, guid: 3f59b7b6c05d93247a76c98b8d5b19c2,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 1.8796691
+      objectReference: {fileID: 0}
+    - target: {fileID: 1659931730229848908, guid: 3f59b7b6c05d93247a76c98b8d5b19c2,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.0551911
+      objectReference: {fileID: 0}
     - target: {fileID: 3474988515057579056, guid: 3f59b7b6c05d93247a76c98b8d5b19c2,
         type: 3}
       propertyPath: m_Name

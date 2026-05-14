@@ -30,6 +30,7 @@ public class Door : MonoBehaviour, IInteractable
     private void Awake()
     {
         _occlusionPortal = GetComponent<OcclusionPortal>();
+        _doorAxis = transform.parent; // 문 회전 축
     }
 
     void Start()
@@ -37,7 +38,6 @@ public class Door : MonoBehaviour, IInteractable
         frontPos = frontTransform.position;
         backPos = backTransform.position;
         centerPos = centerTransform.position;
-        _doorAxis = transform.parent; // 문 회전 축
     }
 
     /// <summary>
@@ -132,39 +132,53 @@ public class Door : MonoBehaviour, IInteractable
                 _isMoving = false;
                 _doorTween = null;
 
-                // // 탈출실 문을 닫은 경우
-                // if (gameObject.CompareTag("EscapeRoomDoor"))
-                // {
-                //     // 치료제 투여한 경우 (원래 어뢰 발사 1번 성공이었는데 바꿈)
-                //     if (SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>().IsCured)
-                //     {
-                //         // 내부 괴물의 현재 위치 가져오기
-                //         Vector3 innerMonsterPos = SubmarineInGameManager.instance.innerMonsterTransform.position;
+                // 탈출실 문을 닫은 경우
+                if (gameObject.CompareTag("EscapeRoomDoor"))
+                {
+                    // 내부 괴물의 현재 위치 가져오기
+                    Vector3 innerMonsterPos = SubmarineInGameManager.instance.innerMonsterTransform.position;
 
-                //         // 내부 괴물과 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
-                //         float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
-                //         float distToBack = Vector3.Distance(innerMonsterPos, backPos);
+                    // 내부 괴물과 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
+                    float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
+                    float distToBack = Vector3.Distance(innerMonsterPos, backPos);
 
-                //         // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 뒤와 가까운 경우 = 탈출실 안쪽에 있는 경우)
-                //         if (GetTargetAngleBasedOnPlayer() == 90f)
-                //         {
-                //             if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
-                //             {
-                //                 GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
-                //                 return;
-                //             }
-                //             else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
-                //             {
-                //                 GameManager.instance.GameClear(); // 탈출 성공
-                //                 return;
-                //             }
-                //         }
-                //     }
-                // }
+                    // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 뒤와 가까운 경우 = 탈출실 안쪽에 있는 경우)
+                    if (GetTargetAngleBasedOnPlayer() == 90f)
+                    {
+                        if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
+                        {
+                            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
+                            return;
+                        }
+                        // else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
+                        // {
+                        //     GameManager.instance.GameClear(); // 탈출 성공
+                        //     return;
+                        // }
+                    }
+                }
 
                 OnDoorOpenStateChanged?.Invoke();
                 OnDoorClosed?.Invoke(this);
                 _occlusionPortal.open = false;
             });
+    }
+
+    /// <summary>
+    /// 문 열린 여부 설정 (초기화할 때 사용, 열리거나 닫히는 모션 없이 즉시 설정)
+    /// </summary>
+    /// <param name="isOpen">열린 여부</param>
+    public void SetDoorOpenState(bool isOpen)
+    {
+        if (_occlusionPortal == null)
+            return;
+
+        isOpened = isOpen;
+        _occlusionPortal.open = isOpen;
+        _doorAxis.localRotation = Quaternion.identity;
+
+        OnDoorOpenStateChanged?.Invoke();
+        if (!isOpened)
+            OnDoorClosed?.Invoke(this);
     }
 }

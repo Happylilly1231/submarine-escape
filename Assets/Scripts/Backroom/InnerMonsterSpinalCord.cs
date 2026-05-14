@@ -55,9 +55,13 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
             if (!bioDataExtractor.CheckIsFull()) // 가득 차있지 않은 경우 -> 추출 가능
                 StartExtractingBioData();
         }
+        else
+        {
+            Debug.Log("생체 데이터 추출기를 들고 있지 않습니다!");
+        }
     }
 
-    private bool IsBioDataExtractorSelected()
+    public bool IsBioDataExtractorSelected()
     {
         return CanInteractwithSelectedItem(_itemEquipController.HeldItemData); // 손에 든 아이템만 검사 (추출기를 손에 들고 있는가)
     }

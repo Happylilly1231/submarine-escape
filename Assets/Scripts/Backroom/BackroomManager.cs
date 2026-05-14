@@ -33,6 +33,7 @@ public class BackroomManager : MonoBehaviour
     [Header("퍼즐1")]
     [SerializeField] private Door largeCenterRoomDoor; // 비대 중앙 방 문
     [SerializeField] private Light largeCenterRoomDoorLight; // 비대 중앙 방 문 천장 조명 빛
+    [SerializeField] private TriggerDetector[] skullSpiritTriggers; // 해골 영혼 트리거 배열
     private int _approachingSkullCount = 0; // 플레이어가 닿은(흡수한) 해골(영혼) 수
 
     // 퍼즐2
@@ -41,6 +42,7 @@ public class BackroomManager : MonoBehaviour
     [Header("탈출")]
     [SerializeField] private Portal escapePortal; // 탈출 포탈
     [SerializeField] private InnerMonsterSpinalCord innerMonsterSpinalCord; // 괴물 척수(등 부분)
+    public InnerMonsterSpinalCord InnerMonsterSpinalCord => innerMonsterSpinalCord;
     public Portal EscapePortal => escapePortal; // 탈출 포탈
     public Vector3 originalPos { get; set; } // 백룸 들어오기 전 위치
 
@@ -48,6 +50,7 @@ public class BackroomManager : MonoBehaviour
     public Image waterSurfaceImg; // 수면 이미지 - 가라앉은 해골에서 사용
 
     public bool isPlayingBackroom { get; private set; } = false; // 백룸 플레이 중 여부
+    private Door[] _allDoors; // 모든 문 배열
 
     public static BackroomManager Instance { get; private set; }
 
@@ -93,6 +96,8 @@ public class BackroomManager : MonoBehaviour
         SetAppearLongCorridorDoor(false);
 
         waterSurfaceImg.gameObject.SetActive(false);
+
+        _allDoors = totalBackroom.GetComponentsInChildren<Door>(true);
     }
 
     /// <summary>
@@ -101,13 +106,21 @@ public class BackroomManager : MonoBehaviour
     public void EnterBackroom()
     {
         totalBackroom.SetActive(true); // 백룸 활성화
+
         SetupBackroom(); // 백룸 구성(백룸 진입할 때마다 랜덤)
         SelectRandomEntity(); // 현재 백룸에 나올 엔티티 랜덤 선택
         _escapePasswordPuzzleController.SetUpPuzzle(); // 비밀번호 퍼즐 구성
-        MoveToStartPos(); // 시작 위치로 이동
 
-        largeCenterRoomDoor.isLocked = true;
-        largeCenterRoomDoor.isAdditionalLocked = true;
+        // 모든 문 닫힌 것으로 초기화
+        foreach (var door in _allDoors)
+        {
+            door.SetDoorOpenState(false);
+        }
+
+        ResetPuzzle1(); // 퍼즐 1 초기화
+        _escapePasswordPuzzleController.ResetPuzzle(); // 비밀번호 퍼즐 초기화
+
+        MoveToStartPos(); // 시작 위치로 이동
 
         isPlayingBackroom = true;
     }
@@ -320,6 +333,19 @@ public class BackroomManager : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    private void ResetPuzzle1()
+    {
+        _approachingSkullCount = 0; // 모은 개수 초기화
+        foreach (var skullSpiritTrigger in skullSpiritTriggers)
+        {
+            skullSpiritTrigger.transform.GetChild(1).gameObject.SetActive(true); // 빛 켜기
+            skullSpiritTrigger.transform.GetChild(2).gameObject.SetActive(true); // 파티클 켜기
+            skullSpiritTrigger.enabled = true; // 트리거 켜기
+        }
+        largeCenterRoomDoor.isAdditionalLocked = true; // 다시 잠금으로 설정
+        largeCenterRoomDoorLight.color = Color.red; // 조명 다시 빨간색으로 변경
     }
 
     public void SetAppearLongCorridorDoor(bool isAppear)
