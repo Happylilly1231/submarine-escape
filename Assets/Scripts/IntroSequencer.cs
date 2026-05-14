@@ -16,6 +16,9 @@ public class IntroSequencer : MonoBehaviour
     void Awake()
     {
         _animator = GetComponent<Animator>();
+
+        if (playerCameraController != null)
+            playerCameraController.IsIntroPlaying = true; // 카메라 컨트롤러에 인트로 시퀀스 재생 중임을 알림
     }
 
     void Start()
@@ -25,17 +28,13 @@ public class IntroSequencer : MonoBehaviour
 
     IEnumerator PlayIntroSequence()
     {
-        yield return null; // SubmarineInGameManager의 Start()가 먼저 실행되도록 대기
-
-        transform.position = new Vector3(9.2f, 0.12f, 4.5f);
-        transform.rotation = Quaternion.Euler(0f, -90f, 0f);
-
         inventoryUI.SetActive(false); // 인벤토리 UI 숨기기
         statUI.SetActive(false); // 스탯 UI 숨기기
         interactorUI.SetActive(false); // 상호작용 UI 숨기기
 
-        if (playerCameraController != null)
-            playerCameraController.IsIntroPlaying = true; // 카메라 컨트롤러에 인트로 시퀀스 재생 중임을 알림
+        transform.position = new Vector3(9.2f, 0.12f, 4.5f);
+        transform.rotation = Quaternion.Euler(0f, -90f, 0f);
+
         SubmarineInGameManager.instance.IntroPause(); // 인트로 시퀀스 시작
 
         // 애니메이션이 끝날 때까지 대기
@@ -43,7 +42,7 @@ public class IntroSequencer : MonoBehaviour
             _animator.GetCurrentAnimatorStateInfo(0).IsName("Sit To Stand") &&
             _animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f);
 
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(0.5f);
 
         transform.rotation = Quaternion.Euler(0, -180f, 0);
 
