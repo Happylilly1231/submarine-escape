@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor.EditorTools;
 
 public enum DatabaseMonitorState
 {
@@ -175,6 +174,7 @@ public class DatabaseMonitorDisplay : MonoBehaviour
     {
         idText.text = "";
         pwText.text = "";
+        loginFailedText.gameObject.SetActive(false);
     }
 
     /// <summary>
