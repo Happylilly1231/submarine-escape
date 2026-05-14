@@ -127,5 +127,14 @@ namespace NavKeypad
             audioSource.PlayOneShot(accessGrantedSfx);
         }
 
+        /// <summary>
+        /// 키패드 초기화
+        /// </summary>
+        public void ResetKeypad()
+        {
+            accessWasGranted = false;
+            ClearInput();
+            panelMesh.material.SetVector("_EmissionColor", screenNormalColor * screenIntensity);
+        }
     }
 }
