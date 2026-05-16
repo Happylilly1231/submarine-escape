@@ -142,10 +142,13 @@ public class Door : MonoBehaviour, IInteractable
                     float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
                     float distToBack = Vector3.Distance(innerMonsterPos, backPos);
 
-                    // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 뒤와 가까운 경우 = 탈출실 안쪽에 있는 경우)
-                    if (GetTargetAngleBasedOnPlayer() == 90f)
+                    Debug.Log(GetTargetAngleBasedOnPlayer());
+
+                    // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 앞과 가까운 경우 = 탈출실 안쪽에 있는 경우)
+                    if (GetTargetAngleBasedOnPlayer() == -90f)
                     {
-                        if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
+                        Debug.Log(distToBack + " / " + distToFront);
+                        if (distToFront < 5f && distToFront < distToBack) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
                         {
                             GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
                             return;

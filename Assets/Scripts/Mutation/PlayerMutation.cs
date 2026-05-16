@@ -33,6 +33,7 @@ public class PlayerMutation : MonoBehaviour
     [SerializeField] private AudioSource mutationAudioSource;
     [SerializeField] private AudioClip spikeHitSound; // 가시로 바닥을 쾅 치는 소리
     [SerializeField] private AudioClip tinnitusSound; // 이명 소리
+    [SerializeField] private AudioClip rourSound; // 포효(완전 괴물화) 소리
 
     private void OnEnable()
     {
@@ -58,26 +59,6 @@ public class PlayerMutation : MonoBehaviour
         _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, () => SpawnSpike(), true);
     }
 
-    // private void Update()
-    // {
-    //     // 정지 중 -> 아무것도 X
-    //     if (SubmarineInGameManager.instance.IsPausing)
-    //         return;
-
-    //     // 타이머 증가
-    //     _mutationTimer += Time.deltaTime;
-
-    //     // 10분마다 단계 증가
-    //     if (_mutationTimer >= _mutationInterval && _currentStage < _maxStage)
-    //     {
-    //         _currentStage++; // 단계 증가
-    //         _mutationTimer = 0f; // 타이머 초기화
-
-    //         // 가시 생성
-    //         SpawnSpike();
-    //     }
-    // }
-
     /// <summary>
     /// 완전 괴물화
     /// </summary>
@@ -86,7 +67,7 @@ public class PlayerMutation : MonoBehaviour
         // 완전 괴물화 이벤트 알림 -> 괴물이 더 이상 플레이어를 추적 & 공격 대상으로 여기지 않도록 함
         OnMutationCompleted?.Invoke();
 
-        // 포효 소리 추가 예정!!!
+        AudioManager.Instance.PlayGlobalOneShot(rourSound); // 포효 소리 재생
 
         Sequence seq = DOTween.Sequence();
 
@@ -120,12 +101,24 @@ public class PlayerMutation : MonoBehaviour
         {
             FXManager.instance.FadeOut(Color.black, 3f, () =>
             {
-                mutationAudioSource.Stop();
-
-                // 게임 오버
-                GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물화 엔딩인데 아직 없어서 일단 괴물에게 죽음으로 함
+                FadeOutAndGameOver();
             });
             AudioManager.Instance.PlaySoundSafe(mutationAudioSource, tinnitusSound); // 이명 소리 재생
+        });
+    }
+
+    private void FadeOutAndGameOver()
+    {
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(FXManager.instance.fadeImage.DOFade(1f, 2f)); // 화면이 완전히 검게 변함
+
+        // 완료되면 -> 탈출 성공
+        seq.OnComplete(() =>
+        {
+            mutationAudioSource.Stop();
+            // 게임 오버
+            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물화 엔딩인데 아직 없어서 일단 괴물에게 죽음으로 함
         });
     }
 
