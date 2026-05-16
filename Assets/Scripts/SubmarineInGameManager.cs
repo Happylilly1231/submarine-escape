@@ -181,6 +181,16 @@ public class SubmarineInGameManager : MonoBehaviour
         AudioListener.pause = true; // 오디오 듣기 정지
     }
 
+    public void IntroPause()
+    {
+        // 인트로 중에는 시간 정지는 아니고 플레이어의 상호작용만 막는 상태
+        Debug.Log("인트로 시퀀스 시작");
+        _isPausing = false;
+        playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
+        GameManager.instance.SetCursorVisible(false); // 커서 보이기
+        AudioListener.pause = false; // 오디오 듣기 정지 해제
+    }
+
     /// <summary>
     /// 게임 정지 해제
     /// </summary>

@@ -18,6 +18,7 @@ public class EngineController : PuzzleController
 
     [Header("UI")]
     [SerializeField] private GameObject inventoryUI; // 인벤토리 UI
+    [SerializeField] private GameObject inateractorUI; // 상호작용 UI
 
     public int currentRepairCount { get; private set; } = 0; // 현재 수리 횟수
 
@@ -48,6 +49,7 @@ public class EngineController : PuzzleController
     {
         _targetEngine.SetVisuals(true); // 엔진 시각 효과 설정
         inventoryUI.SetActive(false);
+        inateractorUI.SetActive(false);
 
         base.ActivatePuzzle();
     }
@@ -84,6 +86,7 @@ public class EngineController : PuzzleController
         Space.performed -= OnSpace; // 스페이스 사용 해제
 
         inventoryUI.SetActive(true);
+        inateractorUI.SetActive(true);
     }
     #endregion
 

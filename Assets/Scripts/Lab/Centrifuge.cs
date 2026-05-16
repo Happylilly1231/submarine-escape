@@ -27,10 +27,31 @@ public class Centrifuge : LabEquipment
 
     private InventoryManager _inventoryManager;
 
+    private bool _isPowerOn = false; // 전력 켜져 있는지 여부
+    public bool IsPowerOn => _isPowerOn;
+
     protected override void Awake()
     {
         base.Awake();
         _inventoryManager = FindObjectOfType<InventoryManager>();
+    }
+
+    private void OnEnable()
+    {
+        LightingManager.instance.OnLightChanged += SetPower;
+    }
+
+    void OnDisable()
+    {
+        LightingManager.instance.OnLightChanged -= SetPower;
+    }
+
+    /// <summary>
+    /// 전력 켜거나 끄기
+    /// </summary>
+    private void SetPower(bool isPowerOn)
+    {
+        _isPowerOn = isPowerOn;
     }
 
     // 작동 가능 조건 체크 - 시험관 3개
@@ -57,10 +78,12 @@ public class Centrifuge : LabEquipment
         return true;
     }
 
-    // 작동 시작
+    /// <summary>
+    /// 작동 시작
+    /// </summary>
     public void StartCentrifuge()
     {
-        if (_isOperating) return;
+        if (_isOperating || !_isPowerOn) return;
 
         _isOperating = true;
 
@@ -91,6 +114,9 @@ public class Centrifuge : LabEquipment
             });
     }
 
+    /// <summary>
+    /// 최종 결과 표시
+    /// </summary>
     public void ShowFinalResult()
     {
         List<Item> allCollectedSamples = new List<Item>();

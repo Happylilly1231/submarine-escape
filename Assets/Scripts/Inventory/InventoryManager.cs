@@ -18,6 +18,7 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private GameObject inventoryUI; // 인벤토리 전체 UI 오브젝트
     [SerializeField] private InventorySlot[] inventorySlots; // 인벤토리 슬롯 배열
     [SerializeField] private TMPro.TextMeshProUGUI actionText; // 상호작용 UI - 아이템 사용, 버리기, 맵 열기 키 표시
+    [SerializeField] private TMPro.TextMeshProUGUI itemNameText; // 선택된 슬롯의 아이템 이름 표시
     [Header("인벤토리 슬롯 스프라이트")]
     [SerializeField] private Sprite slotSprite; // 슬롯 기본 스프라이트
     [SerializeField] private Sprite selectedSlotSprite; // 슬롯 선택 스프라이트
@@ -118,7 +119,9 @@ public class InventoryManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 액션 텍스트 업데이트
+    /// 액션 텍스트 및 아이템 이름 텍스트 업데이트
+    /// <para> - 실험기구 조작 가이드 </para>
+    /// <para> - 아이템 이름 텍스트 업데이트 </para>
     /// <para> - 선택된 아이템과 현재 퍼즐 상호작용 상태에 따라 표시할 텍스트 결정 </para>
     /// </summary>
     public void UpdateActionText()
@@ -163,7 +166,7 @@ public class InventoryManager : MonoBehaviour
                 // 현미경 확대 가이드
                 if (_playerInteractor.CurrentEquipment is Microscope microscope)
                 {
-                    if (!microscope.Slots[0].IsEmpty) sb.AppendLine("Observe [E]");
+                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) sb.AppendLine("Observe [E]"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
                 }
                 // 슬롯에 무언가 들어있다면 꺼내기 가이드
                 if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge1)
@@ -189,7 +192,7 @@ public class InventoryManager : MonoBehaviour
 
             if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge)
             {
-                if (centrifuge.CanStartOperation() && !centrifuge.IsOperating)
+                if (centrifuge.CanStartOperation() && !centrifuge.IsOperating && centrifuge.IsPowerOn) // 시험관 3개 꽉 찼을 때, 작동 중이 아닐 때, 전력 켜져 있을 때 원심분리기 작동 가능
                 {
                     sb.AppendLine("Run Operation [E]");
                 }
@@ -215,6 +218,7 @@ public class InventoryManager : MonoBehaviour
         }
 
         Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
+        itemNameText.text = (currentItem != null) ? currentItem.DisplayName : "";
         if (currentItem != null)
         {
             switch (currentItem.ItemType)
@@ -239,7 +243,7 @@ public class InventoryManager : MonoBehaviour
                     {
                         if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
                         else if (_isViewingUI) sb.AppendLine("Close [E]");
-                        else sb.AppendLine("View [E]");
+                        else if (currentItem.ItemName != "LabID CHM" && currentItem.ItemName != "LabID SEC") sb.AppendLine("View [E]");
                     }
                     break;
                 case EItemType.Wearable:
