@@ -6,7 +6,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 디버깅할 때(꼭 본씬에서 시작해야 함(타이틀씬부터 시작하면 버튼에 할당되는 함수를 찾을 수 없어 오류남))만 사용할 디버깅 UI 매니저
 /// </summary>
-public class DebugingUIManager : MonoBehaviour
+public class DebuggingUIManager : MonoBehaviour
 {
     [SerializeField] private Door crewRoomDoor; // 선원실 문
     [SerializeField] private Button lightToggleButton; // 불 켜기/끄기 버튼
@@ -19,24 +19,50 @@ public class DebugingUIManager : MonoBehaviour
 
     private void Start()
     {
-        // 인게임 매니저가 없을 때 이 컴포넌트 비활성화 (타이틀씬부터 시작했다는 얘기이므로(함수 찾을 수 없음))
-        if (SubmarineInGameManager.instance == null)
+        // // 인게임 매니저가 없을 때 이 컴포넌트 비활성화 (타이틀씬부터 시작했다는 얘기이므로(함수 찾을 수 없음))
+        // if (SubmarineInGameManager.instance == null)
+        // {
+        //     enabled = false;
+        //     return;
+        // }
+
+        // // 버튼 할당
+        // lightToggleButton.onClick.AddListener(() => LightingManager.instance.LightToggle(!LightingManager.instance.IsPowerOn));
+        // alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
+        // unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
+        // escapeBackroomButton.onClick.AddListener(EscapeBackroom);
+        // enterBackroomButton.onClick.AddListener(EnterBackroom);
+        // fillExtractorButton.onClick.AddListener(FillBioDataExtractor);
+        // cureButton.onClick.AddListener(CureImmediately);
+    }
+
+    /// <summary>
+    /// 디버깅 활성화/비활성화 (활성화 -> 버튼 연결 등 / 비활성화 -> 버튼 연결 초기화 등)
+    /// </summary>
+    /// <param name="isActive"></param>
+    public void SetActiveDebugging(bool isActive)
+    {
+        if (isActive)
         {
-            enabled = false;
-            return;
+            // 버튼 함수 연결
+            lightToggleButton.onClick.AddListener(() => LightingManager.instance.LightToggle(!LightingManager.instance.IsPowerOn));
+            alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
+            unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
+            escapeBackroomButton.onClick.AddListener(EscapeBackroom);
+            enterBackroomButton.onClick.AddListener(EnterBackroom);
+            fillExtractorButton.onClick.AddListener(FillBioDataExtractor);
+            cureButton.onClick.AddListener(CureImmediately);
         }
-
-        // 디버깅 UI 활성화
-        MenuUIController.instance.SetActiveDebuggingUI(true);
-
-        // 버튼 할당
-        lightToggleButton.onClick.AddListener(() => LightingManager.instance.LightToggle(!LightingManager.instance.IsPowerOn));
-        alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
-        unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
-        escapeBackroomButton.onClick.AddListener(EscapeBackroom);
-        enterBackroomButton.onClick.AddListener(EnterBackroom);
-        fillExtractorButton.onClick.AddListener(FillBioDataExtractor);
-        cureButton.onClick.AddListener(CureImmediately);
+        else
+        {
+            lightToggleButton.onClick.RemoveAllListeners();
+            alertButton.onClick.RemoveAllListeners();
+            unlockCrewRoomDoorButton.onClick.RemoveAllListeners();
+            escapeBackroomButton.onClick.RemoveAllListeners();
+            enterBackroomButton.onClick.RemoveAllListeners();
+            fillExtractorButton.onClick.RemoveAllListeners();
+            cureButton.onClick.RemoveAllListeners();
+        }
     }
 
     /// <summary>
@@ -106,7 +132,9 @@ public class DebugingUIManager : MonoBehaviour
         PlayerMutation playerMutation = SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>();
         if (!playerMutation.IsCured)
         {
-            playerMutation.Cure();
+            SubmarineInGameManager.instance.ToggleMenuAndSetPause();
+            playerMutation.InjectSerum(true); // 성공 치료제 투여
+            // playerMutation.Cure();
             Debug.Log("[Debug] ✅ 성공 - 치료 완료");
         }
         else

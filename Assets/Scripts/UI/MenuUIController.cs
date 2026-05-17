@@ -27,6 +27,7 @@ public class MenuUIController : MonoBehaviour
     private Color _highLightColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
     // private Color _originalButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
     // private Color _selectedButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    private DebuggingUIManager _debuggingUIManager;
 
     public static MenuUIController instance;
 
@@ -39,6 +40,8 @@ public class MenuUIController : MonoBehaviour
         }
         instance = this;
         DontDestroyOnLoad(gameObject);
+
+        _debuggingUIManager = GetComponent<DebuggingUIManager>();
 
         tabButtons = new GameObject[tabButtonRoot.transform.childCount];
         for (int i = 0; i < tabButtonRoot.transform.childCount; i++)
@@ -98,12 +101,37 @@ public class MenuUIController : MonoBehaviour
     /// <summary>
     /// 디버깅 UI 활성화 여부 설정
     /// </summary>
-    /// <param name="isActive"></param>
+    /// <param name="isActive">활성화 여부</param>
     public void SetActiveDebuggingUI(bool isActive)
     {
         tabButtons[tabButtons.Length - 1].SetActive(isActive);
+        if (isActive)
+        {
+            // 마지막 탭 열기
+            OpenTab(tabPanels.Length - 1);
+        }
+        else
+        {
+            // 첫 탭 열기 
+            OpenTab(0);
+        }
+
+        _debuggingUIManager.SetActiveDebugging(isActive);
     }
 
+    /// <summary>
+    /// 디버깅 UI 토글(켜기/끄기)
+    /// </summary>
+    public void ToggleDebuggingUI()
+    {
+        bool isActive = !tabButtons[tabButtons.Length - 1].activeSelf;
+        SetActiveDebuggingUI(isActive);
+    }
+
+    /// <summary>
+    /// 탭 열기
+    /// </summary>
+    /// <param name="index">탭 인덱스</param>
     public void OpenTab(int index)
     {
         if (_currentIndex == index) return;

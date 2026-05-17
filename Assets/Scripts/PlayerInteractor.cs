@@ -39,7 +39,7 @@ public class PlayerInteractor : MonoBehaviour
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerMutation = FindObjectOfType<PlayerMutation>();
 
-        detectLayerMask = ~(LayerMask.GetMask("Monster") | LayerMask.GetMask("Undectectable")); // 괴물과 감지 불가 레이어(선반 같은 경우 통째로 콜라이더가 있는데 선반 안에 아이템을 놓으면 선반 콜라이더에 가려져서 감지를 못하기 때문에 도입)는 감지 레이어에서 제외
+        detectLayerMask = ~(LayerMask.GetMask("Monster") | LayerMask.GetMask("Undetectable")); // 괴물과 감지 불가 레이어(선반 같은 경우 통째로 콜라이더가 있는데 선반 안에 아이템을 놓으면 선반 콜라이더에 가려져서 감지를 못하기 때문에 도입)는 감지 레이어에서 제외
     }
 
     void Update()
@@ -119,7 +119,7 @@ public class PlayerInteractor : MonoBehaviour
         // 주사기를 손에 든 경우
         if (_heldEquipment != null)
         {
-            if (_heldEquipment is Syringe syringe)
+            if (_heldEquipment is Syringe syringe && syringe.HasContent)
             {
                 // 주사기 내부 데이터 삭제
                 for (int i = 0; i < syringe.Slots.Length; i++)
@@ -152,6 +152,8 @@ public class PlayerInteractor : MonoBehaviour
                     if (!petriDish1.isMonsterBloodMixed && petriDish1.isMonsterBloodDropped)
                     {
                         petriDish1.MixMonsterBlood();
+                        _inventoryManager.UpdateActionText();
+                        return;
                     }
                 }
                 // 현미경 카메라 뷰 전환

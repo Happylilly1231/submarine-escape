@@ -28,9 +28,7 @@ public class IntroSequencer : MonoBehaviour
 
     IEnumerator PlayIntroSequence()
     {
-        inventoryUI.SetActive(false); // 인벤토리 UI 숨기기
-        statUI.SetActive(false); // 스탯 UI 숨기기
-        interactorUI.SetActive(false); // 상호작용 UI 숨기기
+        SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
 
         transform.position = new Vector3(9.2f, 0.12f, 4.5f);
         transform.rotation = Quaternion.Euler(0f, -90f, 0f);
@@ -59,8 +57,6 @@ public class IntroSequencer : MonoBehaviour
 
         // 게임 재개 및 UI 표시
         SubmarineInGameManager.instance.Resume();
-        inventoryUI.SetActive(true);
-        statUI.SetActive(true);
-        interactorUI.SetActive(true);
+        SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
     }
 }
