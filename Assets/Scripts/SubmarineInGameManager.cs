@@ -84,6 +84,11 @@ public class SubmarineInGameManager : MonoBehaviour
     [SerializeField] private ItemEquipController itemEquipController;
     public ItemEquipController ItemEquipController => itemEquipController;
 
+    // UI
+    [SerializeField] private GameObject statUI;
+    [SerializeField] private GameObject inventoryUI;
+    [SerializeField] private GameObject interactorUI;
+
     // 싱글톤 변수
     public static SubmarineInGameManager instance;
 
@@ -139,6 +144,20 @@ public class SubmarineInGameManager : MonoBehaviour
         }
     }
 
+    // Ctrl + F1 디버깅 탭 토글(ESC로 메뉴를 연 상태에서만 사용 가능)
+    public void OnToggleDebug(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            if (!GameManager.instance.MenuUI.activeSelf) return; // 메뉴가 열려있지 않을 때는 디버깅 UI 활성화/비활성화 불가능
+
+            MenuUIController.instance.ToggleDebuggingUI(); // 디버깅 UI 활성화/비활성화
+        }
+    }
+
+    /// <summary>
+    /// 메뉴 켜기/끄기 & 정지 여부 함께 설정
+    /// </summary>
     public void ToggleMenuAndSetPause()
     {
         GameManager.instance.ToggleMenu();
@@ -176,6 +195,7 @@ public class SubmarineInGameManager : MonoBehaviour
         _isActionMapActiveBeforePause = playerInput.currentActionMap.enabled;
         playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
         playerInput.actions["ToggleMenu"].Enable();
+        playerInput.actions["ToggleDebug"].Enable();
         GameManager.instance.SetCursorVisible(true); // 커서 보이기
         Time.timeScale = 0f; // 시간 정지
         AudioListener.pause = true; // 오디오 듣기 정지
@@ -211,6 +231,7 @@ public class SubmarineInGameManager : MonoBehaviour
 
         // 액션 맵 복구 로직
         playerInput.actions["ToggleMenu"].Disable();
+        playerInput.actions["ToggleDebug"].Disable();
         // 퍼즐 중이라면 Puzzle 맵 활성화
         if (CurrentPuzzleController != null) playerInput.SwitchCurrentActionMap("Puzzle");
         // 일반 상태라면 Player 맵 활성화
@@ -371,5 +392,17 @@ public class SubmarineInGameManager : MonoBehaviour
                 GameManager.instance.SetCursorVisible(false);
             }
         }
+    }
+
+    /// <summary>
+    /// 인게임 UI 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive">활성화 여부</param>
+    public void SetActiveInGameUI(bool isActive)
+    {
+        // 활성화 여부 설정
+        inventoryUI.SetActive(isActive); // 인벤토리 UI 
+        statUI.SetActive(isActive); // 스탯 UI
+        interactorUI.SetActive(isActive); // 상호작용 UI
     }
 }

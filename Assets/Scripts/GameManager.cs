@@ -12,6 +12,7 @@ public enum Difficulty { Easy, Hard }
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private GameObject menuUI;
+    public GameObject MenuUI => menuUI;
 
     private bool _isClear = false; // 클리어 여부 변수
     public bool IsClear => _isClear;
@@ -123,6 +124,7 @@ public class GameManager : MonoBehaviour
         if (menuUI.activeSelf)
         {
             menuUI.SetActive(false);
+            MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("SubmarineScene");
     }
@@ -196,6 +198,7 @@ public class GameManager : MonoBehaviour
         if (menuUI.activeSelf)
         {
             menuUI.SetActive(false);
+            MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("EndingScene"); // 엔딩 씬으로 이동
     }
@@ -208,6 +211,7 @@ public class GameManager : MonoBehaviour
         if (menuUI.activeSelf)
         {
             menuUI.SetActive(false);
+            MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("TitleScene"); // 추후 씬 이름 수정 예정
     }
@@ -217,6 +221,7 @@ public class GameManager : MonoBehaviour
         if (menuUI.activeSelf)
         {
             menuUI.SetActive(false);
+            MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("EndingFrameScene");
     }

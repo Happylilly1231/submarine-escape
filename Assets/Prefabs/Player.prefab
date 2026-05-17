@@ -851,22 +851,22 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.76
+      value: 9.2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.38
+      value: 0.12
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 9.69
+      value: 4.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -876,7 +876,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -891,7 +891,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
@@ -1212,6 +1212,11 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: ba4548ec069010e45947050d7d08a21b, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
+        type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 9ba6a15d3975b8c41b1a70176a320aeb,
         type: 3}
       propertyPath: m_ApplyRootMotion
@@ -1752,6 +1757,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: a2b963fb-1428-43fe-957e-e1ebf947579f
     m_ActionName: Permanent/SlotKeyPress[/Keyboard/1,/Keyboard/2,/Keyboard/3,/Keyboard/4,/Keyboard/5,/Keyboard/6]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: SubmarineInGameManager, Assembly-CSharp
+        m_MethodName: OnToggleDebug
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 9880594b-bcfb-4e2e-8667-0854f50849a1
+    m_ActionName: Player/ToggleDebug[/Keyboard/ctrl,/Keyboard/f1]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player
@@ -1957,9 +1978,13 @@ MonoBehaviour:
   vignetteImg: {fileID: 0}
   monsterHandsTransform: {fileID: 3938990211804927758}
   itemOverlayCamera: {fileID: 0}
+  injectionVolume: {fileID: 0}
   mutationAudioSource: {fileID: 3539139798179444966}
   spikeHitSound: {fileID: 8300000, guid: 5ff17ec0746f6fd498f1eb8138cf8ad5, type: 3}
   tinnitusSound: {fileID: 8300000, guid: 6b051d56d7ccefb4b8b0ca5c892cdc53, type: 3}
+  rourSound: {fileID: 8300000, guid: 256331233b52aad45bf3bae624330c5d, type: 3}
+  cureSuccessSound: {fileID: 8300000, guid: e05e1a14972a9fb4c85e56a5c8b9b821, type: 3}
+  cureFailSound: {fileID: 8300000, guid: b0df6aa586d53614dae53760ad3d1150, type: 3}
 --- !u!82 &3539139798179444966
 AudioSource:
   m_ObjectHideFlags: 0
