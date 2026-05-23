@@ -268,6 +268,9 @@ public class RadarLauncher : MonoBehaviour
     {
         SubmarineInGameManager.instance.DeepSeaMonsterController.OnTorpedoHit(); // 심해 괴물 어뢰 맞았을 때 함수 호출
         SubmarineInGameManager.instance.IsFireSuccess = true;
+        _radarController.MonsterAudioSource.Stop();
+        _radarController.MonsterAudioSource.volume = 0f;
+        _radarController.LastShakeMinute = 0;
         StartCoroutine(RunAwayMonster()); // 심해 괴물 도망
     }
 

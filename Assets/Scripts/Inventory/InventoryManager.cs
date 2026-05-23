@@ -29,14 +29,11 @@ public class InventoryManager : MonoBehaviour
     private int _selectedSlotIndex = -1; // 선택된 슬롯 인덱스
     public int SelectedSlotIndex => _selectedSlotIndex;
     private bool _isSwapMode = false; // T키 눌림 상태
-    private bool _hasRegisteredMap = false; // 지도 아이템 사용 여부
+    public bool HasRegisteredMap = false; // 지도 아이템 사용 여부
     private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
 
-    /// <summary>
-    /// 인벤토리 UI를 초기화하고 슬롯 배열을 구성
-    /// </summary>
     void Awake()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
@@ -253,7 +250,7 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        if (_hasRegisteredMap) sb.AppendLine("View Map [Tab]");
+        if (HasRegisteredMap) sb.AppendLine("View Map [Tab]");
         if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
             sb.AppendLine("Drop [Q]");
 
@@ -272,9 +269,10 @@ public class InventoryManager : MonoBehaviour
         var tempItem = selectedSlot.Item;
         var tempCount = selectedSlot.ItemCount;
         var tempItemInstanceNum = selectedSlot.ItemInstanceNum;
+        var tempUniqueID = selectedSlot.ItemUniqueID;
 
-        selectedSlot.SetSlot(swapSlot.Item, swapSlot.ItemCount, swapSlot.ItemInstanceNum);
-        swapSlot.SetSlot(tempItem, tempCount, tempItemInstanceNum);
+        selectedSlot.SetSlot(swapSlot.Item, swapSlot.ItemCount, swapSlot.ItemInstanceNum, swapSlot.ItemUniqueID);
+        swapSlot.SetSlot(tempItem, tempCount, tempItemInstanceNum, tempUniqueID);
     }
 
     /// <summary> 인벤토리에 아이템 추가
@@ -283,7 +281,7 @@ public class InventoryManager : MonoBehaviour
     /// <para> - 빈 슬롯이 없으면 아이템 추가 실패 </para>
     /// </summary>
     /// <returns>인벤토리에 아이템 추가 성공 여부</returns>
-    public bool AddItemToInventory(Item newItem, int count = 1, IStatableItem statableItem = null)
+    public bool AddItemToInventory(Item newItem, int count = 1, IStatableItem statableItem = null, string uniqueID = "")
     {
         if (newItem.CanOverlap)
         {
@@ -313,11 +311,11 @@ public class InventoryManager : MonoBehaviour
         {
             if (statableItem != null)
             {
-                inventorySlots[_selectedSlotIndex].AddItem(newItem, count, statableItem.ItemInstanceNum); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
+                inventorySlots[_selectedSlotIndex].AddItem(newItem, count, statableItem.ItemInstanceNum, uniqueID); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
             }
             else
             {
-                inventorySlots[_selectedSlotIndex].AddItem(newItem, count);
+                inventorySlots[_selectedSlotIndex].AddItem(newItem, count, 0, uniqueID);
             }
             _itemEquipController.EquipItem(inventorySlots[_selectedSlotIndex].Item, inventorySlots[_selectedSlotIndex].ItemInstanceNum);
             UpdateActionText();
@@ -331,11 +329,11 @@ public class InventoryManager : MonoBehaviour
             {
                 if (statableItem != null)
                 {
-                    slot.AddItem(newItem, count, statableItem.ItemInstanceNum); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
+                    slot.AddItem(newItem, count, statableItem.ItemInstanceNum, uniqueID); // 개별 상태 저장 아이템을 위해 슬롯에 현재 아이템 인스턴스 번호도 저장(개별 상태 저장 아이템이 아니면 자동으로 0)
                 }
                 else
                 {
-                    slot.AddItem(newItem, count);
+                    slot.AddItem(newItem, count, 0, uniqueID);
                 }
                 return true;
             }
@@ -403,7 +401,7 @@ public class InventoryManager : MonoBehaviour
                 }
                 if (selectedSlot.Item.ItemName == "Map")
                 {
-                    _hasRegisteredMap = true;
+                    HasRegisteredMap = true;
                     // UI 아이템 중 지도는 사용 시 바로 소비
                     ConsumeItemInSlot(selectedSlot.Item);
                 }
@@ -473,6 +471,7 @@ public class InventoryManager : MonoBehaviour
         StartCoroutine(ApplyRigidbody(droppedItemObject, 2f));
 
         StatableItemManager.Instance.RestoreItemState(droppedItemObject, targetSlot.ItemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
+        droppedItemObject.GetComponent<ItemPickUp>().uniqueID = targetSlot.ItemUniqueID;
 
         if (_itemEquipController.HasItem)
         {

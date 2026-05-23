@@ -101,6 +101,13 @@ public class KeyPadBatterySlot : MonoBehaviour
         }
     }
 
+    public void GreenLED()
+    {
+        if (ledRenderer == null) return;
+        _ledBlinkTween?.Kill();
+        ledRenderer.material = greenMaterial;
+    }
+
     private void StartBlinking()
     {
         _ledBlinkTween = DOTween.Sequence()

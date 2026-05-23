@@ -43,6 +43,10 @@ public class PlayerStat : MonoBehaviour
     void Awake()
     {
         _playerStatus = GetComponent<PlayerStatus>();
+
+        _hp = _maxHp;
+        _stamina = _maxStamina;
+        _temperature = _maxTemperature;
     }
 
     /// <summary>
@@ -50,14 +54,8 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     void Start()
     {
-        _hp = _maxHp;
-        _stamina = _maxStamina;
-        _temperature = _maxTemperature;
-
         UpdateHpSlider();
         UpdateStaminaSlider();
-
-
     }
 
     /// <summary>
@@ -162,5 +160,14 @@ public class PlayerStat : MonoBehaviour
     {
         staminaSlider.value = _stamina / _maxStamina;
         staminaGlowSlider.value = (int)_stamina / _maxStamina; // 각 칸이 회복되면 발광
+    }
+
+    public void ApplyLoadedStats(float hp, float stamina)
+    {
+        _hp = hp;
+        _stamina = stamina;
+
+        UpdateHpSlider();
+        UpdateStaminaSlider();
     }
 }

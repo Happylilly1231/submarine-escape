@@ -90,6 +90,15 @@ public class GameTime : MonoBehaviour
     }
 
     /// <summary>
+    /// 게임 시간 설정
+    /// </summary>
+    /// <param name="playTime"></param>
+    public void SetTime(float playTime)
+    {
+        TimeSinceStart = playTime;
+    }
+
+    /// <summary>
     /// 이벤트 예약
     /// </summary>
     /// <param name="delay"></param>

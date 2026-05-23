@@ -19,10 +19,9 @@ public class PlayerMutation : MonoBehaviour
     private Vignette _injectionVignette; // 치료제 투여할 때 연출에 쓸 비네트
 
     private float _mutationInterval = 600f; // 10분 = 600초
-    private int _currentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
+    public int CurrentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
     private int _maxStage = 5;
-    private bool _isCured = false; // 완전 치료 상태
-    public bool IsCured => _isCured;
+    public bool IsCured = false; // 완전 치료 상태
 
     private float[] _vignetteTimes = { 1f, 2f, 5f, 10f };
     private float[] _temperatures = { 37f, 38f, 40f, 42f, 44f };
@@ -77,6 +76,8 @@ public class PlayerMutation : MonoBehaviour
     /// </summary>
     private void CompleteMutation()
     {
+        SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
+
         // 완전 괴물화 이벤트 알림 -> 괴물이 더 이상 플레이어를 추적 & 공격 대상으로 여기지 않도록 함
         OnMutationCompleted?.Invoke();
 
@@ -124,8 +125,6 @@ public class PlayerMutation : MonoBehaviour
     {
         Sequence seq = DOTween.Sequence();
 
-        SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
-
         seq.Append(FXManager.instance.fadeImage.DOFade(1f, 1f)); // 화면이 완전히 검게 변함
 
         // 완료되면 -> 탈출 성공
@@ -133,7 +132,7 @@ public class PlayerMutation : MonoBehaviour
         {
             mutationAudioSource.Stop();
             // 게임 오버
-            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물화 엔딩인데 아직 없어서 일단 괴물에게 죽음으로 함
+            GameManager.instance.GameOver(EEndingType.Mutation); // 괴물화 엔딩
         });
     }
 
@@ -144,12 +143,12 @@ public class PlayerMutation : MonoBehaviour
     public void SpawnSpike(bool isImmediate = false)
     {
         if (isImmediate)
-            _currentStage = _maxStage;
+            CurrentStage = _maxStage;
         else
-            _currentStage++; // 단계 증가
+            CurrentStage++; // 단계 증가
 
         // 현재 가시
-        GameObject spike = spikes[_currentStage - 2];
+        GameObject spike = spikes[CurrentStage - 2];
 
         // 포커스
         SubmarineInGameManager.instance.SetFocus(true);
@@ -191,7 +190,7 @@ public class PlayerMutation : MonoBehaviour
 
         seq.OnComplete(() =>
         {
-            if (_currentStage == _maxStage) // 최종 단계 -> 바닥 치지 않고 그냥 나감
+            if (CurrentStage == _maxStage) // 최종 단계 -> 바닥 치지 않고 그냥 나감
                 CompleteMutation();
             else
                 HitFloor(spike); // 최종 단계 아님 -> 바닥 치기
@@ -234,12 +233,12 @@ public class PlayerMutation : MonoBehaviour
     /// </summary>
     private void ReactLightOrSound()
     {
-        if (_currentStage == 0)
+        if (CurrentStage == 0)
             return;
 
         // 초기 설정
         vignetteImg.gameObject.SetActive(true);
-        float scale = _maxStage - _currentStage;
+        float scale = _maxStage - CurrentStage;
         vignetteImg.rectTransform.localScale = new Vector3(scale, scale, 1f);
 
         // 이명 소리 재생
@@ -253,7 +252,7 @@ public class PlayerMutation : MonoBehaviour
         seq.Join(mutationAudioSource.DOFade(1f, 1f));
 
         // 지속
-        seq.AppendInterval(_vignetteTimes[_currentStage - 1]);
+        seq.AppendInterval(_vignetteTimes[CurrentStage - 1]);
 
         // 1초 페이드 아웃 - 비네트 알파 & 이명 볼륨
         seq.Append(vignetteImg.DOFade(0f, 1f)).SetEase(Ease.InQuad);
@@ -274,10 +273,10 @@ public class PlayerMutation : MonoBehaviour
     /// <returns>현재 체온</returns>
     public float GetCurrentTemperature()
     {
-        if (_isCured) return 36.5f; // 치료 후 정상 체온
-        if (_currentStage == _maxStage) return 44.0f;
+        if (IsCured) return 36.5f; // 치료 후 정상 체온
+        if (CurrentStage == _maxStage) return 44.0f;
 
-        return Mathf.Floor(Mathf.Lerp(_temperatures[_currentStage - 1], _temperatures[_currentStage], GameTime.Instance.TimeSinceStart / _mutationInterval) * 10f) / 10f;
+        return Mathf.Floor(Mathf.Lerp(_temperatures[CurrentStage - 1], _temperatures[CurrentStage], GameTime.Instance.TimeSinceStart / _mutationInterval) * 10f) / 10f;
     }
 
     private void OnDisable()
@@ -292,6 +291,8 @@ public class PlayerMutation : MonoBehaviour
     /// <param name="isSuccess">성공(치료) 여부</param>
     public void InjectSerum(bool isSuccess)
     {
+        //SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CureInjected, GameTime.Instance.TimeSinceStart);
+
         // 포커스
         SubmarineInGameManager.instance.SetFocus(true);
 
@@ -337,7 +338,7 @@ public class PlayerMutation : MonoBehaviour
                 Debug.Log("<color=red>치료제 투여 실패: 괴물화가 가속<color>");
 
                 // 최종 단계가 아닐 때만 즉시 다음 단계 스폰 함수 호출
-                if (_currentStage < _maxStage)
+                if (CurrentStage < _maxStage)
                 {
                     SpawnSpike();
                 }
@@ -351,7 +352,7 @@ public class PlayerMutation : MonoBehaviour
     public void Cure()
     {
         // 괴물화 중단(종료)
-        _isCured = true;
+        IsCured = true;
         GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
 
         // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단

@@ -35,9 +35,15 @@ public class KeyPadController : PuzzleController
 
     private KeyPadScrew _selectedScrew;
     private KeyPadBatterySlot _selectedBatterySlot;
+    private ObjectiveManager objectiveManager;
 
     private int _removedScrewCount = 0;
     public bool IsActionProcessing { get; private set; } = false; // 애니메이션 중 입력 방지
+
+    private void Awake()
+    {
+        objectiveManager = FindObjectOfType<ObjectiveManager>();
+    }
 
     #region 퍼즐 시작/종료
     public override void ActivatePuzzle()
@@ -216,7 +222,7 @@ public class KeyPadController : PuzzleController
         KeyPadBatterySlot targetSlot = _selectedBatterySlot;
         _selectedBatterySlot = null;
 
-        if (targetSlot.transform.childCount == 1) // 해당 슬롯에 배터리가 없는 경우 - 손에 든 배터리 넣음
+        if (targetSlot.transform.childCount == 2) // 해당 슬롯에 배터리가 없는 경우 - 손에 든 배터리 넣음
         {
             inventoryManager.ConsumeItemInSlot(heldBattery);
             InstallNew(heldBattery, targetSlot);
@@ -235,7 +241,7 @@ public class KeyPadController : PuzzleController
             targetSlot.RemoveBattery(false, () =>
             {
                 inventoryManager.ConsumeItemInSlot(heldBattery);
-                inventoryManager.AddItemToInventory(currentBattery);
+                inventoryManager.AddItemToInventory(currentBattery, 1, null, currentBattery.ItemName);
                 InstallNew(heldBattery, targetSlot);
             });
         }
@@ -288,6 +294,8 @@ public class KeyPadController : PuzzleController
 
     private void HandleSuccess(KeyPadBatterySlot targetSlot)
     {
+        objectiveManager.CompleteObjective("EscapeCrewRoom");
+        SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
         currentState = EPuzzleState.Success;
         IsActionProcessing = true;
         if (targetSlot) targetSlot.DeSelect();
@@ -332,4 +340,32 @@ public class KeyPadController : PuzzleController
     }
 
     #endregion
+
+    public void ForceOpen()
+    {
+        currentState = EPuzzleState.Success;
+
+        outerPanel.gameObject.SetActive(false);
+        interPanel.IsCompleted = true;
+
+        doorPivot.GetChild(0).GetComponent<Door>().isLocked = false; // 문 잠금 해제
+        doorPivot.localRotation = Quaternion.Euler(0, 70f, 0);
+
+        for (int i = 0; i < batterySlots.Length; i++)
+        {
+            if (batterySlots[i] == null) continue;
+
+            batterySlots[i].GreenLED();
+
+            Transform slotTransform = batterySlots[i].transform;
+
+            // 첫 번째 자식 비활성화 (Index 0)
+            if (slotTransform.childCount > 0)
+                slotTransform.GetChild(0).gameObject.SetActive(false);
+
+            // 두 번째 자식 활성화 (Index 1)
+            if (slotTransform.childCount > 2)
+                slotTransform.GetChild(2).gameObject.SetActive(true);
+        }
+    }
 }

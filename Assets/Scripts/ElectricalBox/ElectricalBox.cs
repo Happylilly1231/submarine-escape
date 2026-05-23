@@ -18,11 +18,13 @@ public class ElectricalBox : InteractableBase
     #region 상호작용 인터페이스 구현
     public override string GetInteractText()
     {
-        return "Open [E]";
+        if (!_powerController.IsComplete) return "Open [E]";
+        else return "";
     }
 
     public override void Interact()
     {
+        if (_powerController.IsComplete) return;
         _powerController.ActivatePuzzle();
     }
 

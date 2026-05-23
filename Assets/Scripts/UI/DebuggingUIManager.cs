@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +17,9 @@ public class DebuggingUIManager : MonoBehaviour
     [SerializeField] private Button escapeBackroomButton; // 백룸 탈출 버튼
     [SerializeField] private Button fillExtractorButton; // 추출기 피 채우기 버튼
     [SerializeField] private Button cureButton; // 치료 버튼
+
+    private ObjectiveManager objectiveManager;
+    private PowerSwitch powerSwitch;
 
     private void Start()
     {
@@ -45,7 +49,7 @@ public class DebuggingUIManager : MonoBehaviour
         if (isActive)
         {
             // 버튼 함수 연결
-            lightToggleButton.onClick.AddListener(() => LightingManager.instance.LightToggle(!LightingManager.instance.IsPowerOn));
+            lightToggleButton.onClick.AddListener(() => powerSwitch.TogglePower(!LightingManager.instance.IsPowerOn));
             alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
             unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
             escapeBackroomButton.onClick.AddListener(EscapeBackroom);
@@ -66,11 +70,26 @@ public class DebuggingUIManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 메인 씬의 브릿지가 문 오브젝트의 주소를 실시간으로 등록해줌
+    /// </summary>
+    public void RegisterCrewRoomDoor(Door door)
+    {
+        this.crewRoomDoor = door;
+    }
+
+    public void RegisterScript(PowerSwitch mainScenePowerSwitch, ObjectiveManager objectiveManager)
+    {
+        powerSwitch = mainScenePowerSwitch;
+        this.objectiveManager = objectiveManager;
+    }
+
+    /// <summary>
     /// 선원실 문 잠금 해제
     /// </summary>
     public void UnlockCrewRoomDoor()
     {
         crewRoomDoor.isLocked = false;
+        objectiveManager.CompleteObjective("EscapeCrewRoom");
         Debug.Log("[Debug] ✅ 성공 - 선원실 문 잠금 해제 완료");
     }
 
@@ -129,6 +148,7 @@ public class DebuggingUIManager : MonoBehaviour
     /// </summary>
     public void CureImmediately()
     {
+        objectiveManager.CompleteObjective("AdministerCure");
         PlayerMutation playerMutation = SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>();
         if (!playerMutation.IsCured)
         {

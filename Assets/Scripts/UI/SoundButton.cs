@@ -50,4 +50,10 @@ public class SoundButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         transform.DOKill();
     }
+
+    void OnDisable()
+    {
+        transform.DOKill();
+        transform.localScale = _originalScale;
+    }
 }

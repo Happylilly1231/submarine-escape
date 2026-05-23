@@ -19,6 +19,7 @@ public class RadarController : PuzzleController
     [SerializeField] private AudioClip modeChangeFailSound;
     [SerializeField] private AudioClip modeChangeSuccessSound;
     [SerializeField] private AudioSource _monsterAudioSource;
+    public AudioSource MonsterAudioSource => _monsterAudioSource;
 
     protected override bool IsHoverRequired => false;
     protected override bool IsMouseRequiredAtFirst => false;
@@ -50,7 +51,7 @@ public class RadarController : PuzzleController
     public int CurrentMonsterPeriodIndex { get; set; } = 0; // 심해 괴물 주기 인덱스(몇번째 출현인가)
     public float MonsterStartAngle { get; set; } = 90f; // 시작 각도(심해 괴물의 시작 위치 변경 시 사용)
     private float _monsterTimer = 0f; // 심해 괴물의 타이머(다시 나타날 때 0으로 초기화)
-    private int _lastShakeMinute = -1; // 마지막으로 카메라가 흔들린 분(시간)
+    public int LastShakeMinute { get; set; } = -1; // 마지막으로 카메라가 흔들린 분(시간)
     private float _monsterCloseTime = 300f; // 심해 괴물 가까워져서 소리 나기 시작하는 시간: 5분
     public float CurrentMonsterAppearTime { get; set; } = 0f; // 현재 심해 괴물 등장 시간
 
@@ -117,9 +118,9 @@ public class RadarController : PuzzleController
 
                 // 1분 간격으로 카메라 흔들림
                 int currentMinute = Mathf.FloorToInt(_monsterTimer / 60f); // 현재 몬스터 시간 분 단위로 변환
-                if (currentMinute > _lastShakeMinute) // 1분 간격마다만 실행됨
+                if (currentMinute > LastShakeMinute) // 1분 간격마다만 실행됨
                 {
-                    _lastShakeMinute = currentMinute; // 마지막으로 흔들린 분(시간)을 현재 분(시간)으로 갱신
+                    LastShakeMinute = currentMinute; // 마지막으로 흔들린 분(시간)을 현재 분(시간)으로 갱신
                     AudioManager.Instance.PlayGlobalOneShot(deepSeaImpactSound); // 충격(흔들림) 소리 재생 (볼륨 달라지지 않음)
                     if (DOTween.IsTweening(Camera.main.transform))
                     {
