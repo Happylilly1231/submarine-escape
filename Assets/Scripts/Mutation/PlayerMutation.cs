@@ -166,6 +166,7 @@ public class PlayerMutation : MonoBehaviour
         // 가시 생성(나중에 쑥 나오는 식으로 바꿀 예정, 지금은 그냥 딱 활성화됨) & 가시 마구 움직임 
         seq.AppendCallback(() =>
         {
+            AudioManager.Instance.PlayGlobalOneShot(rourSound); // 포효 소리 재생
             if (isImmediate) // 완전 괴물화 -> 아직 활성화되지 않았던 가시들 전부 활성화
             {
                 // 아직 활성화되지 않았던 가시들 전부 활성화

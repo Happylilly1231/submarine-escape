@@ -23,7 +23,7 @@ public class MapViewController : MonoBehaviour
     private float mapWorldWidth;
     private float mapWorldHeight;
 
-    private bool _isMapLocked = false; // 지도 잠금되어있는지(아직 지도 얻어서 상호작용하지 못한 상태) 여부
+    private bool _isMapUnlocked = true; // 지도 처음부터 잠금 해제
     private int _currentFloor = 1; // 현재 층수
     public float secondFloorHeight; // 2층 바닥 높이
 
@@ -33,13 +33,13 @@ public class MapViewController : MonoBehaviour
         mapWorldHeight = zMax - zMin;
     }
 
-    /// <summary>
-    /// 맵 잠금 해제
-    /// </summary>
-    public void UnlockMap()
-    {
-        _isMapLocked = true;
-    }
+    // /// <summary>
+    // /// 맵 잠금 해제
+    // /// </summary>
+    // public void UnlockMap()
+    // {
+    //     _isMapUnlocked = true;
+    // }
 
     /// <summary>
     /// Tab키 입력으로 맵 켜기/끄기
@@ -47,7 +47,7 @@ public class MapViewController : MonoBehaviour
     /// <param name="context">입력</param>
     public void OnToggleMap(InputAction.CallbackContext context)
     {
-        if (!context.performed || !_isMapLocked) return;
+        if (!context.performed || !_isMapUnlocked) return;
         Debug.Log("Tap!");
 
         // 맵을 켜는 경우
@@ -74,22 +74,37 @@ public class MapViewController : MonoBehaviour
     }
 
     /// <summary>
-    /// 플레이어 위치 보여주기
+    /// 플레이어 위치 및 방향 보여주기
     /// </summary>
     private void ShowPlayerLocation()
     {
         Transform playerTransform = SubmarineInGameManager.instance.player.transform;
 
-        // 플레이어 위치를 0 ~ 1 사이로 정규화
-        float normX = 1 - (playerTransform.position.x - xMin) / mapWorldWidth; // x는 밑으로 내려갈수록 증가이므로 1에서 빼주기
+        // [기존 위치 계산 코드]
+        float normX = 1 - (playerTransform.position.x - xMin) / mapWorldWidth;
         float normZ = (playerTransform.position.z - zMin) / mapWorldHeight;
-        Debug.Log("Player: " + playerTransform.position);
-
-        // UI 좌표로 변환 (0~1 값을 UI 이미지 크기에 곱함)
-        float uiX = 127 + normZ * 1663f; // z가 가로
-        float uiY = 170 + normX * 739f; // x가 세로
-
+        float uiX = 127 + normZ * 1663f;
+        float uiY = 170 + normX * 739f;
         playerIcon.anchoredPosition = new Vector2(uiX, uiY);
+
+        // ================= 새로운 벡터 기반 회전 방식 =================
+
+        // 1. 플레이어가 실제 월드에서 바라보는 앞방향 Vector3 (X, Y, Z)를 가져옵니다.
+        Vector3 playerForward = playerTransform.forward;
+
+        // 2. 위치 공식에 맞게 회전 방향도 축을 매핑해줍니다.
+        // 위치 계산할 때 [월드 Z -> UI X], [월드 X -> UI Y]로 하셨으니 방향 벡터도 똑같이 매핑합니다.
+        // 단, normX 계산할 때 1에서 뺐으므로(반전), UI Y축 방향도 반전(-playerForward.x)시켜야 일치합니다.
+        float mapDirectionX = playerForward.z;
+        float mapDirectionY = -playerForward.x;
+
+        // 3. 이 매핑된 방향을 라디안 각도로 바꾸고, 이를 다시 디그리(Degree) 각도로 변환합니다.
+        float angle = Mathf.Atan2(mapDirectionY, mapDirectionX) * Mathf.Rad2Deg;
+
+        float finalUiRotationZ = angle - 135f;
+
+        // 5. 최종 회전값 적용
+        playerIcon.localEulerAngles = new Vector3(0, 0, finalUiRotationZ);
     }
 
     /// <summary>
