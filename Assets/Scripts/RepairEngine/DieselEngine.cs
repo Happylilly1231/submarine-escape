@@ -109,5 +109,16 @@ public class DieselEngine : InteractableBase
     {
         sparkParticle.gameObject.SetActive(true);
     }
+
+    public void ForceComplete()
+    {
+        repairPatch.SetActive(true);
+
+        originalParticle.gameObject.SetActive(false);
+        sparkParticle.gameObject.SetActive(false);
+        blockedParticle.gameObject.SetActive(false);
+
+        currentRepairStep = 3;
+    }
 }
 

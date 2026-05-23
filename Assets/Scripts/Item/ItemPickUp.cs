@@ -10,4 +10,8 @@ public class ItemPickUp : MonoBehaviour
 {
     [SerializeField] private Item item;
     public Item Item => item;
+
+    [Header("세이브 시스템 식별용")]
+    public string uniqueID;
+    public bool isDropped = false;
 }

@@ -472,7 +472,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""binding"",
                     ""id"": ""aecbfd97-456d-4456-b821-c7eb4cf1083d"",
-                    ""path"": ""<Keyboard>/f1"",
+                    ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";PC"",

@@ -23,6 +23,8 @@ public class SeaWaterValve : InteractableBase
 
     private bool _isUnderwater = false;
 
+    private ObjectiveManager objectiveManager;
+
     [Header("Sound")]
     private AudioSource _audioSource;
     [SerializeField] private AudioClip floodSound; // 물 차는 소리
@@ -31,6 +33,7 @@ public class SeaWaterValve : InteractableBase
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
+        objectiveManager = FindObjectOfType<ObjectiveManager>();
 
         hatchLightObj.SetActive(false);
     }
@@ -67,6 +70,7 @@ public class SeaWaterValve : InteractableBase
             escapeRoomDoor.CloseDoor(); // 탈출실 문 자동으로 닫기
         escapeRoomDoor.isLocked = true; // 탈출실 문 잠그기 (이제 열 수 없음)
 
+        objectiveManager.CompleteObjective("GoToEscapeRoom");
         Debug.Log("물 채우기를 시작합니다.");
         StartWaterSequence();
     }
@@ -152,6 +156,7 @@ public class SeaWaterValve : InteractableBase
         SubmarineInGameManager.instance.SetFocus(true); // 포커스
 
         hatchLightObj.SetActive(true); // 해치 비추는 조명 켜기
+        SubmarineInGameManager.instance.SetActiveInGameUI(false);
 
         // 연출
         Sequence seq = DOTween.Sequence();

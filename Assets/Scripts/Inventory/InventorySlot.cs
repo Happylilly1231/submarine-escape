@@ -18,6 +18,9 @@ public class InventorySlot : MonoBehaviour
 
     public int ItemInstanceNum { get; private set; } = 0; // 아이템 인스턴스(개별 데이터) 번호
 
+    private string _itemUniqueID = "";
+    public string ItemUniqueID => _itemUniqueID;
+
     [Header("아이템 슬롯에 있는 UI 오브젝트")]
     [SerializeField] private Image itemImage; // 아이템 이미지 UI
     [SerializeField] private TMPro.TextMeshProUGUI itemCountText; // 아이템 개수 텍스트 UI
@@ -25,10 +28,11 @@ public class InventorySlot : MonoBehaviour
     /// <summary>
     /// 아이템과 개수를 해당 슬롯에 추가
     /// </summary>
-    public void AddItem(Item newItem, int count, int itemInstanceNum = 0)
+    public void AddItem(Item newItem, int count, int itemInstanceNum = 0, string uniqueID = "")
     {
         _item = newItem;
         _itemCount = count;
+        _itemUniqueID = uniqueID;
 
         if (itemInstanceNum > 0)
             ItemInstanceNum = itemInstanceNum;
@@ -57,11 +61,12 @@ public class InventorySlot : MonoBehaviour
     /// <summary>
     /// 선택된 슬롯과 교체를 원하는 슬롯 간의 아이템 슬롯 업데이트
     /// </summary>
-    public void SetSlot(Item newItem, int count, int newItemInstanceNum)
+    public void SetSlot(Item newItem, int count, int newItemInstanceNum, string newUniqueID)
     {
         _item = newItem;
         _itemCount = count;
         ItemInstanceNum = newItemInstanceNum;
+        _itemUniqueID = newUniqueID;
 
         if (_item != null)
         {

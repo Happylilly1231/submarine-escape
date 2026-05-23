@@ -23,10 +23,12 @@ public class DatabaseMonitorController : PuzzleController
     public DatabaseMonitorState CurrentState { get; private set; } = DatabaseMonitorState.Login; // 현재 모니터 상태
 
     private DatabaseMonitorDisplay _monitorDisplay;
+    private ObjectiveManager objectiveManager;
 
     private void Awake()
     {
         _monitorDisplay = GetComponent<DatabaseMonitorDisplay>();
+        objectiveManager = FindObjectOfType<ObjectiveManager>();
     }
 
     public override void Start()
@@ -123,6 +125,7 @@ public class DatabaseMonitorController : PuzzleController
         {
             if (inputId == userAccounts[i].id && inputPw == userAccounts[i].password)
             {
+                objectiveManager.CompleteObjective("CheckDB");
                 _monitorDisplay.SetUserIndex(i); // 로그인한 사용자 인덱스 설정
                 CurrentState = DatabaseMonitorState.Main;
 

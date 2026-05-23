@@ -12,16 +12,20 @@ public class PowerSwitch : InteractableBase
     [SerializeField] private Material greenMaterial;
     [SerializeField] private Material redMaterial;
     [SerializeField] private Material orangeMaterial;
+    [SerializeField] private DieselEngine[] dieselEngines;
 
     private bool _isPowerOn = false;
+    private bool _isFirst = false;
 
     private EngineController _engineController;
     private PowerController _powerController;
+    private ObjectiveManager objectiveManager;
 
     private void Start()
     {
         _engineController = FindAnyObjectByType<EngineController>();
         _powerController = FindAnyObjectByType<PowerController>();
+        objectiveManager = FindObjectOfType<ObjectiveManager>();
     }
 
     private void Update()
@@ -61,8 +65,14 @@ public class PowerSwitch : InteractableBase
     /// <summary>
     /// 전력 켜는/끄는 모션
     /// </summary>
-    private void TogglePower(bool turnOn)
+    public void TogglePower(bool turnOn)
     {
+        if (!_isFirst)
+        {
+            SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
+            objectiveManager.CompleteObjective("RestorePower");
+            _isFirst = true;
+        }
         _isPowerOn = turnOn;
 
         // 기존 회전값 저장 (올라간 상태 0,0,0 / 내려간 상태 180,0,0)
@@ -118,5 +128,19 @@ public class PowerSwitch : InteractableBase
     private bool IsAllConditionsMet()
     {
         return GetMetConditionsCount() == 2;
+    }
+
+    public void ForcePowerRestoration()
+    {
+        foreach (var engine in dieselEngines)
+        {
+            engine.ForceComplete();
+        }
+
+        _powerController.IsComplete = true;
+        _engineController.currentRepairCount = 3;
+
+        UpdateIndicatorLight();
+        TogglePower(true);
     }
 }

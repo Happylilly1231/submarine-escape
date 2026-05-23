@@ -20,13 +20,13 @@ public class EndingDetailView : MonoBehaviour
         closeBtn.onClick.AddListener(CloseDetail);
     }
 
-    public void ShowDetail(Sprite image, string info, float firstTime, float bestTime)
+    public void ShowDetail(Sprite image, string info, float firstTime, float bestTime, string beatPlayerName)
     {
         endingIamge.sprite = image;
         description.text = info;
 
-        firstTimeText.text = $"최초 달성   {FormatTime(firstTime)}";
-        bestTimeText.text = $"최단 기록   {FormatTime(bestTime)}";
+        firstTimeText.text = FormatTime(firstTime);
+        bestTimeText.text = $"[{beatPlayerName}] {FormatTime(bestTime)}";
 
         detailPanel.SetActive(true);
     }
