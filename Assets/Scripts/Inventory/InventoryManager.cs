@@ -29,7 +29,7 @@ public class InventoryManager : MonoBehaviour
     private int _selectedSlotIndex = -1; // 선택된 슬롯 인덱스
     public int SelectedSlotIndex => _selectedSlotIndex;
     private bool _isSwapMode = false; // T키 눌림 상태
-    public bool HasRegisteredMap = false; // 지도 아이템 사용 여부
+    // public bool HasRegisteredMap = false; // 지도 아이템 사용 여부
     private bool _isViewingUI = false; // UI 아이템 사용으로 UI를 보고 있는 상태 여부
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
@@ -131,7 +131,7 @@ public class InventoryManager : MonoBehaviour
         if (SampleSlotUIManager.Instance.IsActive)
         {
             // 슬롯 선택
-            if (SampleSlotUIManager.Instance.MaxSlotCnt > 1) sb.AppendLine("Select Slot [Mouse Wheel]");
+            if (SampleSlotUIManager.Instance.MaxSlotCnt > 1) sb.AppendLine("슬롯 선택 [Mouse Wheel]");
 
             // 슬롯이 비었다면
             if (SampleSlotUIManager.Instance.IsSelectedSlotEmpty())
@@ -142,19 +142,19 @@ public class InventoryManager : MonoBehaviour
                     _playerInteractor.HeldEquipment is TestTube tube && tube.IsResultTube &&
                     _playerInteractor.CurrentEquipment is PetriDish)
                 {
-                    sb.AppendLine("Pour Solution [E]");
+                    sb.AppendLine("결과물 붓기 [E]");
                 }
                 else
                 {
                     // 인벤토리 슬롯에 있는 샘플 넣기
                     if (heldItem != null && heldItem.ItemType == EItemType.Sample)
                     {
-                        sb.AppendLine("Insert Sample [E]");
+                        sb.AppendLine("샘플 넣기 [E]");
                     }
                     // 실험기구를 손에 들고 있다면 넣기
                     if (_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.CanInsert(_playerInteractor.HeldEquipment))
                     {
-                        sb.AppendLine("Insert Equipment [E]");
+                        sb.AppendLine("장비 사용 [E]");
                     }
                 }
             }
@@ -163,42 +163,42 @@ public class InventoryManager : MonoBehaviour
                 // 현미경 확대 가이드
                 if (_playerInteractor.CurrentEquipment is Microscope microscope)
                 {
-                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) sb.AppendLine("Observe [E]"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
+                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) sb.AppendLine("관찰 [E]"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
                 }
                 // 슬롯에 무언가 들어있다면 꺼내기 가이드
                 if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge1)
                 {
-                    if (!centrifuge1.IsOperating) sb.AppendLine("Withdraw [R]");
+                    if (!centrifuge1.IsOperating) sb.AppendLine("꺼내기 [R]");
                 }
                 else if (_playerInteractor.CurrentEquipment is TestTube testTube)
                 {
-                    if (!testTube.IsResultTube) sb.AppendLine("Withdraw [R]");
+                    if (!testTube.IsResultTube) sb.AppendLine("꺼내기 [R]");
                 }
                 else if (_playerInteractor.CurrentEquipment is PetriDish petriDish)
                 {
-                    if (!petriDish.ContainsResult) sb.AppendLine("Withdraw [R]");
+                    if (!petriDish.ContainsResult) sb.AppendLine("꺼내기 [R]");
                 }
-                else sb.AppendLine("Withdraw [R]");
+                else sb.AppendLine("꺼내기 [R]");
             }
 
             // 실험기구 들기 가이드
             if (!_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.IsGrabbable)
             {
-                sb.AppendLine("Grab Equipment [G]");
+                sb.AppendLine("손에 들기 [G]");
             }
 
             if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge)
             {
                 if (centrifuge.CanStartOperation() && !centrifuge.IsOperating && centrifuge.IsPowerOn) // 시험관 3개 꽉 찼을 때, 작동 중이 아닐 때, 전력 켜져 있을 때 원심분리기 작동 가능
                 {
-                    sb.AppendLine("Run Operation [E]");
+                    sb.AppendLine("기계 작동 [E]");
                 }
             }
             if (_playerInteractor.CurrentEquipment is PetriDish petriDish1)
             {
                 if (!petriDish1.isMonsterBloodMixed && petriDish1.isMonsterBloodDropped && !petriDish1.isMixing)
                 {
-                    sb.AppendLine("Mix [E]");
+                    sb.AppendLine("섞기 [E]");
                 }
             }
         }
@@ -206,11 +206,11 @@ public class InventoryManager : MonoBehaviour
         // 실험기구를 들고 있는 상태라면 놓기 가이드
         if (_playerInteractor.IsHoldingEquipment)
         {
-            sb.AppendLine("Place Equipment [G]");
+            sb.AppendLine("내려놓기 [G]");
 
             if (_playerInteractor.HeldEquipment is Syringe syringe)
             {
-                if (syringe.HasContent) sb.AppendLine("Use Cure [E]");
+                if (syringe.HasContent) sb.AppendLine("치료제 사용 [E]");
             }
         }
 
@@ -221,38 +221,38 @@ public class InventoryManager : MonoBehaviour
             switch (currentItem.ItemType)
             {
                 case EItemType.Toggle:
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null) sb.AppendLine("On/Off [Mouse LMB]");
+                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null) sb.AppendLine("켜기/끄기 [Mouse LMB]");
                     break;
                 case EItemType.Consumable:
                     if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
-                        sb.AppendLine("Use [E]");
+                        sb.AppendLine("사용 [E]");
                     break;
                 case EItemType.Puzzle: // 퍼즐 상호작용 중이라면 표시
                     if (SubmarineInGameManager.instance.CurrentPuzzleController != null)
                     {
-                        if (currentItem.ItemName == "Hammer") sb.AppendLine("Repair Engine [Space]");
-                        else if (currentItem.ItemName == "Screwdriver") sb.AppendLine("Remove Screw [E]");
-                        else if (currentItem.ItemName.Contains("Battery")) sb.AppendLine("Exchange Battery [E]");
+                        if (currentItem.ItemName == "Hammer") sb.AppendLine("엔진 수리 [Space]");
+                        else if (currentItem.ItemName == "Screwdriver") sb.AppendLine("나사 제거 [E]");
+                        else if (currentItem.ItemName.Contains("Battery")) sb.AppendLine("배터리 바꾸기 [E]");
                     }
                     break;
                 case EItemType.UI:
                     if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
                     {
-                        if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
-                        else if (_isViewingUI) sb.AppendLine("Close [E]");
-                        else if (currentItem.ItemName != "LabID CHM" && currentItem.ItemName != "LabID SEC") sb.AppendLine("View [E]");
+                        // if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
+                        if (_isViewingUI) sb.AppendLine("닫기 [E]");
+                        else if (currentItem.ItemName != "LabID CHM" && currentItem.ItemName != "LabID SEC") sb.AppendLine("보기 [E]");
                     }
                     break;
                 case EItemType.Wearable:
                     if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
-                        sb.AppendLine("Wear [E]");
+                        sb.AppendLine("입기 [E]");
                     break;
             }
         }
 
-        if (HasRegisteredMap) sb.AppendLine("View Map [Tab]");
+        sb.AppendLine("맵 보기 [Tab]");
         if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
-            sb.AppendLine("Drop [Q]");
+            sb.AppendLine("아이템 버리기 [Q]");
 
         actionText.text = sb.ToString();
     }
@@ -399,16 +399,14 @@ public class InventoryManager : MonoBehaviour
                 {
                     uiItem.Use(selectedSlot.Item, _isViewingUI);
                 }
-                if (selectedSlot.Item.ItemName == "Map")
-                {
-                    HasRegisteredMap = true;
-                    // UI 아이템 중 지도는 사용 시 바로 소비
-                    ConsumeItemInSlot(selectedSlot.Item);
-                }
-                else
-                {
-                    _isViewingUI = !_isViewingUI;
-                }
+                // if (selectedSlot.Item.ItemName == "Map")
+                // {
+                //     HasRegisteredMap = true;
+                //     // UI 아이템 중 지도는 사용 시 바로 소비
+                //     ConsumeItemInSlot(selectedSlot.Item);
+                // }
+
+                _isViewingUI = !_isViewingUI;
                 break;
             case EItemType.Wearable:
                 //FindAnyObjectByType<WearableItem>()?.Use(selectedSlot.Item);

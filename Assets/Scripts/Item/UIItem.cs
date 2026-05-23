@@ -9,10 +9,10 @@ public class UIItem : MonoBehaviour
         Debug.Log($"Used item: {item.ItemName}");
         switch (item.ItemName)
         {
-            case "Map":
-                FindAnyObjectByType<MapViewController>().UnlockMap(); // 맵 잠금 해제
-                Debug.Log("맵 잠금 해제 - Tab키로 열고 닫을 수 있음");
-                break;
+            // case "Map":
+            //     FindAnyObjectByType<MapViewController>().UnlockMap(); // 맵 잠금 해제
+            //     Debug.Log("맵 잠금 해제 - Tab키로 열고 닫을 수 있음");
+            //     break;
             case "KeyPad Manual":
                 Debug.Log(isViewing);
                 if (!isViewing) // 확대

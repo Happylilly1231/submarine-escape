@@ -132,8 +132,8 @@ public class SaveSystemManager : MonoBehaviour
             }
         }
 
-        inventoryManager.HasRegisteredMap = data.hasRegisteredMap;
-        if (inventoryManager.HasRegisteredMap) FindAnyObjectByType<MapViewController>().UnlockMap(); // 맵 잠금 해제
+        // inventoryManager.HasRegisteredMap = data.hasRegisteredMap;
+        // if (inventoryManager.HasRegisteredMap) FindAnyObjectByType<MapViewController>().UnlockMap(); // 맵 잠금 해제
 
         // [괴물화 및 치료제 여부 업데이트]
         if (playerMutation != null)
@@ -356,7 +356,7 @@ public class SaveSystemManager : MonoBehaviour
             existingData.playerStats.hp = playerStat.Hp;
             existingData.playerStats.stamina = playerStat.Stamina;
             SetPlayerInventory(existingData);
-            existingData.hasRegisteredMap = inventoryManager.HasRegisteredMap;
+            // existingData.hasRegisteredMap = inventoryManager.HasRegisteredMap;
             existingData.mutationStage = playerMutation.CurrentStage;
             existingData.isCureInjected = playerMutation.IsCured;
 
@@ -375,7 +375,6 @@ public class SaveSystemManager : MonoBehaviour
           $"   • 📍 위치: {existingData.playerPosition.ToVector3()}\n" +
           $"   • ❤️ HP: {existingData.playerStats.hp}  |  ⚡ 스태미나: {existingData.playerStats.stamina}\n" +
           $"   • 🎒 인벤토리: {GetInventoryLogString(existingData.playerInventory)}\n" +
-          $"   • 🎒 지도 아이템 등록 여부: {existingData.hasRegisteredMap}\n" +
           $"   • 🧬 괴물화 단계: {existingData.mutationStage}  |  💉 치료제 투여: {(existingData.isCureInjected ? "<color=red>YES</color>" : "NO")}\n" +
           //   $"👹 <b>[괴물 상태]</b>\n" +
           //   $"   • 🚪 내부 괴물 위치: {existingData.insideMonPos.ToVector3()}  |  💥 폭주 상태: {(existingData.isBerserk ? "<color=red>적대화</color>" : "일반")}\n" +
@@ -399,7 +398,7 @@ public class SaveSystemManager : MonoBehaviour
                     hp = playerStat.Hp,
                     stamina = playerStat.Stamina
                 },
-                hasRegisteredMap = inventoryManager.HasRegisteredMap,
+                // hasRegisteredMap = inventoryManager.HasRegisteredMap,
                 mutationStage = playerMutation.CurrentStage,
                 isCureInjected = playerMutation.IsCured,
             };
@@ -416,7 +415,6 @@ public class SaveSystemManager : MonoBehaviour
           $"   • 📍 위치: {newData.playerPosition.ToVector3()}\n" +
           $"   • ❤️ HP: {newData.playerStats.hp}  |  ⚡ 스태미나: {newData.playerStats.stamina}\n" +
           $"   • 🎒 인벤토리: {GetInventoryLogString(newData.playerInventory)}\n" +
-          $"   • 🎒 지도 아이템 등록 여부: {newData.hasRegisteredMap}\n" +
           $"   • 🧬 괴물화 단계: {newData.mutationStage}  |  💉 치료제 투여: {(newData.isCureInjected ? "<color=red>YES</color>" : "NO")}\n" +
           //   $"👹 <b>[괴물 상태]</b>\n" +
           //   $"   • 🚪 내부 괴물 위치: {existingData.insideMonPos.ToVector3()}  |  💥 폭주 상태: {(existingData.isBerserk ? "<color=red>적대화</color>" : "일반")}\n" +

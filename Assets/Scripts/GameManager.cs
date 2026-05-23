@@ -34,7 +34,7 @@ public class SavePointData
     public SerializableVector3 playerPosition;              // 플레이어 위치
     public PlayerStatsData playerStats;                     // 플레이어 스탯
     public List<PlayerInventory> playerInventory = new List<PlayerInventory>();   // 인벤토리
-    public bool hasRegisteredMap;                           // 지도 아이템 등록 여부
+    // public bool hasRegisteredMap;                           // 지도 아이템 등록 여부
     public int mutationStage;                               // 괴물화 진행 단계
     public bool isCureInjected;                             // 치료제 투여 여부
 

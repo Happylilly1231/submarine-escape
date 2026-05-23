@@ -154,6 +154,7 @@ public class SeaWaterValve : InteractableBase
     private void Escape()
     {
         SubmarineInGameManager.instance.SetFocus(true); // 포커스
+        SubmarineInGameManager.instance.SetPlayerGeoActive(false); // 플레이어 모습 안 보이게
 
         hatchLightObj.SetActive(true); // 해치 비추는 조명 켜기
         SubmarineInGameManager.instance.SetActiveInGameUI(false);

@@ -168,6 +168,7 @@ public class SubmarineInGameManager : MonoBehaviour
         }
         else // 플레이 중이면
         {
+            playerInput.actions["ToggleMap"].Disable();
             _playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
             Pause(); // 정지
         }

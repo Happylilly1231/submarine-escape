@@ -18,8 +18,8 @@ public class CrewRoom1KeyPadPanel : InteractableBase
     {
         if (IsCompleted) return "";
         else if (IsRequiredItemSelected())
-            return "Inspect [E]";
-        else return "Need Screwdriver";
+            return "관찰 [E]";
+        else return "드라이버 필요";
     }
 
     public override void Interact()
