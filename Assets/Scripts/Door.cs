@@ -15,20 +15,29 @@ public class Door : MonoBehaviour, IInteractable
 
     public bool isOpened = false; // 열려있는지 변수
     private Transform _doorAxis;
-    //private float _openAngle = -90f; // 목표 회전각
     private float _openDuration = 1f; // 여는 시간
     private bool _isMoving = false;
     public bool isLocked;
+    public bool isAdditionalLocked = false; // 추가적으로 잠금됨
 
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
+
+    private OcclusionPortal _occlusionPortal;
+
+    private Tween _doorTween; // 현재 실행 중인 트윈을 저장할 변수
+
+    private void Awake()
+    {
+        _occlusionPortal = GetComponent<OcclusionPortal>();
+        _doorAxis = transform.parent; // 문 회전 축
+    }
 
     void Start()
     {
         frontPos = frontTransform.position;
         backPos = backTransform.position;
         centerPos = centerTransform.position;
-        _doorAxis = transform.parent; // 문 회전 축
     }
 
     /// <summary>
@@ -37,7 +46,9 @@ public class Door : MonoBehaviour, IInteractable
     /// <returns></returns>
     public string GetInteractText()
     {
-        if (_isMoving || isLocked) return "";
+        if (_isMoving) return "";
+        if (isLocked) return "Locked";
+        if (isAdditionalLocked) return "Still Locked";
         return isOpened ? "close [E]" : "open [E]";
     }
 
@@ -46,7 +57,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked) return;
+        if (_isMoving || isLocked || isAdditionalLocked) return;
 
         if (!isOpened)
         {
@@ -90,87 +101,87 @@ public class Door : MonoBehaviour, IInteractable
             SubmarineInGameManager.instance.AlertOn(); // 경보 발생
         }
 
-        _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
+        _occlusionPortal.open = true;
+
+        _doorTween = _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
             {
                 isOpened = true;
                 _isMoving = false;
+                _doorTween = null;
                 OnDoorOpenStateChanged?.Invoke();
             });
     }
 
-    private void CloseDoor()
+    public void CloseDoor()
     {
+        // 1. 이미 실행 중인 트윈이 있다면 즉시 종료
+        if (_doorTween != null && _doorTween.IsActive())
+        {
+            _doorTween.Kill();
+        }
+
         _isMoving = true;
 
-        _doorAxis.DOLocalRotate(Vector3.zero, _openDuration)
+        _doorTween = _doorAxis.DOLocalRotate(Vector3.zero, _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
             {
                 isOpened = false;
                 _isMoving = false;
+                _doorTween = null;
 
                 // 탈출실 문을 닫은 경우
                 if (gameObject.CompareTag("EscapeRoomDoor"))
                 {
-                    // 발사해서 심해 괴물 맞추기 한 번이라도 성공한 경우
-                    if (SubmarineInGameManager.instance.IsFireSuccess)
+                    // 내부 괴물의 현재 위치 가져오기
+                    Vector3 innerMonsterPos = SubmarineInGameManager.instance.innerMonsterTransform.position;
+
+                    // 내부 괴물과 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
+                    float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
+                    float distToBack = Vector3.Distance(innerMonsterPos, backPos);
+
+                    Debug.Log(GetTargetAngleBasedOnPlayer());
+
+                    // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 앞과 가까운 경우 = 탈출실 안쪽에 있는 경우)
+                    if (GetTargetAngleBasedOnPlayer() == -90f)
                     {
-                        // 내부 괴물의 현재 위치 가져오기
-                        Vector3 innerMonsterPos = SubmarineInGameManager.instance.innerMonsterTransform.position;
-
-                        // 내부 괴물과 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
-                        float distToFront = Vector3.Distance(innerMonsterPos, frontPos);
-                        float distToBack = Vector3.Distance(innerMonsterPos, backPos);
-
-                        // 문을 닫았는데 플레이어가 탈출실 안쪽으로 들어온 경우(문 뒤와 가까운 경우 = 탈출실 안쪽에 있는 경우)
-                        if (GetTargetAngleBasedOnPlayer() == 90f)
+                        Debug.Log(distToBack + " / " + distToFront);
+                        if (distToFront < 5f && distToFront < distToBack) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
                         {
-                            if (distToBack < 5f && distToBack < distToFront) // 괴물이 같이 탈출실 안에 있는 경우 -> 즉사 
-                            {
-                                GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
-                            }
-                            else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
-                            {
-                                GameManager.instance.GameClear(); // 탈출 성공
-                            }
+                            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 괴물에게 죽음
+                            return;
                         }
+                        // else // 괴물 없이 혼자 무사히 탈출실에 들어와 문을 닫은 경우
+                        // {
+                        //     GameManager.instance.GameClear(); // 탈출 성공
+                        //     return;
+                        // }
                     }
                 }
 
                 OnDoorOpenStateChanged?.Invoke();
                 OnDoorClosed?.Invoke(this);
+                _occlusionPortal.open = false;
             });
     }
 
-    // public void ToggleDoor()
-    // {
-    //     StopAllCoroutines();
-    //     StartCoroutine(ToggleDoorCoroutine());
-    // }
+    /// <summary>
+    /// 문 열린 여부 설정 (초기화할 때 사용, 열리거나 닫히는 모션 없이 즉시 설정)
+    /// </summary>
+    /// <param name="isOpen">열린 여부</param>
+    public void SetDoorOpenState(bool isOpen)
+    {
+        if (_occlusionPortal == null)
+            return;
 
-    // IEnumerator ToggleDoorCoroutine()
-    // {
-    //     float time = 0f;
-    //     Quaternion startRot = _doorAxis.localRotation; // 시작 각도(현재 각도)
-    //     float targetRotY = isOpened ? 0f : _openAngle; // 열려있는지 여부에 따라 닫거나 열기
-    //     Quaternion endRot = Quaternion.Euler(0, targetRotY, 0); // 끝 각도(목표 각도)
+        isOpened = isOpen;
+        _occlusionPortal.open = isOpen;
+        _doorAxis.localRotation = Quaternion.identity;
 
-    //     // 부드럽게 회전
-    //     while (time < _openDuration)
-    //     {
-    //         time += Time.deltaTime;
-    //         float t = Mathf.SmoothStep(0, 1, time / _openDuration);
-    //         _doorAxis.localRotation = Quaternion.Slerp(startRot, endRot, t); // 부드럽게 회전
-    //         yield return null;
-    //     }
-    //     _doorAxis.localRotation = endRot;
-
-    //     isOpened = !isOpened;
-    //     OnDoorOpenStateChanged?.Invoke();
-
-    //     if (!isOpened)
-    //         OnDoorClosed?.Invoke(this);
-    // }
+        OnDoorOpenStateChanged?.Invoke();
+        if (!isOpened)
+            OnDoorClosed?.Invoke(this);
+    }
 }

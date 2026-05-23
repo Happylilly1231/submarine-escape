@@ -48,7 +48,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &3947411467211754755
 Transform:
@@ -188,7 +188,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &4608297185871500605
 Transform:
@@ -565,6 +565,11 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Door
       objectReference: {fileID: 0}
+    - target: {fileID: 4483158982627376947, guid: 888d406a3c7075041890c22d1695d67d,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8471776770898399561, guid: 888d406a3c7075041890c22d1695d67d,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -671,6 +676,18 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 4520415506576979951}
+    - targetCorrespondingSourceObject: {fileID: 4483158982627376947, guid: 888d406a3c7075041890c22d1695d67d,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2887243645063087763}
+    - targetCorrespondingSourceObject: {fileID: 4483158982627376947, guid: 888d406a3c7075041890c22d1695d67d,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3271832763813522677}
+    - targetCorrespondingSourceObject: {fileID: 4483158982627376947, guid: 888d406a3c7075041890c22d1695d67d,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4267929175472522097}
   m_SourcePrefab: {fileID: 100100000, guid: 888d406a3c7075041890c22d1695d67d, type: 3}
 --- !u!1 &40152838596798272 stripped
 GameObject:
@@ -724,8 +741,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.27971682, y: 2.052752, z: 1.4714352}
-  m_Center: {x: 0.006910033, y: 1.0237606, z: 3.0000064}
+  m_Size: {x: 0.35, y: 1.9, z: 1.5}
+  m_Center: {x: 0, y: 1.1, z: 3}
 --- !u!114 &439654600950648842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -762,6 +779,58 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0.1, z: 3.0000002}
   m_TimeToStationary: 0.5
+--- !u!41 &2887243645063087763
+OcclusionPortal:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40152838596798272}
+  m_Open: 0
+  m_Center: {x: 0, y: 1, z: 3}
+  m_Size: {x: 0.3, y: 2, z: 1.5}
+--- !u!65 &3271832763813522677
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40152838596798272}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.25, y: 0.9, z: 0.9}
+  m_Center: {x: 0.32, y: 0.8, z: 3}
+--- !u!65 &4267929175472522097
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40152838596798272}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.25, y: 0.9, z: 0.9}
+  m_Center: {x: -0.32, y: 0.8, z: 3}
 --- !u!4 &5415591242259761466 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8471776770898399561, guid: 888d406a3c7075041890c22d1695d67d,
@@ -865,10 +934,20 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5415591242259761466}
     m_Modifications:
+    - target: {fileID: -5571334386175451287, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4867625807595608734, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
         type: 3}
       propertyPath: m_Name
       value: Valve (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4867625807595608734, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5244045174227779620, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
         type: 3}
@@ -920,7 +999,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -5571334386175451287, guid: 2d6bf7932168e4344b308e2b6cf8bb75, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -939,10 +1019,20 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5415591242259761466}
     m_Modifications:
+    - target: {fileID: -5571334386175451287, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4867625807595608734, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
         type: 3}
       propertyPath: m_Name
       value: Valve
+      objectReference: {fileID: 0}
+    - target: {fileID: 4867625807595608734, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5244045174227779620, guid: 2d6bf7932168e4344b308e2b6cf8bb75,
         type: 3}
@@ -994,7 +1084,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -5571334386175451287, guid: 2d6bf7932168e4344b308e2b6cf8bb75, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

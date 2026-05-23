@@ -12,14 +12,22 @@ public class MenuUIController : MonoBehaviour
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
     [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private Button setDifficultyEasyButton;
+    private TextMeshProUGUI setDifficultyEasyButtonText;
+    [SerializeField] private Button setDifficultyHardButton;
+    private TextMeshProUGUI setDifficultyHardButtonText;
     [SerializeField] private Button returnToTitleButton;
     [SerializeField] private Button quitButton;
-    [SerializeField] private Button exitButton;
+    // [SerializeField] private Button exitButton;
 
     private int _currentIndex = -1;
     private GameObject[] tabButtons;
     private GameObject[] tabPanels;
-    private Color _highLightColor = new Color(190f / 255f, 163f / 255f, 58f / 255f);
+    private Color _originalColor = new Color(227f / 255f, 231f / 255f, 232f / 255f, 1f);
+    private Color _highLightColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    // private Color _originalButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    // private Color _selectedButtonColor = new Color(1f, 0f, 33f / 255f, 200f / 255f);
+    private DebuggingUIManager _debuggingUIManager;
 
     public static MenuUIController instance;
 
@@ -32,6 +40,8 @@ public class MenuUIController : MonoBehaviour
         }
         instance = this;
         DontDestroyOnLoad(gameObject);
+
+        _debuggingUIManager = GetComponent<DebuggingUIManager>();
 
         tabButtons = new GameObject[tabButtonRoot.transform.childCount];
         for (int i = 0; i < tabButtonRoot.transform.childCount; i++)
@@ -46,10 +56,16 @@ public class MenuUIController : MonoBehaviour
         {
             tabPanels[i] = tabPanelRoot.transform.GetChild(i).gameObject;
         }
+
+        // 디버깅 UI 비활성화
+        SetActiveDebuggingUI(false);
     }
 
     private void Start()
     {
+        setDifficultyEasyButtonText = setDifficultyEasyButton.GetComponentInChildren<TextMeshProUGUI>();
+        setDifficultyHardButtonText = setDifficultyHardButton.GetComponentInChildren<TextMeshProUGUI>();
+
         // 슬라이더 수치 변경 이벤트 함수 연결
         masterVolumeSlider.onValueChanged.AddListener(AudioManager.Instance.SetMasterVolume);
         bgmSlider.onValueChanged.AddListener(AudioManager.Instance.SetBGMVolume);
@@ -65,9 +81,57 @@ public class MenuUIController : MonoBehaviour
         // 버튼 함수 연결
         returnToTitleButton.onClick.AddListener(GameManager.instance.ReturnToTitle);
         quitButton.onClick.AddListener(GameManager.instance.QuitGame);
-        exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
+        // exitButton.onClick.AddListener(GameManager.instance.ExitMenu);
+        setDifficultyEasyButton.onClick.AddListener(() => OnClickSetDifficultyButton(setDifficultyEasyButtonText, Difficulty.Easy));
+        setDifficultyHardButton.onClick.AddListener(() => OnClickSetDifficultyButton(setDifficultyHardButtonText, Difficulty.Hard));
+
+        OnClickSetDifficultyButton(setDifficultyEasyButtonText, Difficulty.Easy);
     }
 
+    private void OnClickSetDifficultyButton(TextMeshProUGUI buttonText, Difficulty difficulty)
+    {
+        GameManager.instance.SetDifficulty(difficulty);
+        buttonText.color = _highLightColor;
+        if (buttonText == setDifficultyEasyButtonText)
+            setDifficultyHardButtonText.color = _originalColor;
+        else
+            setDifficultyEasyButtonText.color = _originalColor;
+    }
+
+    /// <summary>
+    /// 디버깅 UI 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive">활성화 여부</param>
+    public void SetActiveDebuggingUI(bool isActive)
+    {
+        tabButtons[tabButtons.Length - 1].SetActive(isActive);
+        if (isActive)
+        {
+            // 마지막 탭 열기
+            OpenTab(tabPanels.Length - 1);
+        }
+        else
+        {
+            // 첫 탭 열기 
+            OpenTab(0);
+        }
+
+        _debuggingUIManager.SetActiveDebugging(isActive);
+    }
+
+    /// <summary>
+    /// 디버깅 UI 토글(켜기/끄기)
+    /// </summary>
+    public void ToggleDebuggingUI()
+    {
+        bool isActive = !tabButtons[tabButtons.Length - 1].activeSelf;
+        SetActiveDebuggingUI(isActive);
+    }
+
+    /// <summary>
+    /// 탭 열기
+    /// </summary>
+    /// <param name="index">탭 인덱스</param>
     public void OpenTab(int index)
     {
         if (_currentIndex == index) return;
@@ -75,8 +139,8 @@ public class MenuUIController : MonoBehaviour
         if (_currentIndex >= 0)
         {
             tabPanels[_currentIndex].SetActive(false);
-            tabButtons[_currentIndex].transform.GetChild(0).GetComponent<Image>().color = Color.white;
-            tabButtons[_currentIndex].transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = Color.white;
+            tabButtons[_currentIndex].transform.GetChild(0).GetComponent<Image>().color = _originalColor;
+            tabButtons[_currentIndex].transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = _originalColor;
         }
 
         tabPanels[index].SetActive(true);

@@ -1,0 +1,378 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.UI;
+
+public class PlayerMutation : MonoBehaviour
+{
+    [SerializeField] private GameObject[] spikes;
+    [SerializeField] private Transform spawnSpikeViewPoint; // 가시 생성될 때 3인칭으로 보는 위치
+    [SerializeField] private Transform hitViewPoint; // 가시가 바닥을 칠 때 바닥 바라보도록 하는 위치
+    [SerializeField] private Image vignetteImg;
+    [SerializeField] private Transform monsterHandsTransform; // 괴물 양손 트랜스폼
+    [SerializeField] private GameObject itemOverlayCamera; // 아이템 든 거 보여주는 카메라
+    [SerializeField] private Volume injectionVolume; // 치료제 투여할 때 연출에 쓸 볼륨
+    private Vignette _injectionVignette; // 치료제 투여할 때 연출에 쓸 비네트
+
+    private float _mutationInterval = 600f; // 10분 = 600초
+    public int CurrentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
+    private int _maxStage = 5;
+    public bool IsCured = false; // 완전 치료 상태
+
+    private float[] _vignetteTimes = { 1f, 2f, 5f, 10f };
+    private float[] _temperatures = { 37f, 38f, 40f, 42f, 44f };
+
+    public static event Action<Vector3> OnSpikeHitFloor; // 가시가 바닥을 쳤을 때 이벤트 
+    public static event Action OnMutationCompleted; // 괴물화 완료 이벤트
+
+    private TimerReservation _mutationTimerReservation;
+
+    // 사운드
+    [Header("Sound")]
+    [SerializeField] private AudioSource mutationAudioSource;
+    [SerializeField] private AudioClip spikeHitSound; // 가시로 바닥을 쾅 치는 소리
+    [SerializeField] private AudioClip tinnitusSound; // 이명 소리
+    [SerializeField] private AudioClip rourSound; // 포효(완전 괴물화) 소리
+    [SerializeField] private AudioClip cureSuccessSound; // 치료 성공 소리
+    [SerializeField] private AudioClip cureFailSound; // 치료 실패 소리(심장 박동)
+
+    private void OnEnable()
+    {
+        LightingManager.instance.OnLightTurnedOn += ReactLightOrSound;
+        SubmarineInGameManager.instance.OnAlertStarted += ReactLightOrSound;
+    }
+
+    private void Start()
+    {
+        // 가시들 비활성화
+        foreach (var spike in spikes)
+        {
+            spike.SetActive(false);
+        }
+
+        // 비네트 이미지 비활성화
+        vignetteImg.gameObject.SetActive(false);
+
+        // 괴물 손 비활성화
+        monsterHandsTransform.gameObject.SetActive(false);
+
+        // 괴물화 타이머 이벤트 예약 (인게임 시간에서 괴물화 간격 시간마다 괴물화 단계 진행되도록 해줌)
+        _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, () => SpawnSpike(), true);
+
+        // 치료제 투여 볼륨 관련 초기화
+        injectionVolume.weight = 0f;
+        if (injectionVolume.profile.TryGet<Vignette>(out var vignette))
+        {
+            _injectionVignette = vignette;
+        }
+    }
+
+    /// <summary>
+    /// 완전 괴물화
+    /// </summary>
+    private void CompleteMutation()
+    {
+        SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
+
+        // 완전 괴물화 이벤트 알림 -> 괴물이 더 이상 플레이어를 추적 & 공격 대상으로 여기지 않도록 함
+        OnMutationCompleted?.Invoke();
+
+        AudioManager.Instance.PlayGlobalOneShot(rourSound); // 포효 소리 재생
+
+        Sequence seq = DOTween.Sequence();
+
+        Quaternion playerOriginalRotation = SubmarineInGameManager.instance.player.transform.rotation;
+
+        // 플레이어 포효 (마구 움직임)
+        seq.Append(SubmarineInGameManager.instance.player.transform
+            .DORotate(new Vector3(0, 15f, 0), 0.1f)
+            .SetRelative()
+            .SetLoops(20, LoopType.Yoyo)
+            .SetEase(Ease.InOutFlash));
+
+        seq.AppendCallback(() =>
+        {
+            // 회전값 다시 원상복구
+            SubmarineInGameManager.instance.player.transform.rotation = playerOriginalRotation;
+
+            // 1인칭 시점으로 바뀌고 아래 보도록 클로즈업
+            Camera.main.transform.position = hitViewPoint.position;
+            Camera.main.transform.rotation = hitViewPoint.rotation;
+
+            // 괴물 손 활성화
+            monsterHandsTransform.gameObject.SetActive(true);
+        });
+
+        // 손 시야 밖에서 서서히 가운데로 나옴
+        seq.Append(monsterHandsTransform.DOLocalMoveZ(0f, 3f)).SetEase(Ease.InSine);
+
+        // 완전 암전 & 이명 일정 시간 지속
+        seq.AppendCallback(() =>
+        {
+            FXManager.instance.FadeOut(Color.black, 3f, () =>
+            {
+                FadeOutAndGameOver();
+            });
+            AudioManager.Instance.PlaySoundSafe(mutationAudioSource, tinnitusSound); // 이명 소리 재생
+        });
+    }
+
+    private void FadeOutAndGameOver()
+    {
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(FXManager.instance.fadeImage.DOFade(1f, 1f)); // 화면이 완전히 검게 변함
+
+        // 완료되면 -> 탈출 성공
+        seq.OnComplete(() =>
+        {
+            mutationAudioSource.Stop();
+            // 게임 오버
+            GameManager.instance.GameOver(EEndingType.Mutation); // 괴물화 엔딩
+        });
+    }
+
+    /// <summary>
+    /// 가시 생성
+    /// </summary>
+    /// <param name="isImmediate">즉각적인 완전 괴물화 여부</param>
+    public void SpawnSpike(bool isImmediate = false)
+    {
+        if (isImmediate)
+            CurrentStage = _maxStage;
+        else
+            CurrentStage++; // 단계 증가
+
+        // 현재 가시
+        GameObject spike = spikes[CurrentStage - 2];
+
+        // 포커스
+        SubmarineInGameManager.instance.SetFocus(true);
+
+        // 3인칭 시점으로 즉시 바뀌고 가시가 생성되는 등을 비춤
+        Camera.main.transform.position = spawnSpikeViewPoint.position;
+        Camera.main.transform.rotation = spawnSpikeViewPoint.rotation;
+
+        itemOverlayCamera.SetActive(false); // 아이템 든 거 비추는 카메라 비활성화 (3인칭에서는 우하단에 아이템이 보이지 않으므로)
+
+        // 1초 기다리기
+        Sequence seq = DOTween.Sequence();
+        seq.AppendInterval(1f);
+
+        // 가시 생성(나중에 쑥 나오는 식으로 바꿀 예정, 지금은 그냥 딱 활성화됨) & 가시 마구 움직임 
+        seq.AppendCallback(() =>
+        {
+            if (isImmediate) // 완전 괴물화 -> 아직 활성화되지 않았던 가시들 전부 활성화
+            {
+                // 아직 활성화되지 않았던 가시들 전부 활성화
+                foreach (var spike in spikes)
+                {
+                    if (!spike.activeSelf)
+                    {
+                        spike.SetActive(true);
+                        spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
+                    }
+                }
+            }
+            else // 기본 괴물화 -> 가시 1개 활성화
+            {
+                spike.SetActive(true);
+                spike.GetComponentInChildren<Animator>().SetTrigger("Rage");
+            }
+        });
+
+        // 2초 기다리기 (등 가시 움직이는 거 보여주는 중)
+        seq.AppendInterval(2f);
+
+        seq.OnComplete(() =>
+        {
+            if (CurrentStage == _maxStage) // 최종 단계 -> 바닥 치지 않고 그냥 나감
+                CompleteMutation();
+            else
+                HitFloor(spike); // 최종 단계 아님 -> 바닥 치기
+        });
+    }
+
+    /// <summary>
+    /// 바닥 치기
+    /// </summary>
+    /// <param name="spike">가시</param>
+    private void HitFloor(GameObject spike)
+    {
+        // 바닥 치기 애니메이션 재생
+        spike.GetComponentInChildren<Animator>().SetTrigger("Hit");
+
+        // 1인칭 시점으로 바뀌고 가시가 칠 바닥 즉시 클로즈업
+        Camera.main.transform.position = hitViewPoint.position;
+        Camera.main.transform.rotation = hitViewPoint.rotation;
+
+        itemOverlayCamera.SetActive(true); // 아이템 든 거 비추는 카메라 활성화 (1인칭으로 다시 돌아왔으므로)
+
+        OnSpikeHitFloor?.Invoke(transform.position + Vector3.forward * 0.5f); // 이벤트 알림
+
+        AudioManager.Instance.PlayGlobalOneShot(spikeHitSound); // 쾅 소리 재생
+
+        Sequence seq = DOTween.Sequence();
+
+        // 카메라 흔들림
+        seq.Append(Camera.main.transform.DOShakePosition(1f, 0.3f, 10, 90f));
+
+        // 완료되면 포커스 종료 
+        seq.OnComplete(() =>
+        {
+            SubmarineInGameManager.instance.SetFocus(false);
+        });
+    }
+
+    /// <summary>
+    /// 빛이나 소리에 대한 반응
+    /// </summary>
+    private void ReactLightOrSound()
+    {
+        if (CurrentStage == 0)
+            return;
+
+        // 초기 설정
+        vignetteImg.gameObject.SetActive(true);
+        float scale = _maxStage - CurrentStage;
+        vignetteImg.rectTransform.localScale = new Vector3(scale, scale, 1f);
+
+        // 이명 소리 재생
+        mutationAudioSource.volume = 0f; // 볼륨 0으로 설정
+        AudioManager.Instance.PlaySoundSafe(mutationAudioSource, tinnitusSound);
+
+        Sequence seq = DOTween.Sequence();
+
+        // 1초 페이드 인 - 비네트 알파 & 이명 볼륨
+        seq.Append(vignetteImg.DOFade(1f, 1f)).SetEase(Ease.InQuad);
+        seq.Join(mutationAudioSource.DOFade(1f, 1f));
+
+        // 지속
+        seq.AppendInterval(_vignetteTimes[CurrentStage - 1]);
+
+        // 1초 페이드 아웃 - 비네트 알파 & 이명 볼륨
+        seq.Append(vignetteImg.DOFade(0f, 1f)).SetEase(Ease.InQuad);
+        seq.Join(mutationAudioSource.DOFade(0f, 1f));
+
+        // 종료 처리
+        seq.OnComplete(() =>
+        {
+            mutationAudioSource.Stop(); // 이명 소리 정지
+            vignetteImg.gameObject.SetActive(false); // 비네트 이미지 비활성화
+            mutationAudioSource.volume = 1f; // 볼륨 다시 1로 초기화
+        });
+    }
+
+    /// <summary>
+    /// 현재 체온 반환
+    /// </summary>
+    /// <returns>현재 체온</returns>
+    public float GetCurrentTemperature()
+    {
+        if (IsCured) return 36.5f; // 치료 후 정상 체온
+        if (CurrentStage == _maxStage) return 44.0f;
+
+        return Mathf.Floor(Mathf.Lerp(_temperatures[CurrentStage - 1], _temperatures[CurrentStage], GameTime.Instance.TimeSinceStart / _mutationInterval) * 10f) / 10f;
+    }
+
+    private void OnDisable()
+    {
+        LightingManager.instance.OnLightTurnedOn -= ReactLightOrSound;
+        SubmarineInGameManager.instance.OnAlertStarted -= ReactLightOrSound;
+    }
+
+    /// <summary>
+    /// 치료제 투여 처리
+    /// </summary>
+    /// <param name="isSuccess">성공(치료) 여부</param>
+    public void InjectSerum(bool isSuccess)
+    {
+        //SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CureInjected, GameTime.Instance.TimeSinceStart);
+
+        // 포커스
+        SubmarineInGameManager.instance.SetFocus(true);
+
+        AudioClip sound;
+
+        // 치료 결과 바로 적용
+        if (isSuccess)
+        {
+            // 괴물화 중단 및 초기화
+            Debug.Log("<color=green>치료제 투여 성공: 괴물화 진행이 억제<color>");
+
+            Cure(); // 괴물화 치료
+
+            _injectionVignette.color.value = Color.green;
+            sound = cureSuccessSound;
+        }
+        else
+        {
+            _injectionVignette.color.value = Color.red;
+            sound = cureFailSound;
+        }
+
+        AudioManager.Instance.PlayGlobalOneShot(sound);
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(DOTween.To(() => injectionVolume.weight, x => injectionVolume.weight = x, 1f, 0.2f));
+        // 치료 소리 추가 / 심장 박동(실패) 소리 추가
+
+        // 1초 동안 유지
+        seq.AppendInterval(1f);
+
+        seq.Append(DOTween.To(() => injectionVolume.weight, x => injectionVolume.weight = x, 0f, 1f));
+
+        seq.OnComplete(() =>
+        {
+            // 포커스 해제
+            SubmarineInGameManager.instance.SetFocus(false);
+
+            if (!isSuccess)
+            {
+                // 괴물화 가속 (즉시 다음 단계 스폰)
+                Debug.Log("<color=red>치료제 투여 실패: 괴물화가 가속<color>");
+
+                // 최종 단계가 아닐 때만 즉시 다음 단계 스폰 함수 호출
+                if (CurrentStage < _maxStage)
+                {
+                    SpawnSpike();
+                }
+            }
+        });
+    }
+
+    /// <summary>
+    /// 괴물화 치료
+    /// </summary>
+    public void Cure()
+    {
+        // 괴물화 중단(종료)
+        IsCured = true;
+        GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
+
+        // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
+        StopMutationEffects();
+    }
+
+    /// <summary>
+    /// 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단
+    /// </summary>
+    private void StopMutationEffects()
+    {
+        // 모든 가시 비활성화 (이미 돋아난 가시가 있다면 제거)
+        foreach (var spike in spikes)
+        {
+            spike.SetActive(false);
+        }
+
+        // 사운드 및 비네트 즉시 종료
+        mutationAudioSource.Stop();
+        vignetteImg.gameObject.SetActive(false);
+    }
+}
+

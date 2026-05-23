@@ -26,7 +26,7 @@ namespace InnerMonsterStates
             owner.CanMove(true); // 이동
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
             owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentTargetPos.position); // 현재 목표 위치를 향해 이동
-            owner.ColliderCenterChange(true, 0.3f); // 컨트롤러 중심 변경
+            owner.ChangeMonsterModelCenter(true, 0.3f); // 몬스터 모델 중심 변경
 
             // 경로 상의 문 리스트 얻기
             owner.StartCoroutine(GetDoorsOnPathList(owner));
@@ -34,7 +34,7 @@ namespace InnerMonsterStates
             // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
             _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
 
-            AudioManager.Instance.PlaySFX(owner.detectSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.detectSound);
             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
         }
 
@@ -86,6 +86,10 @@ namespace InnerMonsterStates
                     return;
                 }
             }
+
+            Debug.Log("aaaaa: " + owner.CanAttack());
+            Debug.Log("bbbb: " + (owner.DistToPlayer < owner.RageAttackDistance));
+
 
             // 폭주 공격 상태로 전환
             if (owner.CanAttack() && owner.DistToPlayer < owner.RageAttackDistance)
@@ -146,7 +150,11 @@ namespace InnerMonsterStates
         {
             // 경로 계산 완료 대기
             while (monster.Nav.pathPending)
+            {
+                yield return monster.WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
                 yield return null;
+            }
 
             // 경로의 코너 배열 가져오기
             Vector3[] corners = monster.Nav.path.corners;
@@ -154,8 +162,8 @@ namespace InnerMonsterStates
             // 코너 ~ 다음 코너 구간마다 RayCastAll 함수로 경로 상의 문 검출 -> DoorsOnPathList에 추가
             for (int i = 0; i < corners.Length - 1; i++)
             {
-                Vector3 start = corners[i]; // 현재 코너
-                Vector3 end = corners[i + 1]; // 다음 코너
+                Vector3 start = corners[i] + Vector3.up * 1f; // 현재 코너
+                Vector3 end = corners[i + 1] + Vector3.up * 1f; // 다음 코너
                 Vector3 dir = (end - start).normalized; // 현재 코너에서 다음 코너로의 정규화된 방향
                 float dist = Vector3.Distance(start, end); // 현재 코너에서 다음 코너까지의 거리
 

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8375391200558301224}
   - component: {fileID: 7325063583849494449}
   - component: {fileID: -6129095713465522215}
+  - component: {fileID: -7156183026651039485}
   m_Layer: 0
   m_Name: RadarSystemManual
   m_TagString: Untagged
@@ -80,7 +81,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 10, y: 12}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -120,3 +121,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   item: {fileID: 11400000, guid: ff192d543f310fd44b244fbbd8331cfe, type: 2}
+--- !u!114 &-7156183026651039485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2783371661473418686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b87225b60a4dc40be431197b4ea637, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

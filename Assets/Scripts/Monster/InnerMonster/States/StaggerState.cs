@@ -13,10 +13,10 @@ namespace InnerMonsterStates
         public void Enter(InnerMonsterController owner)
         {
             owner.CanMove(false); // 이동 정지
-            owner.ColliderCenterChange(false); // 컨트롤러 중심 기본으로 돌림
+            owner.ChangeMonsterModelCenter(false); // 몬스터 모델 중심 기본으로 돌림
 
             owner.Animator.SetTrigger("Stagger"); // 휘청임 애니메이션 재생
-            AudioManager.Instance.PlaySFX(owner.staggerSound);
+            AudioManager.Instance.PlayGlobalOneShot(owner.staggerSound);
         }
 
         public void Update(InnerMonsterController owner)
