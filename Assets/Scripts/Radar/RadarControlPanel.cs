@@ -6,27 +6,31 @@ using UnityEngine;
 /// <summary>
 /// 레이더 조작 패널
 /// </summary>
-public class RadarControlPanel : InteractableBase
+public class RadarControlPanel : MonoBehaviour, IInteractable
 {
-    [SerializeField] private RadarController radarController; // 레이더 컨트롤러
+    [SerializeField] private RadarController _radarController; // 레이더 컨트롤러
+    [SerializeField] private Transform radarViewPoint; // 레이더 볼 때 카메라 위치
     [SerializeField] private Item toolKitItem; // 공구 상자 아이템 (파괴되어 고장났을 때 필요)
 
+    private float _duration = 1.5f; // 레이더 볼 때 카메라 이동 시간
     private bool _isPowerOn = false; // 전력 켜져 있는지 여부
     private bool _isBroken = false; // 고장 여부
 
-    private InventoryManager inventoryManager;
+    private ItemEquipController _itemEquipController;
+    private InventoryManager _inventoryManager;
 
-    private void Start()
+    void Start()
     {
-        inventoryManager = FindObjectOfType<InventoryManager>();
+        _itemEquipController = FindObjectOfType<ItemEquipController>();
+        _inventoryManager = FindObjectOfType<InventoryManager>();
     }
 
-    private void OnEnable()
+    void OnEnable()
     {
         LightingManager.instance.OnLightChanged += SetPower;
     }
 
-    public override bool CanInteractwithSelectedItem(Item item)
+    public bool CanInteractwithSelectedItem(Item item)
     {
         if (!_isBroken) return false; // 고장 나지 않았을 때는 X
         return item == toolKitItem; // 고장 났을 때는 공구 상자 선택 여부에 따름
@@ -35,7 +39,7 @@ public class RadarControlPanel : InteractableBase
     /// <summary>
     /// 상호작용 UI에 표시할 텍스트
     /// </summary>
-    public override string GetInteractText()
+    public string GetInteractText()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
@@ -44,22 +48,22 @@ public class RadarControlPanel : InteractableBase
             return "View Radar [E]";
 
         // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
-        return IsRequiredItemSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
+        return IsToolKitSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
     }
 
     /// <summary>
     /// 플레이어가 E키를 입력할 때 레이더 화면을 띄우거나 끔
     /// </summary>
-    public override void Interact()
+    public void Interact()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
         if (!_isBroken) // 고장 나지 않았을 때 -> 레이더 보기
         {
-            radarController.ActivatePuzzle();
+            ViewRadar();
         }
-        else if (_isBroken && IsRequiredItemSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
+        else if (_isBroken && IsToolKitSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
         {
             StartCoroutine(Repair());
         }
@@ -72,16 +76,51 @@ public class RadarControlPanel : InteractableBase
     }
 
     /// <summary>
+    /// 레이더 보기
+    /// </summary>
+    public void ViewRadar()
+    {
+        SubmarineInGameManager.instance.SetFocusUI(true);
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(Camera.main.transform.DOMove(radarViewPoint.position, _duration)
+        .SetEase(Ease.OutQuad));
+
+        seq.Join(Camera.main.transform.DORotateQuaternion(radarViewPoint.rotation, _duration)
+            .SetEase(Ease.OutQuad));
+
+        seq.OnComplete(() =>
+        {
+            _radarController.SetRadarVisible(true); // 레이더 보기
+        });
+    }
+
+    /// <summary>
     /// 전력 켜거나 끄기
     /// </summary>
     private void SetPower(bool isPowerOn)
     {
-        if (isPowerOn && !radarController.IsUpdateStart)
-        {
-            radarController.IsUpdateStart = true;
-            radarController.CurrentMonsterAppearTime = GameTime.Instance.TimeSinceStart;
-        }
+        if (isPowerOn && !_radarController.IsUpdateStart)
+            _radarController.IsUpdateStart = true;
         _isPowerOn = isPowerOn;
+    }
+
+    /// <summary>
+    /// 공구 상자 선택되었는지 여부
+    /// </summary>
+    private bool IsToolKitSelected()
+    {
+        Item selectedItem = null;
+        if (_itemEquipController.HeldItemData != null)
+        {
+            selectedItem = _itemEquipController.HeldItemData;
+        }
+        else if (_inventoryManager.SelectedSlotIndex >= 0 && _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex] != null)
+        {
+            selectedItem = _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item;
+        }
+
+        return CanInteractwithSelectedItem(selectedItem);
     }
 
     /// <summary>
@@ -100,10 +139,7 @@ public class RadarControlPanel : InteractableBase
         float repairTime = 3f;
         float timer = repairTime;
 
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
-
-        inventoryManager.UpdateActionText();
-
+        SubmarineInGameManager.instance.SetFocusUI(true);
         while (timer > 0)
         {
             MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
@@ -114,7 +150,7 @@ public class RadarControlPanel : InteractableBase
         yield return new WaitForSeconds(1f);
         MessageUIController.Instance.HideMessage();
 
-        SubmarineInGameManager.instance.SetPuzzleFocus(false);
+        SubmarineInGameManager.instance.SetFocusUI(false);
         _isBroken = false;
     }
 }

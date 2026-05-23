@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -24,11 +23,11 @@ namespace InnerMonsterStates
         {
             owner.CanMove(false); // 이동 정지
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
-            owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경
+            owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
 
             owner.currentAttackType = EAttackType.RageDestroyAttack; // 현재 공격 타입 -> 폭주 파괴 공격
             owner.Animator.SetBool("isRageDestroying", true); // 폭주 파괴 애니메이션 재생
-            AudioManager.Instance.PlayGlobalOneShot(owner.destroyRageSound);
+            AudioManager.Instance.PlaySFX(owner.destroyRageSound);
             _timer = 0f; // 타이머 초기화
 
             // 파괴하는데 걸리는 시간 설정
@@ -84,7 +83,7 @@ namespace InnerMonsterStates
         /// </summary>
         private void RageDestroy(InnerMonsterController monster)
         {
-            AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound);
+            AudioManager.Instance.PlaySFX(monster.destroyCompleteSound);
             // 타입에 따른 후처리
             switch (monster.currentDestroyObjType)
             {
@@ -97,8 +96,6 @@ namespace InnerMonsterStates
                 case EDestroyObjType.EscapeRoomDoor: // 탈출실 문을 파괴한 경우
                     monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
                     ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
-                    GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
-                    // monster.ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환(아직 경보 발생 중이기 때문)
                     // 경보 끌 수 없으므로 끄지 않음
                     // 이후 탈출실에서 플레이어가 괴물에게 죽는 장면이 연출 처리될 것
                     break;
@@ -111,8 +108,7 @@ namespace InnerMonsterStates
                             monster.currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
                             break;
                         case 1: // 어뢰 자동 탑재 스위치
-                            // 스위치 off
-                            monster.currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
+                            // 스위치 off 필요
                             break;
                         case 2: // 산소 자동 제어 스위치
                             // 스위치 off 필요
@@ -156,16 +152,8 @@ namespace InnerMonsterStates
 
             yield return null; // 한 프레임 대기 <- 문 NavMeshObstacle 활성화와 순찰 상태에서 경로 계산이 똑같은 프레임에 일어날 경우 Obstacle 인식 제대로 안되는 버그 해결
 
-            yield return monster.WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
-
             // 순찰 상태로 전환
             monster.ChangeState(new PatrolState());
-        }
-
-        private void CompleteDestroyingEscapeRoomDoor()
-        {
-            Sequence seq = DOTween.Sequence();
-
         }
     }
 }

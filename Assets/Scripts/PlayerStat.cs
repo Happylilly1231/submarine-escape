@@ -43,10 +43,6 @@ public class PlayerStat : MonoBehaviour
     void Awake()
     {
         _playerStatus = GetComponent<PlayerStatus>();
-
-        _hp = _maxHp;
-        _stamina = _maxStamina;
-        _temperature = _maxTemperature;
     }
 
     /// <summary>
@@ -54,8 +50,14 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     void Start()
     {
+        _hp = _maxHp;
+        _stamina = _maxStamina;
+        _temperature = _maxTemperature;
+
         UpdateHpSlider();
         UpdateStaminaSlider();
+
+
     }
 
     /// <summary>
@@ -64,7 +66,7 @@ public class PlayerStat : MonoBehaviour
     /// </summary>
     public void Damage(float value, EEndingType cause = EEndingType.MonsterDeath)
     {
-        AudioManager.Instance.PlayGlobalOneShot(damageSound);
+        AudioManager.Instance.PlaySFX(damageSound);
         _hp -= value;
         Debug.Log($"Damage: -{value} | Cause: {cause}");
         if (_hp <= 0)
@@ -99,11 +101,6 @@ public class PlayerStat : MonoBehaviour
     public void Heal(float value)
     {
         _hp += value;
-        // 체력이 최대 체력을 넘지 않도록 제한
-        if (_hp > _maxHp)
-        {
-            _hp = _maxHp;
-        }
         UpdateHpSlider();
         Debug.Log("Heal: +" + value);
     }
@@ -160,14 +157,5 @@ public class PlayerStat : MonoBehaviour
     {
         staminaSlider.value = _stamina / _maxStamina;
         staminaGlowSlider.value = (int)_stamina / _maxStamina; // 각 칸이 회복되면 발광
-    }
-
-    public void ApplyLoadedStats(float hp, float stamina)
-    {
-        _hp = hp;
-        _stamina = stamina;
-
-        UpdateHpSlider();
-        UpdateStaminaSlider();
     }
 }

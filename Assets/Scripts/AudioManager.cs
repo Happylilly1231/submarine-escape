@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 /// <summary>
 /// 전역적인 오디오 재생과 공통으로 사용할 오디오 함수를 관리한다.
@@ -17,9 +15,6 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource sfxSource;
 
     [SerializeField] private AudioClip deepSeaMonsterExplosionSound; // 심해 괴물이 부딪혀서 나는 폭발 사운드
-    [SerializeField] private AudioClip buttonHoverSound;
-    [SerializeField] private AudioClip buttonClickSound;
-    public AudioClip fanSound; // 임시 브금으로 쓰기
 
     void Awake()
     {
@@ -49,11 +44,6 @@ public class AudioManager : MonoBehaviour
         audioMixer.SetFloat("SFX", Mathf.Log10(value) * 20f);
     }
 
-    public void SetSFXAudioSourceVolume(float volume)
-    {
-        sfxSource.volume = volume;
-    }
-
     public void PlayBGM(AudioClip clip, bool loop = true)
     {
         if (bgmSource.clip == clip) return;
@@ -64,22 +54,12 @@ public class AudioManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 전역 오디오 한 번만 재생
-    /// </summary>
-    /// <param name="clip"></param>
-    public void PlayGlobalOneShot(AudioClip clip)
-    {
-        sfxSource.PlayOneShot(clip); // 한 번만 재생
-    }
-
-    /// <summary>
-    /// 전역 오디오 루프 재생(오디오 매니저의 sfxSource에서 재생됨)
+    /// 한 번만 재생되는 효과음 재생(오디오 매니저의 sfxSource에서 재생됨)
     /// </summary>
     /// <param name="clip">오디오 클립</param>
-    public void PlayGlobalSFXLoop(AudioClip clip)
+    public void PlaySFX(AudioClip clip)
     {
-        sfxSource.clip = clip;
-        sfxSource.Play(); // 재생
+        sfxSource.PlayOneShot(clip); // 한 번만 재생
     }
 
     public void StopBGM()
@@ -109,42 +89,6 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PlayDeepSeaMonsterExplosionSound()
     {
-        PlayGlobalSFXLoop(deepSeaMonsterExplosionSound);
+        PlaySFX(deepSeaMonsterExplosionSound);
     }
-
-    /// <summary>
-    /// 버튼 호버 사운드 재생 함수
-    /// </summary>
-    public void PlayButtonHoverSound() => sfxSource.PlayOneShot(buttonHoverSound);
-
-    /// <summary>
-    /// 버튼 클릭 사운드 재생 함수
-    /// </summary>
-    public void PlayButtonClickSound() => sfxSource.PlayOneShot(buttonClickSound);
-
-    // /// <summary>
-    // /// 버튼 소리 설정(호버, 클릭)
-    // /// </summary>
-    // /// <param name="button"></param>
-    // public void SetupButtonSounds(Button button)
-    // {
-    //     // 각 버튼에 EventTrigger 컴포넌트가 없다면 추가
-    //     EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
-    //     if (trigger == null) trigger = button.gameObject.AddComponent<EventTrigger>();
-
-    //     // 호버(PointerEnter) 이벤트 연결
-    //     AddEvent(trigger, EventTriggerType.PointerEnter, PlayButtonHoverSound);
-
-    //     // 클릭(PointerClick) 이벤트 연결
-    //     AddEvent(trigger, EventTriggerType.PointerClick, PlayButtonClickSound);
-    // }
-
-    // // 이벤트를 등록하는 헬퍼 함수
-    // void AddEvent(EventTrigger trigger, EventTriggerType type, System.Action action)
-    // {
-    //     EventTrigger.Entry entry = new EventTrigger.Entry();
-    //     entry.eventID = type;
-    //     entry.callback.AddListener((data) => { action(); });
-    //     trigger.triggers.Add(entry);
-    // }
 }
