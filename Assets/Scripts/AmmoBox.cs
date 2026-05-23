@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AmmoBox : InteractableBase
+public class AmmoBox : MonoBehaviour, IInteractable
 {
     [SerializeField] private Transform ammoBoxDoor; // 실제로 움직이는 탄약 상자 뚜껑
     [SerializeField] private float openAngle = -90f;
@@ -23,7 +23,7 @@ public class AmmoBox : InteractableBase
     /// 상호작용 UI에 표시할 텍스트
     /// </summary>
     /// <returns></returns>
-    public override string GetInteractText()
+    public string GetInteractText()
     {
         return _isOpen ? "close [E]" : "open [E]";
     }
@@ -31,7 +31,7 @@ public class AmmoBox : InteractableBase
     /// <summary>
     /// 플레이어가 E키를 입력할 때 탄약 상자 뚜껑을 열거나 닫음
     /// </summary>
-    public override void Interact()
+    public void Interact()
     {
         if (_isMoving) return;
 
@@ -64,7 +64,7 @@ public class AmmoBox : InteractableBase
         _isMoving = false;
     }
 
-    public override bool CanInteractwithSelectedItem(Item item)
+    public bool CanInteractwithSelectedItem(Item item)
     {
         return false;
     }

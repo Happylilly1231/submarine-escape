@@ -12,7 +12,7 @@ namespace NavKeypad
         [SerializeField] private UnityEvent onAccessGranted;
         [SerializeField] private UnityEvent onAccessDenied;
         [Header("Combination Code (9 Numbers Max)")]
-        public int keypadCombo = 12345;
+        [SerializeField] private int keypadCombo = 12345;
 
         public UnityEvent OnAccessGranted => onAccessGranted;
         public UnityEvent OnAccessDenied => onAccessDenied;
@@ -127,14 +127,5 @@ namespace NavKeypad
             audioSource.PlayOneShot(accessGrantedSfx);
         }
 
-        /// <summary>
-        /// 키패드 초기화
-        /// </summary>
-        public void ResetKeypad()
-        {
-            accessWasGranted = false;
-            ClearInput();
-            panelMesh.material.SetVector("_EmissionColor", screenNormalColor * screenIntensity);
-        }
     }
 }

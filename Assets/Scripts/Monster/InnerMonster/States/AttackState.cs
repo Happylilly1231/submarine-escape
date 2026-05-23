@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace InnerMonsterStates
@@ -15,112 +16,36 @@ namespace InnerMonsterStates
     /// </summary>
     public class AttackState : IState<InnerMonsterController>
     {
-        private float _attackChaseSpeed = 5f; // 공격할 때 추적 속도
         private float _stopDistance = 2f; // 멈춤 거리
-        private float _resumeDistance = 2.3f; // 다시 움직이기 시작할 거리
-        private bool _isClose; // 가까운지 여부
-        private float targetWeight;
 
         public void Enter(InnerMonsterController owner)
         {
+            owner.CanMove(false); // 이동 정지
             AttackCurrentPattern(owner); // 현재 패턴 공격(근접/원거리)
-
-            // 괴물 난이도에 따른 설정
-            if (GameManager.instance.CurrentDifficulty == Difficulty.Easy)
-            {
-                owner.CanMove(false); // 이동 정지
-            }
-            else
-            {
-                owner.CanMove(true); // 이동
-                owner.Nav.speed = _attackChaseSpeed; // 공격할 때 추적 속도로 속도 변경
-
-                // 점프 공격일 때는 하체 레이어 비활성화, 그 외 공격은 하체 레이어 활성화 (하체 움직임 추가해야 하므로)
-                if (owner.currentAttackType == EAttackType.JumpAttack)
-                    owner.Animator.SetLayerWeight(owner.lowerBodyLayerIndex, 0f);
-                else
-                    owner.Animator.SetLayerWeight(owner.lowerBodyLayerIndex, 1f);
-
-                // Debug.Log("Weight: " + owner.Animator.GetLayerWeight(owner.lowerBodyLayerIndex) + " / " + owner.currentAttackType);
-            }
-
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
             owner.ChangeFovCenter(true); // 시야각 중심 위치를 그냥 트랜스폼으로 변경
             owner.Nav.updateRotation = false; // 회전 수동으로 변경 - NavMeshAgent의 기본 회전 사용 X(너무 느림)
-            owner.ChangeMonsterModelCenter(true); // 몬스터 모델 중심 변경
+            owner.ColliderCenterChange(true); // 컨트롤러 중심 변경
         }
 
         public void Update(InnerMonsterController owner)
         {
-            // 공격 도중 플레이어 완전 괴물화 시 -> 바로 순찰 상태로 전환 
-            if (owner.IsPlayerMutationCompeleted)
-            {
-                owner.Animator.Play("Walk");
-                owner.ChangeState(new PatrolState());
-                return;
-            }
-
-            // 현재 남은 거리 - 경로 계산 중이 아닐 때만 남은 거리로 비교하고, 계산 중일 때는 직접 거리 구해 사용
-            float currentDistance = owner.Nav.pathPending
-                ? Vector3.Distance(owner.transform.position, owner.PlayerTransform.position)
-                : owner.Nav.remainingDistance;
-
             owner.LookAtTarget(owner.PlayerTransform.position); // 현재 플레이어 위치를 바라보도록 회전
 
-            if (GameManager.instance.CurrentDifficulty == Difficulty.Easy)
+            // 점프 중 -> 플레이어를 향해 이동
+            if (owner.IsJumping)
             {
-                // 점프 중 -> 플레이어를 향해 이동
-                if (owner.IsJumping)
-                {
-                    if (owner.DistToPlayer <= _stopDistance)
-                        owner.CanMove(false);
-                    else
-                        owner.CanMove(true);
-
-                    owner.Nav.SetDestination(owner.PlayerTransform.position);
-                }
-            }
-            else
-            {
-                owner.Nav.SetDestination(owner.PlayerTransform.position);
-
-                if (owner.currentAttackType == EAttackType.JumpAttack)
-                {
-                    if (owner.IsJumping)
-                    {
-                        // 점프 중 이동 로직은 별도 처리
-                        owner.CanMove(currentDistance > _stopDistance);
-                    }
-                }
+                if (owner.DistToPlayer <= _stopDistance)
+                    owner.CanMove(false);
                 else
-                {
-                    // 거리에 따른 이동 및 가중치 판단
-                    if (!_isClose && owner.CanDetect() && currentDistance <= _stopDistance)
-                    {
-                        _isClose = true;
-                        owner.CanMove(false);
-                        owner.StopPlaying();
-                        targetWeight = 0f; // 가까우면 하체 레이어 끔 (Idle 권장)
-                    }
-                    else if (_isClose && currentDistance > _resumeDistance)
-                    {
-                        _isClose = false;
-                        owner.CanMove(true);
-                        AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.chaseSound, 3f);
-                        targetWeight = 1f; // 멀면 하체 레이어 켬 (Chase)
-                    }
+                    owner.CanMove(true);
 
-                    // 최종 가중치를 부드럽게 적용 (깜빡임 방지 핵심)
-                    float currentWeight = owner.Animator.GetLayerWeight(owner.lowerBodyLayerIndex);
-                    owner.Animator.SetLayerWeight(owner.lowerBodyLayerIndex,
-                        Mathf.Lerp(currentWeight, targetWeight, Time.deltaTime * 10f));
-                }
+                owner.Nav.SetDestination(owner.PlayerTransform.position);
             }
         }
 
         public void Exit(InnerMonsterController owner)
         {
-            owner.Animator.SetLayerWeight(owner.lowerBodyLayerIndex, 0f);
             owner.ChangeFovCenter(false); // 시야각 중심 위치를 머리 위치로 변경
             owner.monsterEyeRenderer.material = owner.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
             owner.Nav.updateRotation = true; // 회전 자동으로 변경
@@ -148,6 +73,7 @@ namespace InnerMonsterStates
                     monster.currentAttackType = EAttackType.HitAttack;
                     monster.Animator.SetInteger("attackType", 0);
                     monster.Animator.SetTrigger("Attack");
+
                     break;
 
                 case 1:

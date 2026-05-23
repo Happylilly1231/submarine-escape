@@ -25,7 +25,7 @@ namespace InnerMonsterStates
             owner.Nav.speed = _patrolSpeed;
             owner.Animator.SetBool("isPatrolling", true); // 애니메이션 순찰 중(->walk)으로 설정
             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.patrolSound, 1.5f);
-            owner.ChangeMonsterModelCenter(false); // 몬스터 모델 중심 기본으로 돌림
+            owner.ColliderCenterChange(false); // 컨트롤러 중심 기본으로 돌림
 
             monster = owner;
 
@@ -53,7 +53,7 @@ namespace InnerMonsterStates
             }
 
             // 추적 상태로 전환
-            if (owner.CanDetect() || owner.CanChaseHitPos)
+            if (owner.CanDetect())
             {
                 owner.ChangeState(new ChaseState());
                 return;

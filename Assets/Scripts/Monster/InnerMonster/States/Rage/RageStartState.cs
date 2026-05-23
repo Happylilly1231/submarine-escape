@@ -16,11 +16,11 @@ namespace InnerMonsterStates
         public void Enter(InnerMonsterController owner)
         {
             owner.CanMove(false); // 이동 정지
-            owner.ChangeMonsterModelCenter(false); // 몬스터 모델 중심 기본으로 돌림
+            owner.ColliderCenterChange(false); // 컨트롤러 중심 기본으로 돌림
 
             owner.Animator.SetBool("isRageEnd", false);
             owner.Animator.SetTrigger("RageStart");
-            AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound);
+            AudioManager.Instance.PlaySFX(owner.rageStartSound);
             owner.ResetAttackCoolDown(); // 쿨타임 초기화(쿨타임 상태 아닌 걸로 변경)
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.UI;
 
 /// <summary>
 /// 효과 관리
@@ -14,12 +13,6 @@ public class FXManager : MonoBehaviour
     [SerializeField] private Volume volume; // 볼륨
     private Bloom _bloom; // 발광
     private Vignette _vignette; // 비네트
-    public Vignette Vignette => _vignette;
-    private ChromaticAberration _chromatic;
-    public ChromaticAberration Chromatic => _chromatic;
-    private LensDistortion _distortion;
-    public LensDistortion Distortion => _distortion;
-    public Image fadeImage;
 
     // 싱글톤 변수
     public static FXManager instance;
@@ -44,8 +37,6 @@ public class FXManager : MonoBehaviour
         // 볼륨에서 각 효과 가져오기
         volume.profile.TryGet(out _bloom);
         volume.profile.TryGet(out _vignette);
-        volume.profile.TryGet(out _chromatic);
-        volume.profile.TryGet(out _distortion);
 
         // 초기 설정
         VignetteOff(); // 비네트 효과 끄기
@@ -76,7 +67,6 @@ public class FXManager : MonoBehaviour
     {
         _vignette.color.value = color;
         _vignette.intensity.value = 0.5f;
-        _vignette.smoothness.value = 0.5f;
     }
 
     /// <summary>
@@ -85,31 +75,5 @@ public class FXManager : MonoBehaviour
     public void VignetteOff()
     {
         _vignette.intensity.value = 0f;
-    }
-
-    /// <summary>
-    /// 암전
-    /// </summary>
-    public void FadeOut(Color color, float duration, System.Action onComplete = null)
-    {
-        StartCoroutine(FadeOutCoroutine(color, duration, onComplete));
-    }
-
-    private IEnumerator FadeOutCoroutine(Color color, float duration, System.Action onComplete)
-    {
-        _vignette.color.value = color;
-        _vignette.smoothness.value = 1f;
-
-        float value = 0f;
-        float speed = 1f / duration;
-        while (value < 1f)
-        {
-            _vignette.intensity.value = value;
-            value += speed * Time.deltaTime;
-            yield return null;
-        }
-        _vignette.intensity.value = 1f;
-
-        onComplete?.Invoke();
     }
 }
