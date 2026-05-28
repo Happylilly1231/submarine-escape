@@ -174,6 +174,7 @@ public class KeyPadController : PuzzleController
             .SetLink(outerPanel.gameObject)
             .OnComplete(() =>
         {
+            outerPanel.transform.SetParent(null); // 부모인 문과 해체
             Rigidbody rb = outerPanel.GetComponent<Rigidbody>();
             if (rb)
             {
@@ -184,6 +185,7 @@ public class KeyPadController : PuzzleController
 
             DOVirtual.DelayedCall(0.5f, () =>
             {
+                outerPanel.gameObject.SetActive(false);
                 IsActionProcessing = false;
                 Debug.Log("패널 제거 완료. 현재 맵: " + SubmarineInGameManager.instance.playerInput.currentActionMap.name);
 
