@@ -113,6 +113,7 @@ public class SaveSystemManager : MonoBehaviour
         if (playerStat != null) playerStat.ApplyLoadedStats(data.playerStats.hp, data.playerStats.stamina);
 
         // [인벤토리 업데이트]
+        Debug.Log($"인벤토리: {GetInventoryLogString(data.playerInventory)}\n");
         if (inventorySlots != null && data.playerInventory != null)
         {
             for (int i = 0; i < inventorySlots.Length; i++)
