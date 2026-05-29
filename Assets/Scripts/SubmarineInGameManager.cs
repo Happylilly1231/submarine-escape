@@ -160,17 +160,18 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void ToggleMenuAndSetPause()
     {
-        GameManager.instance.ToggleMenu();
-        if (_isPausing) // 정지 중이면
-        {
-            _playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
-            Resume(); // 정지 해제(플레이)
-        }
-        else // 플레이 중이면
+        GameManager.instance.ToggleMenu(); // 메뉴 켜기/끄기
+
+        if (GameManager.instance.MenuUI.activeSelf) // 메뉴를 켰을 때
         {
             playerInput.actions["ToggleMap"].Disable();
             _playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
             Pause(); // 정지
+        }
+        else // 메뉴를 껐을 때
+        {
+            _playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+            Resume(); // 정지 해제(플레이)
         }
     }
 
