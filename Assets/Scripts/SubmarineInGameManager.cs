@@ -17,11 +17,6 @@ public class SubmarineInGameManager : MonoBehaviour
     // 정지
     private bool _isPausing = false; // 정지 중 여부
     public bool IsPausing { get => _isPausing; set => _isPausing = value; }
-    // private bool _haveToShowCursor = false;
-    // public bool HaveToShowCursor { get => _haveToShowCursor; set => _haveToShowCursor = value; } // 커서가 현재 보여야 하는지 여부(true일 때는 Resume(재시작)을 해도 커서를 숨기지 않음)
-    private bool _isActionMapActiveBeforePause = true; // 정지 전 액션 맵 활성화 여부
-    private bool _isMapOpened = false;
-    public bool IsMapOpened { get => _isMapOpened; set => _isMapOpened = value; }
 
     // 경보
     [SerializeField] private Button alertButton; // 임시 - 경보 버튼
@@ -46,8 +41,8 @@ public class SubmarineInGameManager : MonoBehaviour
     public GameObject player;
     public PlayerInput playerInput;
     private GameObject playerGeo;
-    private PlayerInteractor _playerInteractor;
-    private PlayerCameraController _playerCameraController;
+    public PlayerInteractor playerInteractor { get; private set; }
+    public PlayerCameraController playerCameraController { get; private set; }
     public PlayerMove playerMove { get; private set; }
 
     // 내부 괴물
@@ -88,6 +83,8 @@ public class SubmarineInGameManager : MonoBehaviour
     [SerializeField] private GameObject statUI;
     [SerializeField] private GameObject inventoryUI;
     [SerializeField] private GameObject interactorUI;
+    public GameObject InteractorUI => interactorUI;
+    public bool isInGameMenuActive = false; // 플레이어가 인게임 메뉴를 보고 있는 상태
 
     // 싱글톤 변수
     public static SubmarineInGameManager instance;
@@ -120,11 +117,11 @@ public class SubmarineInGameManager : MonoBehaviour
         // 플레이어 관련 필요한 것 가져오기
         playerGeo = player.transform.GetChild(0).gameObject; // 플레이어 Geo(외형) 가져오기 (Player의 첫번째 자식)
         playerInput = player.GetComponent<PlayerInput>(); // 플레이어 입력 컴포넌트 가져오기
-        _playerInteractor = player.GetComponent<PlayerInteractor>(); // 플레이어 인터랙터 컴포넌트 가져오기
-        _playerCameraController = Camera.main.GetComponent<PlayerCameraController>(); // 플레이어 카메라 컨트롤러 컴포넌트 가져오기
+        playerInteractor = player.GetComponent<PlayerInteractor>(); // 플레이어 인터랙터 컴포넌트 가져오기
+        playerCameraController = Camera.main.GetComponent<PlayerCameraController>(); // 플레이어 카메라 컨트롤러 컴포넌트 가져오기
         playerMove = player.GetComponent<PlayerMove>(); // 플레이어 이동 컴포넌트 가져오기
 
-        InitGame();
+        // InitGame();
     }
 
     private void OnDisable()
@@ -164,13 +161,12 @@ public class SubmarineInGameManager : MonoBehaviour
 
         if (GameManager.instance.MenuUI.activeSelf) // 메뉴를 켰을 때
         {
-            playerInput.actions["ToggleMap"].Disable();
-            _playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
+            playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
             Pause(); // 정지
         }
         else // 메뉴를 껐을 때
         {
-            _playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+            playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
             Resume(); // 정지 해제(플레이)
         }
     }
@@ -178,13 +174,17 @@ public class SubmarineInGameManager : MonoBehaviour
     /// <summary>
     /// 게임 초기 설정
     /// </summary>
-    private void InitGame()
+    public void InitGame()
     {
-        GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
+        FocusManager.Instance.TransitionToState(GameFocusState.None);
+        // GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
 
-        // AudioManager.Instance.PlayBGM(AudioManager.Instance.fanSound);
+        // // AudioManager.Instance.PlayBGM(AudioManager.Instance.fanSound);
 
-        Resume(); // 재시작
+        // // 기본인 플레이어 액션 맵으로 변경
+        // InputManager.instance.SwitchActionMapWithPermanent("Player");
+
+        // Resume(); // 재시작
     }
 
     /// <summary>
@@ -194,23 +194,31 @@ public class SubmarineInGameManager : MonoBehaviour
     {
         Debug.Log("정지");
         _isPausing = true; // 정지 중으로 설정
-        _isActionMapActiveBeforePause = playerInput.currentActionMap.enabled;
-        playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
-        playerInput.actions["ToggleMenu"].Enable();
-        playerInput.actions["ToggleDebug"].Enable();
-        GameManager.instance.SetCursorVisible(true); // 커서 보이기
+
         Time.timeScale = 0f; // 시간 정지
         AudioListener.pause = true; // 오디오 듣기 정지
+
+        FocusManager.Instance.PushFocusState(GameFocusState.ESCMenu); // 퍼즐 포커스 상태로 변경
+
+        // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
+        // playerInput.actions["ToggleMenu"].Enable(); // 메뉴 토글 액션 활성화
+        // playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화
+
+        // GameManager.instance.SetCursorVisible(true); // 커서 보이기
+
+
     }
 
     public void IntroPause()
     {
         // 인트로 중에는 시간 정지는 아니고 플레이어의 상호작용만 막는 상태
         Debug.Log("인트로 시퀀스 시작");
-        _isPausing = false;
-        playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
-        GameManager.instance.SetCursorVisible(false); // 커서 보이기
-        AudioListener.pause = false; // 오디오 듣기 정지 해제
+        InputManager.instance.DisableAllInputs(); // 모든 입력 비활성화
+        // FocusManager.Instance.TransitionToState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 연출 포커스 상태로 변경
+        // _isPausing = false;
+        // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
+        // GameManager.instance.SetCursorVisible(false); // 커서 보이지 않게 하기
+        // AudioListener.pause = false; // 오디오 듣기 정지 해제
     }
 
     /// <summary>
@@ -218,31 +226,38 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void Resume()
     {
-        if (_isMapOpened)
-        {
-            Debug.Log("맵 켜져 있는 상태");
-            playerInput.actions["ToggleMap"].Enable(); // 맵 켜고 끄는 버튼만 활성화
-            return;
-        }
-
         Debug.Log("재시작");
         _isPausing = false; // 정지 중 아님으로 설정
 
         Time.timeScale = 1.0f; // 시간 정지 해제
         AudioListener.pause = false; // 오디오 듣기 정지 해제
 
-        // 액션 맵 복구 로직
-        playerInput.actions["ToggleMenu"].Disable();
-        playerInput.actions["ToggleDebug"].Disable();
-        // 퍼즐 중이라면 Puzzle 맵 활성화
-        if (CurrentPuzzleController != null) playerInput.SwitchCurrentActionMap("Puzzle");
-        // 일반 상태라면 Player 맵 활성화
-        else playerInput.SwitchCurrentActionMap("Player");
-        // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
-        playerInput.actions.FindActionMap("Permanent")?.Enable();
+        FocusManager.Instance.PopFocusState();
 
-        // 커서 숨기기
-        GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
+        // // 액션 맵 복구 로직
+        // // 퍼즐 중이라면 Puzzle 맵 활성화
+        // if (CurrentPuzzleController != null)
+        //     InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
+        // // 일반 상태라면 Player 맵 활성화
+        // else
+        //     InputManager.instance.SwitchActionMapWithPermanent("Player");
+        // playerInput.actions["ToggleDebug"].Disable();
+
+
+        // // 액션 맵 복구 로직
+        // // 퍼즐 중이라면 Puzzle 맵 활성화
+        // if (CurrentPuzzleController != null)
+        //     playerInput.SwitchCurrentActionMap("Puzzle");
+        // // 일반 상태라면 Player 맵 활성화
+        // else
+        //     playerInput.SwitchCurrentActionMap("Player");
+
+        // // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
+        // playerInput.actions.FindActionMap("Permanent")?.Enable();
+
+        // // 인게임 메뉴 비활성화 상태에서만 -> 커서 숨기기 (인게임 메뉴는 퍼즐에서도 켤 수 있어서 HaveToCursor를 true로 하지 않기 때문)
+        // if (!isInGameMenuActive)
+        //     GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
     }
 
     /// <summary>
@@ -298,102 +313,31 @@ public class SubmarineInGameManager : MonoBehaviour
         alertButton.colors = colorBlock;
     }
 
-    // 플레이어 모습 활성화 / 비활성화
+    /// <summary>
+    /// 플레이어 외형 활성화 여부 설정
+    /// </summary>
+    /// <param name="isActive">활성화 여부</param>
     public void SetPlayerGeoActive(bool isActive)
     {
         playerGeo.SetActive(isActive);
     }
 
+    /// <summary>
+    /// 카메라 컨트롤러 활성화 여부 설정
+    /// </summary>
+    /// <param name="isEnable">활성화 여부</param>
     public void SetCameraControllerEnable(bool isEnable)
     {
-        _playerCameraController.enabled = isEnable;
+        playerCameraController.enabled = isEnable;
     }
 
     /// <summary>
-    /// 포커스 여부 설정
-    /// <para>포커스</para>
-    /// <para>- 게임 시간 정지</para>
-    /// <para>- 카메라 조작 불가</para>
-    /// <para>- 플레이어 이동 불가능</para>
-    /// <para>- 퍼즐 진행 중이었다면 종료</para>
+    /// 현재 퍼즐 컨트롤러 갱신
     /// </summary>
-    /// <param name="isFocus">포커스 여부</param>
-    public void SetFocus(bool isFocus)
-    {
-        // 카운트 업데이트
-        if (isFocus) // 포커스 요청
-            _focusRequestCount++; // 포커스 요청 카운트 1 증가
-        else // 포커스 해제 요청
-            _focusRequestCount = Mathf.Max(0, _focusRequestCount - 1); // 포커스 요청 카운트 1 감소
-
-        // 목표 포커스 상태: 포커스 요청 카운트가 1 이상이면 포커스 / 0이면 포커스 해제
-        bool targetFocusState = _focusRequestCount > 0;
-
-        // 현재 포커스 상태와 목표 포커스 상태가 다를 때만 실제 수행
-        if (targetFocusState != _isCurrentlyFocused)
-        {
-            _isCurrentlyFocused = targetFocusState; // 현재 상태 업데이트
-
-            GameTime.Instance.SetPause(isFocus); // 포커스 -> 게임 시간 정지
-
-            // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
-            if (CurrentPuzzleController != null)
-            {
-                CurrentPuzzleController.ExitPuzzle();
-                CurrentPuzzleController = null;
-            }
-
-            // 해제는 포커스와 반대로 작동
-            _playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
-            _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-            playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
-
-            if (isFocus) // 포커스
-            {
-                // 상호작용 감지 텍스트 클리어
-                _playerInteractor.ClearDetectionText();
-
-                playerInput.DeactivateInput(); // 모든 액션 비활성화
-            }
-            else
-            {
-                playerInput.ActivateInput(); // 모든 액션 활성화
-            }
-        }
-    }
-
-    /// <summary>
-    /// 퍼즐 포커스 여부 설정
-    /// </summary>
-    /// <param name="isFocus">포커스 여부</param>
     /// <param name="puzzleController">퍼즐 컨트롤러</param>
-    public void SetPuzzleFocus(bool isFocus, PuzzleController puzzleController = null)
+    public void SetCurrentPuzzleController(PuzzleController puzzleController)
     {
-        if (isFocus)
-            CurrentPuzzleController = puzzleController;
-        else
-            CurrentPuzzleController = null;
-
-        // 해제는 포커스와 반대로 작동
-        _playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
-        _playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
-        _playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-        playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
-
-        if (isFocus) // 포커스
-        {
-            // 상호작용 감지 텍스트 클리어
-            _playerInteractor.ClearDetectionText();
-        }
-        else // 포커스 해제
-        {
-            // 커서 보여야 한다고 되어 있었으면 -> 커서 보이지 않아도 됨으로 설정(퍼즐에서 플레이로 돌아가니까), 커서 숨기기
-            if (GameManager.instance.HaveToShowCursor)
-            {
-                GameManager.instance.SetHaveToShowCursor(false);
-                GameManager.instance.SetCursorVisible(false);
-            }
-        }
+        CurrentPuzzleController = puzzleController;
     }
 
     /// <summary>
@@ -407,4 +351,120 @@ public class SubmarineInGameManager : MonoBehaviour
         statUI.SetActive(isActive); // 스탯 UI
         interactorUI.SetActive(isActive); // 상호작용 UI
     }
+
+    // /// <summary>
+    // /// 포커스 여부 설정
+    // /// <para>포커스</para>
+    // /// <para>- 게임 시간 정지</para>
+    // /// <para>- 카메라 조작 불가</para>
+    // /// <para>- 플레이어 이동 불가능</para>
+    // /// <para>- 퍼즐 진행 중이었다면 종료</para>
+    // /// </summary>
+    // /// <param name="isFocus">포커스 여부</param>
+    // public void SetFocus(bool isFocus)
+    // {
+    //     // 카운트 업데이트
+    //     if (isFocus) // 포커스 요청
+    //         _focusRequestCount++; // 포커스 요청 카운트 1 증가
+    //     else // 포커스 해제 요청
+    //         _focusRequestCount = Mathf.Max(0, _focusRequestCount - 1); // 포커스 요청 카운트 1 감소
+
+    //     // 목표 포커스 상태: 포커스 요청 카운트가 1 이상이면 포커스 / 0이면 포커스 해제
+    //     bool targetFocusState = _focusRequestCount > 0;
+
+    //     // 현재 포커스 상태와 목표 포커스 상태가 다를 때만 실제 수행
+    //     if (targetFocusState != _isCurrentlyFocused)
+    //     {
+    //         _isCurrentlyFocused = targetFocusState; // 현재 상태 업데이트
+
+    //         GameTime.Instance.SetPause(isFocus); // 포커스 -> 게임 시간 정지
+
+    //         // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
+    //         if (CurrentPuzzleController != null)
+    //         {
+    //             CurrentPuzzleController.ExitPuzzle();
+    //             CurrentPuzzleController = null;
+    //         }
+
+    //         // 해제는 포커스와 반대로 작동
+    //         playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
+    //         playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
+    //         playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+    //         if (isFocus) // 포커스
+    //         {
+    //             // 상호작용 감지 텍스트 클리어
+    //             playerInteractor.ClearDetectionText();
+
+    //             playerInput.DeactivateInput(); // 모든 액션 비활성화
+    //         }
+    //         else
+    //         {
+    //             playerInput.ActivateInput(); // 모든 액션 활성화
+    //         }
+    //     }
+    // }
+
+    // /// <summary>
+    // /// 퍼즐 포커스 여부 설정
+    // /// </summary>
+    // /// <param name="isFocus">포커스 여부</param>
+    // /// <param name="puzzleController">퍼즐 컨트롤러</param>
+    // public void SetPuzzleFocus(bool isFocus, PuzzleController puzzleController = null)
+    // {
+    //     if (isFocus)
+    //         CurrentPuzzleController = puzzleController;
+    //     else
+    //         CurrentPuzzleController = null;
+
+    //     // 해제는 포커스와 반대로 작동
+    //     playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
+    //     playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
+    //     playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
+    //     playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+    //     if (isFocus) // 포커스
+    //     {
+    //         // 상호작용 감지 텍스트 클리어
+    //         playerInteractor.ClearDetectionText();
+    //     }
+    //     else // 포커스 해제
+    //     {
+    //         // 커서 보여야 한다고 되어 있었으면 -> 커서 보이지 않아도 됨으로 설정(퍼즐에서 플레이로 돌아가니까), 커서 숨기기
+    //         if (GameManager.instance.HaveToShowCursor)
+    //         {
+    //             GameManager.instance.SetHaveToShowCursor(false);
+    //             GameManager.instance.SetCursorVisible(false);
+    //         }
+    //     }
+    // }
+
+    // public void SetFocusInGameMenu(bool isFocus)
+    // {
+    //     // 해제는 포커스와 반대로 작동
+    //     playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
+    //     isInGameMenuActive = isFocus;
+
+    //     playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
+    //     playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
+
+    //     if (isFocus) // 포커스
+    //     {
+    //         // 상호작용 감지 텍스트 클리어
+    //         playerInteractor.ClearDetectionText();
+
+    //         GameManager.instance.SetCursorVisible(true);
+
+    //         bool isToggleMenuEnabled = playerInput.actions["ToggleMenu"].enabled;
+    //         InputManager.instance.SaveAndDisableAllInputs(); // 인풋 비활성화(현재 여부들 저장)
+    //         playerInput.actions["ToggleInGameMenu"].Enable();
+    //         if (isToggleMenuEnabled)
+    //             playerInput.actions["ToggleMenu"].Enable();
+    //     }
+    //     else // 포커스 해제
+    //     {
+    //         GameManager.instance.SetCursorVisible(false);
+    //         InputManager.instance.RestoreInputsFromSnapshot(); // 인풋 활성화 여부 복구
+    //     }
+    // }
 }

@@ -100,7 +100,8 @@ public class BigSkull : BackroomEntity
         // 2. 카메라가 해골 눈 제대로 마주치도록 상하 회전
         seq.AppendCallback(() =>
         {
-            SubmarineInGameManager.instance.SetFocus(true); // 포커스
+            FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+            // SubmarineInGameManager.instance.SetFocus(true); // 포커스
             Vector3 lookEyeDir = (eyePosTransform.position - Camera.main.transform.position).normalized; // 카메라가 해골 눈높이 바라보는 방향 계산
             Quaternion targetRotation = Quaternion.LookRotation(lookEyeDir); // 해당 방향을 바라보기 위한 쿼터니언을 오일러 각으로 변환
             float targetY = targetRotation.eulerAngles.y; // y만 목표 회전값으로 설정
@@ -113,7 +114,8 @@ public class BigSkull : BackroomEntity
         // 완료 시 -> 포커스 해제
         seq.OnComplete(() =>
         {
-            SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제 
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제 
         });
 
         return seq; // 연출 시퀀스 반환
@@ -276,7 +278,8 @@ public class BigSkull : BackroomEntity
         // 연출
         yield return ViewBigSkullSequence().WaitForCompletion(); // 플레이어가 해골 바라보도록 함
 
-        SubmarineInGameManager.instance.SetFocus(true); // 포커스
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true); // 포커스
         Vector3 playerFrontPos = _playerTransform.position + _playerTransform.forward * 2.5f + _playerTransform.up * 1f;
 
         Sequence seq = DOTween.Sequence();

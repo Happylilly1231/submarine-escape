@@ -6,12 +6,13 @@ using UnityEngine.UI;
 
 public class MapViewController : MonoBehaviour
 {
-    [SerializeField] private GameObject mapUI; // 맵 UI
     [SerializeField] private Image mapImage; // 맵 이미지
     [SerializeField] private Sprite firstFloorMapImage; // 1층 맵 이미지
     [SerializeField] private Sprite secondFloorMapImage; // 2층 맵 이미지
     [SerializeField] private RectTransform playerIcon;
     [SerializeField] private RectTransform mapRectTransform;
+    [SerializeField] private Button firstFloorButton; // 1층 버튼
+    [SerializeField] private Button secondFloorButton; // 2층 버튼
     private Vector3 mapCameraPos = new Vector3(-3, 50, 6);
 
     private float xMin = -18f;
@@ -23,54 +24,50 @@ public class MapViewController : MonoBehaviour
     private float mapWorldWidth;
     private float mapWorldHeight;
 
-    private bool _isMapUnlocked = true; // 지도 처음부터 잠금 해제
-    private int _currentFloor = 1; // 현재 층수
-    public float secondFloorHeight; // 2층 바닥 높이
+    public int CurrentFloor { get; private set; } = 1; // 현재 층수
+    private float _secondFloorHeight = 6f; // 2층 바닥 높이
 
     private void Start()
     {
         mapWorldWidth = xMax - xMin;
         mapWorldHeight = zMax - zMin;
+
+        firstFloorButton.onClick.AddListener(() => { SetFloor(1); });
+        secondFloorButton.onClick.AddListener(() => { SetFloor(2); });
     }
 
-    // /// <summary>
-    // /// 맵 잠금 해제
-    // /// </summary>
-    // public void UnlockMap()
-    // {
-    //     _isMapUnlocked = true;
-    // }
+    /// <summary>
+    /// 맵 UI 갱신
+    /// </summary>
+    public void UpdateMapUI()
+    {
+        // 현재 플레이어 위치에 따라 자동으로 보여줄 층수 설정됨
+        if (SubmarineInGameManager.instance.player.transform.position.y < _secondFloorHeight)
+            SetFloor(1);
+        else
+            SetFloor(2);
+
+        ShowPlayerLocation();
+    }
 
     /// <summary>
-    /// Tab키 입력으로 맵 켜기/끄기
+    /// 맵에서 볼 층수 설정(층수 버튼 함수)
     /// </summary>
-    /// <param name="context">입력</param>
-    public void OnToggleMap(InputAction.CallbackContext context)
+    /// <param name="floor">층수</param>
+    public void SetFloor(int floor)
     {
-        if (!context.performed || !_isMapUnlocked) return;
-        Debug.Log("Tap!");
+        if (CurrentFloor == floor)
+            return;
 
-        // 맵을 켜는 경우
-        if (!mapUI.activeSelf)
+        CurrentFloor = floor;
+        if (floor == 1)
         {
-            // 현재 플레이어 위치에 따라 자동으로 보여줄 층수 설정됨
-            if (SubmarineInGameManager.instance.player.transform.position.y < secondFloorHeight)
-                SetFloor(1);
-            else
-                SetFloor(2);
-
-            SubmarineInGameManager.instance.IsMapOpened = true;
-            SubmarineInGameManager.instance.Pause();
-            SubmarineInGameManager.instance.player.GetComponent<PlayerInput>().actions["ToggleMap"].Enable();
-            ShowPlayerLocation();
+            mapImage.sprite = firstFloorMapImage;
         }
         else
         {
-            SubmarineInGameManager.instance.IsMapOpened = false;
-            SubmarineInGameManager.instance.Resume();
+            mapImage.sprite = secondFloorMapImage;
         }
-
-        mapUI.SetActive(!mapUI.activeSelf);
     }
 
     /// <summary>
@@ -83,8 +80,8 @@ public class MapViewController : MonoBehaviour
         // [기존 위치 계산 코드]
         float normX = 1 - (playerTransform.position.x - xMin) / mapWorldWidth;
         float normZ = (playerTransform.position.z - zMin) / mapWorldHeight;
-        float uiX = 127 + normZ * 1663f;
-        float uiY = 170 + normX * 739f;
+        float uiX = 61f + normZ * 1295f;
+        float uiY = 141f + normX * 600f;
         playerIcon.anchoredPosition = new Vector2(uiX, uiY);
 
         // ================= 새로운 벡터 기반 회전 방식 =================
@@ -105,22 +102,5 @@ public class MapViewController : MonoBehaviour
 
         // 5. 최종 회전값 적용
         playerIcon.localEulerAngles = new Vector3(0, 0, finalUiRotationZ);
-    }
-
-    /// <summary>
-    /// 맵에서 볼 층수 설정(층수 버튼 함수)
-    /// </summary>
-    /// <param name="floor">층수</param>
-    public void SetFloor(int floor)
-    {
-        _currentFloor = floor;
-        if (floor == 1)
-        {
-            mapImage.sprite = firstFloorMapImage;
-        }
-        else
-        {
-            mapImage.sprite = secondFloorMapImage;
-        }
     }
 }

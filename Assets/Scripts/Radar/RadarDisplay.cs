@@ -27,6 +27,10 @@ public class RadarDisplay : MonoBehaviour
     [SerializeField] private RectTransform realExplosionRange; // 실제 폭발 범위
     [SerializeField] private RectTransform animExplosionRange; // 애니메이션 폭발 범위
 
+    [SerializeField] private Image radarImg; // 레이더 이미지
+    [SerializeField] private Sprite defaultRadar; // 기본 레이더
+    [SerializeField] private Sprite redRadar; // 빨간 레이더
+
     public GameObject heightLever; // 높이 레버
     public GameObject fireButton; // 발사 버튼
 
@@ -70,12 +74,6 @@ public class RadarDisplay : MonoBehaviour
             firingLine.gameObject.SetActive(false);
             fireTorpedo.gameObject.SetActive(false);
             realExplosionRange.gameObject.SetActive(false);
-
-            // 애니메이션 어뢰 발사 UI 요소 숨기기
-            // animTargetDot.gameObject.SetActive(false);
-            // animTorpedo.gameObject.SetActive(false);
-            // animDistanceLine.gameObject.SetActive(false);
-            // animExplosionRange.gameObject.SetActive(false);
         }
         else
         {
@@ -204,6 +202,18 @@ public class RadarDisplay : MonoBehaviour
         heightContent.anchoredPosition = new Vector2(heightContent.anchoredPosition.x, targetY);
     }
 
+    /// <summary>
+    /// 레이더 배경을 위험(빨간색)으로 할지 여부 설정
+    /// </summary>
+    /// <param name="isDanger">현재 위험 여부</param>
+    public void SetDangerBackround(bool isDanger)
+    {
+        if (isDanger)
+            radarImg.sprite = redRadar;
+        else
+            radarImg.sprite = defaultRadar;
+    }
+
     #region 발사
     /// <summary>
     /// 발사 버튼 활성화 여부 갱신
@@ -318,7 +328,7 @@ public class RadarDisplay : MonoBehaviour
         }
 
         Vector2 retreatDir = target.dotRectTransform.anchoredPosition.normalized; // 후퇴 방향
-        float retreatSpeed = 15f;
+        float retreatSpeed = 0.025f;
 
         // 불투명도 변경
         float t = 0f;
@@ -337,7 +347,7 @@ public class RadarDisplay : MonoBehaviour
             target.dotImg.color = c;
 
             // 크기 변경
-            float scale = Mathf.Lerp(0.3f, 1f, alpha);
+            float scale = Mathf.Lerp(0.5f, 1f, alpha);
             target.dotRectTransform.localScale = Vector3.one * scale;
 
             // 페이드 아웃일 때만 -> 위치 변경(물러남)

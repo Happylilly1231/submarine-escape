@@ -471,6 +471,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "RightClick",
+                    "type": "Button",
+                    "id": "7de0607f-ef32-4808-b18c-6c003d20a302",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -583,6 +592,17 @@
                     "action": "KeyE",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4b9769ac-5f59-480a-8952-94c3450a18f4",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "RightClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -603,6 +623,24 @@
                     "name": "SlotKeyPress",
                     "type": "Button",
                     "id": "a2b963fb-1428-43fe-957e-e1ebf947579f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleInGameMenu",
+                    "type": "Button",
+                    "id": "1f02194f-d6ad-49de-960b-1a5b9a076b90",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UpDownKey",
+                    "type": "Button",
+                    "id": "afb9e098-7870-4983-977e-06c2199c0f4d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -686,6 +724,50 @@
                     "action": "SlotKeyPress",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "84f077e8-b2b9-4358-bcd0-342b3fae234c",
+                    "path": "<Keyboard>/v",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "ToggleInGameMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "1D Axis",
+                    "id": "1df62e9a-ef3e-4d16-8f9e-78fff32303f3",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UpDownKey",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "a7dcea87-49c7-4c48-b770-beca3a9ba854",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "UpDownKey",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "c7fd380a-6ee0-4cc2-8409-eb06846ceb1f",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "UpDownKey",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         }

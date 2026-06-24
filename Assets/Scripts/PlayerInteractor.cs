@@ -46,7 +46,8 @@ public class PlayerInteractor : MonoBehaviour
 
     void Update()
     {
-        if (!IsPuzzleActive) DetectObject();
+        if (!IsPuzzleActive || SubmarineInGameManager.instance.isInGameMenuActive)
+            DetectObject();
     }
 
     /// <summary>

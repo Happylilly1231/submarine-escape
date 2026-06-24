@@ -120,7 +120,7 @@ public class GameManager : MonoBehaviour
 
     private float _mouseSensitivity; // 마우스 감도
     public float MouseSensitivity => _mouseSensitivity;
-    private bool _haveToShowCursor = true;
+    private bool _haveToShowCursor = false;
     public bool HaveToShowCursor => _haveToShowCursor;
 
     // 현재 난이도
@@ -129,6 +129,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string playerName;
     public string PlayerName { get => playerName; private set => playerName = value; } // 플레이어 이름
     public EPanelType CurrentPanelType = EPanelType.NameSetting;
+
+    private int _cursorRequestCount = 0;
 
     // 싱글톤 변수
     public static GameManager instance;
@@ -172,11 +174,13 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (!_haveToShowCursor)
-            {
-                Cursor.visible = false; // 마우스 커서 숨김
-                Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
-            }
+            Cursor.visible = false; // 마우스 커서 숨김
+            Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+            // if (!_haveToShowCursor)
+            // {
+            //     Cursor.visible = false; // 마우스 커서 숨김
+            //     Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
+            // }
         }
     }
 
@@ -187,6 +191,31 @@ public class GameManager : MonoBehaviour
     public void SetHaveToShowCursor(bool isShow)
     {
         _haveToShowCursor = isShow;
+    }
+
+    /// <summary>
+    /// 커서 활성화/비활성화 요청 (카운터 기반)
+    /// </summary>
+    /// <param name="isShow"커서 표시 여부</param>
+    public void RequestCursor(bool isShow)
+    {
+        // 카운트 업데이트
+        if (isShow)
+            _cursorRequestCount++;
+        else
+            _cursorRequestCount = Mathf.Max(0, _cursorRequestCount - 1);
+
+        // 최종 상태 반영 (카운트가 0보다 크면 무조건 커서를 보여줌)
+        if (_cursorRequestCount > 0)
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
     }
 
     public void ToggleMenu()

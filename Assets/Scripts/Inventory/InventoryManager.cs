@@ -254,6 +254,15 @@ public class InventoryManager : MonoBehaviour
         if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
             sb.AppendLine("아이템 버리기 [Q]");
 
+        // SOS 신호 퍼즐 상호작용 메시지
+        if (SubmarineInGameManager.instance.CurrentPuzzleController is TelegraphKey telegraphKey)
+        {
+            sb.AppendLine("모스 부호 입력 [Mouse LMB]");
+            sb.AppendLine("최종 메시지 송신 [Mouse RMB]");
+            if (telegraphKey.IsSubmarineLeft)
+                sb.AppendLine("녹음 재생 [E]");
+        }
+
         actionText.text = sb.ToString();
     }
 
@@ -497,5 +506,22 @@ public class InventoryManager : MonoBehaviour
         {
             Destroy(rb);
         }
+    }
+
+    /// <summary>
+    /// 인벤토리에 해당 아이템을 갖고 있는지 여부 검사
+    /// </summary>
+    /// <param name="item">아이템</param>
+    /// <returns>인벤토리에 해당 아이템을 갖고 있는지 여부</returns>
+    public bool CheckHasItemInInventory(Item item)
+    {
+        foreach (var slot in inventorySlots)
+        {
+            if (slot.Item != null && slot.Item.ItemName == item.ItemName)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

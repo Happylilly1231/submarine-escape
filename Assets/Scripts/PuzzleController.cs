@@ -28,6 +28,7 @@ public abstract class PuzzleController : MonoBehaviour
     private InputAction _keyE; // E 키
     public InputAction KeyE => _keyE;
     protected InputAction ForceKey { get; private set; }
+    protected InputAction RightClick { get; private set; }
 
     public bool IsPuzzleStarted { get; private set; } // 현재 퍼즐 시작되었는지(활성화되는 시점 X, StartPuzzle이 실행되는 시점 O) 여부
     private bool _isInputLocked = false; // 현재 입력 잠금 여부
@@ -35,13 +36,15 @@ public abstract class PuzzleController : MonoBehaviour
     // 호버
     protected abstract bool IsHoverRequired { get; } // 호버 필요한지 여부
     protected abstract bool IsMouseRequiredAtFirst { get; } // 마우스 처음에 필요한지 여부(고정값이라 Start()에서만 이것 참조, 후에는 아래 변수 참조)
-    private bool _isCurrentMouseRequired; // 현재 마우스 필요한지 여부
+    public bool IsCurrentMouseRequired { get; private set; } // 현재 마우스 필요한지 여부
     private LayerMask _hoverableLayerMask; // 호버 가능 레이어 마스크(Hoverable 레이어)
     private HoverInteractable _currentHover; // 현재 호버
     public HoverInteractable CurrentHover => _currentHover;
 
     protected InventoryManager inventoryManager; // 인벤토리 매니저 참조
     protected ItemEquipController itemEquipController; // 아이템 장착 컨트롤러 참조
+
+    private Sequence _activatePuzzleSequence = null;
 
     // // 이벤트
     // public event Action OnPuzzleStarted; // 퍼즐 시작 이벤트(활성화 시점 X)
@@ -62,11 +65,12 @@ public abstract class PuzzleController : MonoBehaviour
         _space = playerInput.actions["Space"];
         _keyE = playerInput.actions["KeyE"];
         ForceKey = playerInput.actions["ForceKey"];
+        RightClick = playerInput.actions["RightClick"];
 
         _hoverableLayerMask = LayerMask.GetMask("Hoverable");
 
         // 커서 보여줘야하는지 여부 설정
-        _isCurrentMouseRequired = IsMouseRequiredAtFirst;
+        IsCurrentMouseRequired = IsMouseRequiredAtFirst;
 
         inventoryManager = FindObjectOfType<InventoryManager>();
         itemEquipController = FindObjectOfType<ItemEquipController>();
@@ -81,7 +85,7 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="isRequired">필요 여부</param>
     public void SetMouseRequired(bool isRequired)
     {
-        _isCurrentMouseRequired = isRequired;
+        IsCurrentMouseRequired = isRequired;
         GameManager.instance.SetHaveToShowCursor(isRequired);
         GameManager.instance.SetCursorVisible(isRequired);
     }
@@ -97,19 +101,24 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="viewPoint"></param>
     public virtual void ActivatePuzzle()
     {
-        SubmarineInGameManager.instance.SetPuzzleFocus(true, this);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(false);
+        SubmarineInGameManager.instance.SetCurrentPuzzleController(this); // 현재 퍼즐 컨트롤러를 지금 컨트롤러로 갱신
+        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = true; // 퍼즐 활성화 상태로 변경
+        FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetPuzzleFocus(true, this);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(false); // 플레이어 외형 안 보이게
 
-        Sequence seq = DOTween.Sequence();
-        seq.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
+        _exit.performed += OnExit;
+
+        _activatePuzzleSequence = DOTween.Sequence();
+        _activatePuzzleSequence.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
         .SetEase(Ease.OutQuad));
 
-        seq.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
+        _activatePuzzleSequence.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
         .SetEase(Ease.OutQuad));
 
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
 
-        seq.OnComplete(() =>
+        _activatePuzzleSequence.OnComplete(() =>
         {
             StartPuzzle(); // 퍼즐 시작
         });
@@ -121,15 +130,12 @@ public abstract class PuzzleController : MonoBehaviour
     public virtual void StartPuzzle()
     {
         IsPuzzleStarted = true;
-        playerInput.SwitchCurrentActionMap("Puzzle");
+        // InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
 
-        // 퍼즐로 전환하더라도 Permanent 맵은 계속 살아있게함
-        playerInput.actions.FindActionMap("Permanent")?.Enable();
-
-        _exit.performed += OnExit;
+        // _exit.performed += OnExit;
         if (IsHoverRequired) _point.performed += OnPoint; // 호버 필요할 때만 미리 구독
 
-        if (_isCurrentMouseRequired)
+        if (IsCurrentMouseRequired)
         {
             GameManager.instance.SetHaveToShowCursor(true);
             GameManager.instance.SetCursorVisible(true);
@@ -147,9 +153,7 @@ public abstract class PuzzleController : MonoBehaviour
         _exit.performed -= OnExit;
         if (IsHoverRequired) _point.performed -= OnPoint; // 호버 필요할 때만 미리 구독해두었던 것 해제
 
-        playerInput.SwitchCurrentActionMap("Player");
-
-        playerInput.actions.FindActionMap("Permanent")?.Enable();
+        // InputManager.instance.SwitchActionMapWithPermanent("Player");
 
         // if (_isCurrentMouseRequired)
         // {
@@ -164,12 +168,18 @@ public abstract class PuzzleController : MonoBehaviour
             _currentHover = null;
         }
 
-        SubmarineInGameManager.instance.SetPuzzleFocus(false);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(true);
-
-        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
-
         // OnPuzzleExited?.Invoke();
+    }
+
+    /// <summary>
+    /// 퍼즐 활성화(카메라 이동) 중단
+    /// </summary>
+    public virtual void StopActivatePuzzle()
+    {
+        _exit.performed -= OnExit;
+
+        _activatePuzzleSequence.Kill();
+        _activatePuzzleSequence = null;
     }
 
     /// <summary>
@@ -178,7 +188,21 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="context"></param>
     public virtual void OnExit(InputAction.CallbackContext context)
     {
-        ExitPuzzle();
+        if (_activatePuzzleSequence != null && _activatePuzzleSequence.IsActive())
+        {
+            StopActivatePuzzle();
+        }
+        else
+        {
+            ExitPuzzle();
+        }
+
+        SubmarineInGameManager.instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
+        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
+        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+        // SubmarineInGameManager.instance.SetPuzzleFocus(false);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
+        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
 
     /// <summary>

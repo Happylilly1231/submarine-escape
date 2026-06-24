@@ -23,6 +23,9 @@ public class IntroSequencer : MonoBehaviour
 
     void Start()
     {
+        // 게임 초기 설정
+        SubmarineInGameManager.instance.InitGame();
+
         // 세이브 로드 상태라면
         if (SaveSystemManager.Instance != null && SaveSystemManager.IsLoadGameMode)
         {

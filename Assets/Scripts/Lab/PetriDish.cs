@@ -194,7 +194,8 @@ public class PetriDish : LabEquipment, IInteractable
     public void MixMonsterBlood()
     {
         isMixing = true;
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
             rb.isKinematic = true;
@@ -239,7 +240,8 @@ public class PetriDish : LabEquipment, IInteractable
             RefreshVisuals(); // 비주얼 업데이트 
             if (rb != null)
                 rb.isKinematic = false;
-            SubmarineInGameManager.instance.SetFocus(false);
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false);
             isMonsterBloodMixed = true;
             isMixing = false;
         });

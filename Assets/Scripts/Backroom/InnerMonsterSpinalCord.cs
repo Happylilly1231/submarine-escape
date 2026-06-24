@@ -74,7 +74,8 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         Debug.Log("추출 시작!");
 
         // 1. 포커스 & 현재 플레이어 위치 저장 (나중에 백룸에서 탈출할 때 다시 이곳으로 옴)
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
         BackroomManager.Instance.originalPos = SubmarineInGameManager.instance.player.transform.position;
 
         // 2. 괴물 정지
@@ -179,7 +180,8 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         // 포커스 해제
         seq.AppendCallback(() =>
         {
-            SubmarineInGameManager.instance.SetFocus(false);
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false);
             GameTime.Instance.SetPauseInBackroom(true); // 백룸에서는 게임 시간 정지
         });
 
@@ -217,7 +219,8 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
             _currentExtractorObj = null; // 현재 추출기 아이템 초기화(추출 끝났으므로)
 
             // 상태
-            SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
             GameTime.Instance.SetPauseInBackroom(false); // 백룸 나왔으니 게임 시간 정지 해제
             _innerMonsterController.IsBeingExtracted = false; // 추출 중 아님으로 설정
         });

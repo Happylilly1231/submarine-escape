@@ -250,7 +250,8 @@ public class BackroomManager : MonoBehaviour
     {
         isPlayingBackroom = false;
 
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
 
         Sequence seq = DOTween.Sequence();
 

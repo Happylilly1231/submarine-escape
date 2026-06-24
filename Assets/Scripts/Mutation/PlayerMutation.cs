@@ -151,7 +151,8 @@ public class PlayerMutation : MonoBehaviour
         GameObject spike = spikes[CurrentStage - 2];
 
         // 포커스
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
 
         // 3인칭 시점으로 즉시 바뀌고 가시가 생성되는 등을 비춤
         Camera.main.transform.position = spawnSpikeViewPoint.position;
@@ -225,7 +226,8 @@ public class PlayerMutation : MonoBehaviour
         // 완료되면 포커스 종료 
         seq.OnComplete(() =>
         {
-            SubmarineInGameManager.instance.SetFocus(false);
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false);
         });
     }
 
@@ -295,7 +297,8 @@ public class PlayerMutation : MonoBehaviour
         //SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CureInjected, GameTime.Instance.TimeSinceStart);
 
         // 포커스
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
 
         AudioClip sound;
 
@@ -331,7 +334,8 @@ public class PlayerMutation : MonoBehaviour
         seq.OnComplete(() =>
         {
             // 포커스 해제
-            SubmarineInGameManager.instance.SetFocus(false);
+            FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+            // SubmarineInGameManager.instance.SetFocus(false);
 
             if (!isSuccess)
             {
