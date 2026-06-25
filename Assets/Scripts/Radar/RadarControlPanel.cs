@@ -19,6 +19,7 @@ public class RadarControlPanel : InteractableBase
     private void Start()
     {
         inventoryManager = FindObjectOfType<InventoryManager>();
+        radarController.RadarControlPanelAudioSource = GetComponent<AudioSource>();
     }
 
     private void OnEnable()
@@ -90,6 +91,7 @@ public class RadarControlPanel : InteractableBase
     public void Broke()
     {
         _isBroken = true;
+        radarController.SetTurnOnScreen(false);
     }
 
     /// <summary>
@@ -100,7 +102,8 @@ public class RadarControlPanel : InteractableBase
         float repairTime = 3f;
         float timer = repairTime;
 
-        SubmarineInGameManager.instance.SetPuzzleFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetPuzzleFocus(true);
 
         inventoryManager.UpdateActionText();
 
@@ -114,7 +117,8 @@ public class RadarControlPanel : InteractableBase
         yield return new WaitForSeconds(1f);
         MessageUIController.Instance.HideMessage();
 
-        SubmarineInGameManager.instance.SetPuzzleFocus(false);
+        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+        // SubmarineInGameManager.instance.SetPuzzleFocus(false);
         _isBroken = false;
     }
 }

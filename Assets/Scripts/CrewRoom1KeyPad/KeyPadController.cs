@@ -305,8 +305,9 @@ public class KeyPadController : PuzzleController
         flashlight.SetActive(false);
         successFlashlight.SetActive(true);
 
-        GameManager.instance.SetHaveToShowCursor(false);
-        GameManager.instance.SetCursorVisible(false);
+        SetMouseRequired(false);
+        // GameManager.instance.SetHaveToShowCursor(false);
+        // GameManager.instance.SetCursorVisible(false);
 
         if (audioSource) { audioSource.clip = openingDoorSound; audioSource.Play(); }
 

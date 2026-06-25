@@ -123,7 +123,7 @@ public class RadarLauncher : MonoBehaviour
         while (currentExplosionTargets.Count == 0) // 폭발 가능한 타겟이 없는 동안
         {
             // 정지 중일 때 -> 아무것도 안 함
-            if (SubmarineInGameManager.instance.IsPausing)
+            if (GameManager.instance.IsPausing)
                 yield return null;
 
             // 어뢰 위치 업데이트

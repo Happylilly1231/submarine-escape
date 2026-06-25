@@ -34,7 +34,7 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     private void Update()
     {
         // 정지 중일 때 -> 아무것도 안 함
-        if (SubmarineInGameManager.instance.IsPausing)
+        if (GameManager.instance.IsPausing)
             return;
 
         // 퍼즐이 시작되지 않았으면 -> 아무것도 안 함

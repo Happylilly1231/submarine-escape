@@ -1616,7 +1616,7 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: SubmarineInGameManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: MenuUIController, Assembly-CSharp
         m_MethodName: OnToggleMenu
         m_Mode: 0
         m_Arguments:
@@ -1728,22 +1728,6 @@ MonoBehaviour:
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: MapViewController, Assembly-CSharp
-        m_MethodName: OnToggleMap
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 1f11af43-3f70-4fcc-aaeb-2bd8485ece71
-    m_ActionName: Permanent/ToggleMap[/Keyboard/tab]
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
         m_MethodName: OnSlotKeyPress
         m_Mode: 0
@@ -1773,6 +1757,14 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 9880594b-bcfb-4e2e-8667-0854f50849a1
     m_ActionName: Player/ToggleDebug[/Keyboard/ctrl,/Keyboard/f1]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 7de0607f-ef32-4808-b18c-6c003d20a302
+    m_ActionName: Puzzle/RightClick[/Mouse/rightButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 1f02194f-d6ad-49de-960b-1a5b9a076b90
+    m_ActionName: Permanent/ToggleTabMenu[/Keyboard/tab]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player

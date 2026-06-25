@@ -398,7 +398,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""path"": ""<Keyboard>/escape"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": """",
+                    ""groups"": "";PC"",
                     ""action"": ""ToggleMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -557,6 +557,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""RightClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""7de0607f-ef32-4808-b18c-6c003d20a302"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -669,6 +678,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""KeyE"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4b9769ac-5f59-480a-8952-94c3450a18f4"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""RightClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -677,9 +697,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             ""id"": ""7c0fe542-d38f-4cc9-a7e5-efb22b4eba6d"",
             ""actions"": [
                 {
-                    ""name"": ""ToggleMap"",
+                    ""name"": ""ToggleInGameMenu"",
                     ""type"": ""Button"",
-                    ""id"": ""1f11af43-3f70-4fcc-aaeb-2bd8485ece71"",
+                    ""id"": ""1f02194f-d6ad-49de-960b-1a5b9a076b90"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -696,17 +716,6 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 }
             ],
             ""bindings"": [
-                {
-                    ""name"": """",
-                    ""id"": ""880338bc-6231-4b86-b47b-d24edac882cb"",
-                    ""path"": ""<Keyboard>/tab"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";PC"",
-                    ""action"": ""ToggleMap"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
                 {
                     ""name"": """",
                     ""id"": ""9f6ba36b-deea-46d6-843a-98da2e6adedb"",
@@ -772,6 +781,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""SlotKeyPress"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""84f077e8-b2b9-4358-bcd0-342b3fae234c"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""ToggleInGameMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -823,9 +843,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Puzzle_KeyD = m_Puzzle.FindAction("KeyD", throwIfNotFound: true);
         m_Puzzle_KeyE = m_Puzzle.FindAction("KeyE", throwIfNotFound: true);
         m_Puzzle_ForceKey = m_Puzzle.FindAction("ForceKey", throwIfNotFound: true);
+        m_Puzzle_RightClick = m_Puzzle.FindAction("RightClick", throwIfNotFound: true);
         // Permanent
         m_Permanent = asset.FindActionMap("Permanent", throwIfNotFound: true);
-        m_Permanent_ToggleMap = m_Permanent.FindAction("ToggleMap", throwIfNotFound: true);
+        m_Permanent_ToggleInGameMenu = m_Permanent.FindAction("ToggleInGameMenu", throwIfNotFound: true);
         m_Permanent_SlotKeyPress = m_Permanent.FindAction("SlotKeyPress", throwIfNotFound: true);
     }
 
@@ -1178,6 +1199,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Puzzle_KeyD;
     private readonly InputAction m_Puzzle_KeyE;
     private readonly InputAction m_Puzzle_ForceKey;
+    private readonly InputAction m_Puzzle_RightClick;
     /// <summary>
     /// Provides access to input actions defined in input action map "Puzzle".
     /// </summary>
@@ -1221,6 +1243,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Puzzle/ForceKey".
         /// </summary>
         public InputAction @ForceKey => m_Wrapper.m_Puzzle_ForceKey;
+        /// <summary>
+        /// Provides access to the underlying input action "Puzzle/RightClick".
+        /// </summary>
+        public InputAction @RightClick => m_Wrapper.m_Puzzle_RightClick;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1271,6 +1297,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ForceKey.started += instance.OnForceKey;
             @ForceKey.performed += instance.OnForceKey;
             @ForceKey.canceled += instance.OnForceKey;
+            @RightClick.started += instance.OnRightClick;
+            @RightClick.performed += instance.OnRightClick;
+            @RightClick.canceled += instance.OnRightClick;
         }
 
         /// <summary>
@@ -1306,6 +1335,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ForceKey.started -= instance.OnForceKey;
             @ForceKey.performed -= instance.OnForceKey;
             @ForceKey.canceled -= instance.OnForceKey;
+            @RightClick.started -= instance.OnRightClick;
+            @RightClick.performed -= instance.OnRightClick;
+            @RightClick.canceled -= instance.OnRightClick;
         }
 
         /// <summary>
@@ -1343,7 +1375,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     // Permanent
     private readonly InputActionMap m_Permanent;
     private List<IPermanentActions> m_PermanentActionsCallbackInterfaces = new List<IPermanentActions>();
-    private readonly InputAction m_Permanent_ToggleMap;
+    private readonly InputAction m_Permanent_ToggleInGameMenu;
     private readonly InputAction m_Permanent_SlotKeyPress;
     /// <summary>
     /// Provides access to input actions defined in input action map "Permanent".
@@ -1357,9 +1389,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public PermanentActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Permanent/ToggleMap".
+        /// Provides access to the underlying input action "Permanent/ToggleInGameMenu".
         /// </summary>
-        public InputAction @ToggleMap => m_Wrapper.m_Permanent_ToggleMap;
+        public InputAction @ToggleInGameMenu => m_Wrapper.m_Permanent_ToggleInGameMenu;
         /// <summary>
         /// Provides access to the underlying input action "Permanent/SlotKeyPress".
         /// </summary>
@@ -1390,9 +1422,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_PermanentActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_PermanentActionsCallbackInterfaces.Add(instance);
-            @ToggleMap.started += instance.OnToggleMap;
-            @ToggleMap.performed += instance.OnToggleMap;
-            @ToggleMap.canceled += instance.OnToggleMap;
+            @ToggleInGameMenu.started += instance.OnToggleInGameMenu;
+            @ToggleInGameMenu.performed += instance.OnToggleInGameMenu;
+            @ToggleInGameMenu.canceled += instance.OnToggleInGameMenu;
             @SlotKeyPress.started += instance.OnSlotKeyPress;
             @SlotKeyPress.performed += instance.OnSlotKeyPress;
             @SlotKeyPress.canceled += instance.OnSlotKeyPress;
@@ -1407,9 +1439,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="PermanentActions" />
         private void UnregisterCallbacks(IPermanentActions instance)
         {
-            @ToggleMap.started -= instance.OnToggleMap;
-            @ToggleMap.performed -= instance.OnToggleMap;
-            @ToggleMap.canceled -= instance.OnToggleMap;
+            @ToggleInGameMenu.started -= instance.OnToggleInGameMenu;
+            @ToggleInGameMenu.performed -= instance.OnToggleInGameMenu;
+            @ToggleInGameMenu.canceled -= instance.OnToggleInGameMenu;
             @SlotKeyPress.started -= instance.OnSlotKeyPress;
             @SlotKeyPress.performed -= instance.OnSlotKeyPress;
             @SlotKeyPress.canceled -= instance.OnSlotKeyPress;
@@ -1642,6 +1674,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnForceKey(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RightClick" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRightClick(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Permanent" which allows adding and removing callbacks.
@@ -1651,12 +1690,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     public interface IPermanentActions
     {
         /// <summary>
-        /// Method invoked when associated input action "ToggleMap" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "ToggleInGameMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnToggleMap(InputAction.CallbackContext context);
+        void OnToggleInGameMenu(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "SlotKeyPress" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

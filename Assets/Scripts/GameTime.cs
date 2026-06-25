@@ -44,7 +44,7 @@ public class GameTime : MonoBehaviour
     private void Update()
     {
         // Debug.Log(_isPausing + " / " + TimeSinceStart);
-        if (SubmarineInGameManager.instance.IsPausing || _isPausing)
+        if (GameManager.instance.IsPausing || _isPausing)
             return;
 
         TimeSinceStart += Time.deltaTime;

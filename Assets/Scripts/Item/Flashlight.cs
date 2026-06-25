@@ -9,7 +9,7 @@ public class Flashlight : MonoBehaviour
 
     private void Update()
     {
-        if (SubmarineInGameManager.instance.CurrentPuzzleController != null) flashlightLight.enabled = false;
+        if (FocusManager.Instance.CurrentPuzzleController != null) flashlightLight.enabled = false;
     }
 
     public void Use()

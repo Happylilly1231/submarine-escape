@@ -2,10 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class MenuUIController : MonoBehaviour
 {
+    [SerializeField] private GameObject menuUI;
+    public GameObject MenuUI => menuUI;
+
     [SerializeField] private GameObject tabButtonRoot;
     [SerializeField] private GameObject tabPanelRoot;
     [SerializeField] private Slider masterVolumeSlider;
@@ -39,7 +43,6 @@ public class MenuUIController : MonoBehaviour
             return;
         }
         instance = this;
-        DontDestroyOnLoad(gameObject);
 
         _debuggingUIManager = GetComponent<DebuggingUIManager>();
 
@@ -56,6 +59,7 @@ public class MenuUIController : MonoBehaviour
         {
             tabPanels[i] = tabPanelRoot.transform.GetChild(i).gameObject;
         }
+        Debug.Log("??? : " + tabPanels.Length);
 
         // 디버깅 UI 비활성화
         SetActiveDebuggingUI(false);
@@ -86,6 +90,40 @@ public class MenuUIController : MonoBehaviour
         setDifficultyHardButton.onClick.AddListener(() => OnClickSetDifficultyButton(setDifficultyHardButtonText, Difficulty.Hard));
 
         OnClickSetDifficultyButton(setDifficultyEasyButtonText, Difficulty.Easy);
+    }
+
+    /// <summary>
+    /// Escape키 입력에 따라 메뉴 열기/열기 해제
+    /// </summary>
+    public void OnToggleMenu(InputAction.CallbackContext context)
+    {
+        // 정지 버튼(ESC) 눌렀을 때
+        if (context.performed)
+        {
+            ToggleMenu();
+        }
+    }
+
+    public void ToggleMenu()
+    {
+        menuUI.SetActive(!menuUI.activeSelf);
+        if (menuUI.activeSelf)
+        {
+            GameManager.instance.Pause(); // 정지
+            OpenTab(0);
+            if (SubmarineInGameManager.instance != null) // 인게임 중이면
+            {
+                PlayerManager.Instance.playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
+            }
+        }
+        else
+        {
+            GameManager.instance.Resume(); // 정지 해제
+            if (SubmarineInGameManager.instance != null) // 인게임 중이면
+            {
+                PlayerManager.Instance.playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+            }
+        }
     }
 
     private void OnClickSetDifficultyButton(TextMeshProUGUI buttonText, Difficulty difficulty)
@@ -143,6 +181,7 @@ public class MenuUIController : MonoBehaviour
             tabButtons[_currentIndex].transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = _originalColor;
         }
 
+        Debug.Log(index + " / " + tabPanels.Length);
         tabPanels[index].SetActive(true);
         _currentIndex = index;
         tabButtons[_currentIndex].transform.GetChild(0).GetComponent<Image>().color = _highLightColor;

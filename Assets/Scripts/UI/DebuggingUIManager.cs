@@ -99,7 +99,7 @@ public class DebuggingUIManager : MonoBehaviour
         {
             if (BackroomManager.Instance.InnerMonsterSpinalCord.IsBioDataExtractorSelected())
             {
-                SubmarineInGameManager.instance.ToggleMenuAndSetPause();
+                MenuUIController.instance.ToggleMenu();
                 BackroomManager.Instance.InnerMonsterSpinalCord.Interact(); // 괴물 척수 상호작용(주사기 꽂고 백룸 진입)
                 Debug.Log("[Debug] ✅ 성공 - 백룸 진입");
             }
@@ -119,7 +119,7 @@ public class DebuggingUIManager : MonoBehaviour
     {
         if (BackroomManager.Instance.isPlayingBackroom)
         {
-            SubmarineInGameManager.instance.ToggleMenuAndSetPause();
+            MenuUIController.instance.ToggleMenu();
             BackroomManager.Instance.EscapeBackroom(SubmarineInGameManager.instance.playerMove);
             Debug.Log("[Debug] ✅ 성공 - 백룸 탈출");
         }
@@ -152,7 +152,7 @@ public class DebuggingUIManager : MonoBehaviour
         PlayerMutation playerMutation = SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>();
         if (!playerMutation.IsCured)
         {
-            SubmarineInGameManager.instance.ToggleMenuAndSetPause();
+            MenuUIController.instance.ToggleMenu();
             playerMutation.InjectSerum(true); // 성공 치료제 투여
             // playerMutation.Cure();
             Debug.Log("[Debug] ✅ 성공 - 치료 완료");

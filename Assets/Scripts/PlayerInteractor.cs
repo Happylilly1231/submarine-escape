@@ -46,7 +46,8 @@ public class PlayerInteractor : MonoBehaviour
 
     void Update()
     {
-        if (!IsPuzzleActive) DetectObject();
+        if (!IsPuzzleActive || SubmarineInGameManager.instance.isInGameMenuActive)
+            DetectObject();
     }
 
     /// <summary>
@@ -375,7 +376,8 @@ public class PlayerInteractor : MonoBehaviour
             if (_sphereCastHit.transform.TryGetComponent(out ItemPickUp item))
             {
                 HandleItem(item);
-                SampleSlotUIManager.Instance.HideSlotUI();
+                if (SampleSlotUIManager.Instance != null)
+                    SampleSlotUIManager.Instance.HideSlotUI();
                 return;
             }
 
@@ -409,12 +411,14 @@ public class PlayerInteractor : MonoBehaviour
                 if (_inventoryManager.SelectedSlotIndex < 0 || _inventoryManager.InventorySlots[_inventoryManager.SelectedSlotIndex].Item == null || canInteract)
                 {
                     HandleInteractable(furniture);
-                    SampleSlotUIManager.Instance.HideSlotUI();
+                    if (SampleSlotUIManager.Instance != null)
+                        SampleSlotUIManager.Instance.HideSlotUI();
                     return;
                 }
             }
         }
-        SampleSlotUIManager.Instance.HideSlotUI();
+        if (SampleSlotUIManager.Instance != null)
+            SampleSlotUIManager.Instance.HideSlotUI();
     }
     #endregion
 

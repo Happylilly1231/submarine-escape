@@ -32,7 +32,8 @@ public class SunkenSkullPoint : BackroomEntity
 
     private void SpawnSunkenSkull(Transform playerTransform)
     {
-        SubmarineInGameManager.instance.SetFocus(true); // 포커스
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true); // 포커스
 
         puddle.transform.localScale = Vector3.one; // 물 웅덩이 크기 초기화
         puddle.SetActive(true); // 물 웅덩이 활성화
@@ -54,7 +55,7 @@ public class SunkenSkullPoint : BackroomEntity
 
         seq.AppendCallback(() =>
         {
-            SubmarineInGameManager.instance.SetCameraControllerEnable(true);
+            PlayerManager.Instance.SetCameraControllerEnable(true);
             sunkenSkull.SetActive(false); // 가라앉은 해골 비활성화
         });
         seq.AppendCallback(() =>
@@ -136,7 +137,8 @@ public class SunkenSkullPoint : BackroomEntity
 
         SubmarineInGameManager.instance.player.GetComponent<PlayerMove>().enabled = true;
         SubmarineInGameManager.instance.player.GetComponent<CharacterController>().enabled = true;
-        SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+        // SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
         _spaceAction.Disable();
 
         Sequence seq = DOTween.Sequence();
@@ -157,7 +159,8 @@ public class SunkenSkullPoint : BackroomEntity
         KillPlayer(); // 플레이어 죽이기
         SubmarineInGameManager.instance.player.GetComponent<PlayerMove>().enabled = true;
         SubmarineInGameManager.instance.player.GetComponent<CharacterController>().enabled = true;
-        SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
+        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+        // SubmarineInGameManager.instance.SetFocus(false); // 포커스 해제
     }
 
     // escapeGauge가 변할 때마다 호출

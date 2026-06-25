@@ -21,7 +21,7 @@ public class PlayerCameraController : MonoBehaviour
     /// </summary>
     void LateUpdate()
     {
-        if (!SubmarineInGameManager.instance.IsPausing) // 정지 중이 아닐 때
+        if (!GameManager.instance.IsPausing) // 정지 중이 아닐 때
         {
             if (IsIntroPlaying)
             {

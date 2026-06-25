@@ -250,7 +250,8 @@ public class BackroomManager : MonoBehaviour
     {
         isPlayingBackroom = false;
 
-        SubmarineInGameManager.instance.SetFocus(true);
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        // SubmarineInGameManager.instance.SetFocus(true);
 
         Sequence seq = DOTween.Sequence();
 
@@ -276,7 +277,7 @@ public class BackroomManager : MonoBehaviour
                 rotation = Quaternion.LookRotation(direction);
             }
             playerMove.PlayerTeleport(originalPos, rotation);
-            SubmarineInGameManager.instance.SetCameraControllerEnable(true); // 플레이어 카메라 컨트롤러 활성화
+            PlayerManager.Instance.SetCameraControllerEnable(true); // 플레이어 카메라 컨트롤러 활성화
         });
 
         // 잠시 정적 (완전 암전 상태)
