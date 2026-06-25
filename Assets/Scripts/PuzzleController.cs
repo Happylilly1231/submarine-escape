@@ -44,7 +44,7 @@ public abstract class PuzzleController : MonoBehaviour
     protected InventoryManager inventoryManager; // 인벤토리 매니저 참조
     protected ItemEquipController itemEquipController; // 아이템 장착 컨트롤러 참조
 
-    private Sequence _activatePuzzleSequence = null;
+    // private Sequence _activatePuzzleSequence = null;
 
     // // 이벤트
     // public event Action OnPuzzleStarted; // 퍼즐 시작 이벤트(활성화 시점 X)
@@ -104,21 +104,20 @@ public abstract class PuzzleController : MonoBehaviour
         SubmarineInGameManager.instance.SetCurrentPuzzleController(this); // 현재 퍼즐 컨트롤러를 지금 컨트롤러로 갱신
         SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = true; // 퍼즐 활성화 상태로 변경
         FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
+        InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화 (퍼즐에 들어가는 동안만, StartPuzzle에서 해제)
         // SubmarineInGameManager.instance.SetPuzzleFocus(true, this);
         SubmarineInGameManager.instance.SetPlayerGeoActive(false); // 플레이어 외형 안 보이게
 
-        _exit.performed += OnExit;
-
-        _activatePuzzleSequence = DOTween.Sequence();
-        _activatePuzzleSequence.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
+        Sequence seq = DOTween.Sequence();
+        seq.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
         .SetEase(Ease.OutQuad));
 
-        _activatePuzzleSequence.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
+        seq.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
         .SetEase(Ease.OutQuad));
 
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
 
-        _activatePuzzleSequence.OnComplete(() =>
+        seq.OnComplete(() =>
         {
             StartPuzzle(); // 퍼즐 시작
         });
@@ -130,9 +129,9 @@ public abstract class PuzzleController : MonoBehaviour
     public virtual void StartPuzzle()
     {
         IsPuzzleStarted = true;
-        // InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
+        InputManager.instance.SwitchActionMapWithPermanent("Puzzle"); // 퍼즐 액션 맵과 Permanent 액션 맵 활성화
 
-        // _exit.performed += OnExit;
+        _exit.performed += OnExit;
         if (IsHoverRequired) _point.performed += OnPoint; // 호버 필요할 때만 미리 구독
 
         if (IsCurrentMouseRequired)
@@ -169,17 +168,13 @@ public abstract class PuzzleController : MonoBehaviour
         }
 
         // OnPuzzleExited?.Invoke();
-    }
 
-    /// <summary>
-    /// 퍼즐 활성화(카메라 이동) 중단
-    /// </summary>
-    public virtual void StopActivatePuzzle()
-    {
-        _exit.performed -= OnExit;
-
-        _activatePuzzleSequence.Kill();
-        _activatePuzzleSequence = null;
+        SubmarineInGameManager.instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
+        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
+        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
+        // SubmarineInGameManager.instance.SetPuzzleFocus(false);
+        SubmarineInGameManager.instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
+        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
 
     /// <summary>
@@ -188,21 +183,7 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="context"></param>
     public virtual void OnExit(InputAction.CallbackContext context)
     {
-        if (_activatePuzzleSequence != null && _activatePuzzleSequence.IsActive())
-        {
-            StopActivatePuzzle();
-        }
-        else
-        {
-            ExitPuzzle();
-        }
-
-        SubmarineInGameManager.instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
-        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
-        FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
-        // SubmarineInGameManager.instance.SetPuzzleFocus(false);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
-        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
+        ExitPuzzle();
     }
 
     /// <summary>
@@ -220,7 +201,7 @@ public abstract class PuzzleController : MonoBehaviour
     }
 
     /// <summary>
-    /// 입력 잠금 설정
+    /// 입력 잠금 설정 (ESC로 나가는 거 금지, 또는 그 어떤 입력도 들어오면 안될 때 잠금)
     /// </summary>
     /// <param name="isLock">잠금 여부</param>
     public void SetInputLock(bool isLock)
@@ -228,12 +209,14 @@ public abstract class PuzzleController : MonoBehaviour
         if (isLock)
         {
             _isInputLocked = true;
-            playerInput.DeactivateInput(); // 모든 액션 비활성화
+            InputManager.instance.DisableAllInputs(); // 모든 인풋 (+Permanent까지) 비활성화
+            // playerInput.DeactivateInput(); // 모든 액션 비활성화
         }
         else
         {
             _isInputLocked = false;
-            playerInput.ActivateInput(); // 모든 액션 활성화
+            InputManager.instance.SwitchActionMapWithPermanent("Puzzle"); // 퍼즐 액션맵, Permanant 액션 맵 다시 활성화
+            // playerInput.ActivateInput(); // 모든 액션 활성화
         }
     }
 

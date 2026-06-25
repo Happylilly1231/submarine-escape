@@ -12,6 +12,7 @@ public class TelegraphKey : PuzzleController, IInteractable
 {
     [SerializeField] private GameObject telegraphUI; // 통신 UI
     [SerializeField] private GameObject morseCodeChartUI; // 모스부호 표
+    [SerializeField] private GameObject communicationTextUI; // 하단 통신 텍스트 UI
     [SerializeField] private Item morseCodeChartItem; // 모스부호 표 아이템
     [SerializeField] private Renderer communicationLightRenderer; // 통신 신호등(모스부호 누르는 거에 따라 켜짐)
     [SerializeField] private TextMeshProUGUI contextText; // 통신 내용 텍스트
@@ -34,7 +35,7 @@ public class TelegraphKey : PuzzleController, IInteractable
     [SerializeField] private AudioSource morseAudioSource;
     [SerializeField] private AudioSource noiseAudioSource;
 
-    private const string HAS_SIGNAL = ".... .ㅡ ...*.ㅡㅡㅡㅡ ㅡㅡㅡㅡㅡ*...ㅡㅡ ㅡㅡㅡㅡㅡ*ㅡ..ㅡ ..ㅡㅡㅡ ㅡㅡ...*ㅡ.ㅡㅡ ...ㅡㅡ ㅡ...."; // HAS 10 30 X 27 Y 36
+    private const string HAS_SIGNAL = ".... .ㅡ ...*.ㅡㅡㅡㅡ ㅡㅡㅡㅡㅡ*...ㅡㅡ ㅡㅡㅡㅡㅡ*..ㅡㅡㅡ ㅡㅡ...*...ㅡㅡ ㅡ...."; // HAS 10 30 27 36
 
     // 퍼즐 컨트롤러 필수 변수
     protected override bool IsHoverRequired => false;
@@ -60,6 +61,9 @@ public class TelegraphKey : PuzzleController, IInteractable
     private bool _isHoldForceOver = false;
     private bool _isResponding = false; // 본부가 응답 중 여부
     public bool IsCommunicating { get; private set; } = false; // 통신 중 여부(심해 괴물 자극 판단에 씀)
+    private Coroutine _currentPlayRecordingCoroutine = null; // 현재 녹음 재생 중인 코루틴
+    private Coroutine _currentPlayMorseCoroutine = null; // 현재 모스부호 재생 코루틴
+    private Coroutine _currentTypeTextCoroutine = null; // 현재 타이핑 코루틴
 
     // 세션(통신) 자동 종료
     private Coroutine _autoSessionEndCheckCoroutine = null; // 세션 자동 종료 검사 코루틴
@@ -116,27 +120,27 @@ public class TelegraphKey : PuzzleController, IInteractable
         itemEquipController.UnequipItem(); // 아이템 장착 해제
         SubmarineInGameManager.instance.InteractorUI.SetActive(true); // 상호작용 UI 활성화
 
+        telegraphUI.SetActive(true); // 통신 UI 활성화
+        communicationTextUI.SetActive(false); // 하단 통신 텍스트 UI 비활성화
+        // 모스부호 표 아이템 갖고 있는지 여부에 따라 모스부호 표 UI 활성화 여부 설정
+        bool hasMorseCodeChartItem = inventoryManager.CheckHasItemInInventory(morseCodeChartItem);
+        morseCodeChartUI.SetActive(hasMorseCodeChartItem);
+
         base.ActivatePuzzle();
     }
 
     public override void StartPuzzle()
     {
-        PickUpTransmitter(); // 송신기 들기
-
-        base.StartPuzzle();
-
-        Click.started += OnClickStarted;
-        Click.canceled += OnClickCanceled;
-        RightClick.performed += OnRightClickPerformed;
         if (IsSubmarineLeft)
             KeyE.performed += OnKeyEPerformed;
+        else
+        {
+            Click.started += OnClickStarted;
+            Click.canceled += OnClickCanceled;
+            RightClick.performed += OnRightClickPerformed;
+        }
 
-        // 모스부호 표 아이템 갖고 있는지 여부에 따라 모스부호 표 UI 활성화 여부 설정
-        bool hasMorseCodeChartItem = inventoryManager.CheckHasItemInInventory(morseCodeChartItem);
-        morseCodeChartUI.SetActive(hasMorseCodeChartItem);
-
-        // 현재 퍼즐 인풋 잠금 여부에 따라 다시 설정
-        SetPuzzleInputLock(_isPuzzleInputLocked);
+        PickUpTransmitter(); // 송신기 들기
     }
 
     public override void ExitPuzzle()
@@ -154,11 +158,17 @@ public class TelegraphKey : PuzzleController, IInteractable
         telegraphUI.SetActive(false); // 통신 UI 비활성화
         SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
 
-        // 플레이어가 누르고 있었을 때만 피드백 종료 (응답 재생 중에는 퍼즐 나가도 계속 재생됨)
+        // 플레이어가 모스 부호를 입력 중이었을 때 -> 피드백 종료
         if (_holdCheckCoroutine != null)
         {
             StopFeedback();
             _holdCheckCoroutine = null;
+        }
+
+        // 녹음 재생 중이었을 때 -> 종료 (맨 처음 응답은 녹음이 아니므로 퍼즐 종료할 때 종료하지 않음)
+        if (_currentPlayRecordingCoroutine != null)
+        {
+            StopRecording();
         }
 
         // 세션 자동 종료 코루틴 실행 중이면 중지 (종료됐으니까)
@@ -167,9 +177,9 @@ public class TelegraphKey : PuzzleController, IInteractable
             StopCoroutine(_autoSessionEndCheckCoroutine);
         }
 
-        // 퍼즐 인풋 잠금 일단 해제 (다른 퍼즐에 영향 주지 않기 위해서. 만약, 다시 퍼즐에 들어올 때 아직 잠겨져 있어야 하는 상태면 잠글 것임)
-        Click.Enable();
-        RightClick.Enable();
+        // // 퍼즐 인풋 잠금 일단 해제 (다른 퍼즐에 영향 주지 않기 위해서. 만약, 다시 퍼즐에 들어올 때 아직 잠겨져 있어야 하는 상태면 잠글 것임)
+        // Click.Enable();
+        // RightClick.Enable();
 
         // 송신기 내려놓기
         PutDownTransmitter();
@@ -270,6 +280,60 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     #region 퍼즐용 함수
     /// <summary>
+    /// 송신기 들기
+    /// </summary>
+    private void PickUpTransmitter()
+    {
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(transmitterTransform.DOLocalMoveZ(_transmitterWaypointZPos, 0.5f)
+        .SetEase(Ease.OutQuad));
+
+        seq.Append(transmitterTransform.DOMove(transmitterPickUpTransform.position, 1f)
+        .SetEase(Ease.OutQuad));
+        seq.Join(transmitterTransform.DORotateQuaternion(transmitterPickUpTransform.rotation, 1f)
+        .SetEase(Ease.OutQuad));
+
+        seq.OnComplete(() =>
+        {
+            base.StartPuzzle();
+
+            communicationTextUI.SetActive(true); // 하단 통신 텍스트 UI 활성화
+
+            // 현재 퍼즐 인풋 잠금 여부에 따라 다시 설정
+            SetMorseInputLock(_isPuzzleInputLocked);
+        });
+    }
+
+    /// <summary>
+    /// 송신기 내려놓기
+    /// </summary>
+    private void PutDownTransmitter()
+    {
+        SetInputLock(true);
+
+        Sequence seq = DOTween.Sequence();
+
+        Vector3 waypointPos = transmitterOriginalTransform.localPosition;
+        waypointPos.z = _transmitterWaypointZPos;
+
+        seq.Append(transmitterTransform.DOLocalMove(waypointPos, 1f)
+        .SetEase(Ease.OutQuad));
+        seq.Join(transmitterTransform.DORotateQuaternion(Quaternion.identity, 1f)
+        .SetEase(Ease.OutQuad));
+
+        seq.Append(transmitterTransform.DOLocalMoveZ(0f, 0.5f)
+        .SetEase(Ease.OutQuad));
+
+        seq.OnComplete(() =>
+        {
+            SetInputLock(false);
+
+            base.ExitPuzzle();
+        });
+    }
+
+    /// <summary>
     /// 버튼 누르기/떼기
     /// </summary>
     /// <param name="isPress">누르는 여부</param>
@@ -289,87 +353,26 @@ public class TelegraphKey : PuzzleController, IInteractable
     }
 
     /// <summary>
-    /// 송신기 들기
-    /// </summary>
-    private void PickUpTransmitter()
-    {
-        // 송신기 드는 동안은 퍼즐 입력 불가
-        Click.Disable();
-        RightClick.Disable();
-        KeyE.Disable();
-
-        Sequence seq = DOTween.Sequence();
-
-        seq.Append(transmitterTransform.DOLocalMoveZ(_transmitterWaypointZPos, 0.5f)
-        .SetEase(Ease.OutQuad));
-
-        seq.Append(transmitterTransform.DOMove(transmitterPickUpTransform.position, 1f)
-        .SetEase(Ease.OutQuad));
-        seq.Join(transmitterTransform.DORotateQuaternion(transmitterPickUpTransform.rotation, 1f)
-        .SetEase(Ease.OutQuad));
-
-        seq.OnComplete(() =>
-        {
-            // 송신기 들었으므로 퍼즐 입력 가능
-            Click.Enable();
-            RightClick.Enable();
-            KeyE.Enable();
-
-            telegraphUI.SetActive(true); // 통신 UI 활성화
-        });
-    }
-
-    private void PutDownTransmitter()
-    {
-        SetInputLock(true);
-
-        Sequence seq = DOTween.Sequence();
-
-        Vector3 waypointPos = transmitterOriginalTransform.localPosition;
-        waypointPos.z = _transmitterWaypointZPos;
-
-        seq.Append(transmitterTransform.DOLocalMove(waypointPos, 1f)
-        .SetEase(Ease.OutQuad));
-        seq.Join(transmitterTransform.DORotateQuaternion(Quaternion.identity, 1f)
-        .SetEase(Ease.OutQuad));
-
-        seq.Append(transmitterTransform.DOLocalMoveZ(0f, 0.5f)
-        .SetEase(Ease.OutQuad));
-
-
-        seq.OnComplete(() =>
-        {
-            SetInputLock(false);
-
-            base.ExitPuzzle();
-        });
-    }
-
-
-    /// <summary>
     /// 세션 자동 종료 검사 코루틴
     /// </summary>
     /// <returns></returns>
     private IEnumerator AutoSessionEndCheckCoroutine()
     {
         IsCommunicating = true;
-        yield return new WaitForSeconds(_autoSessionEndTime);
+        yield return new WaitForSeconds(_autoSessionEndTime); // 세션 자동 종료 시간이 지날 때까지 대기 (지나지 않으면 이후 로직 실행 X)
+
         IsCommunicating = false;
 
-        SetPuzzleInputLock(true);
+        SetMorseInputLock(true); // 모스 부호 입력 막음
+
+        // 자동 종료 이유 설명
         yield return StartCoroutine(TypeText("5초 간 미입력. 미전송. 통신 자동 종료.", 0.05f));
         yield return new WaitForSeconds(1f);
 
         _currentWord.Clear();
         UpdateMorseDisplayUI();
 
-        // if (_currentWord.Length != 0)
-        // {
-        //     // 모스부호 전송
-        //     StartCoroutine(SubmitCode(_currentWord.ToString()));
-        // }
-
-        SetPuzzleInputLock(false);
+        SetMorseInputLock(false); // 모스 부호 입력 막은 거 해제
 
         _autoSessionEndCheckCoroutine = null;
     }
@@ -462,18 +465,21 @@ public class TelegraphKey : PuzzleController, IInteractable
         }
     }
 
-    // 불빛과 텍스처 Emission을 동시에 제어
+    /// <summary>
+    /// 불빛과 텍스처 Emission을 동시에 제어
+    /// </summary>
+    /// <param name="targetColor"></param>
     private void SetLampFeedback(Color targetColor)
     {
         _communicationLightMaterial.SetColor("_EmissionColor", targetColor);
         _communicationLightMaterial.EnableKeyword("_EMISSION");
     }
 
-    // ─── 2. 버튼에서 손을 뗀 순간 실행 (소리 OFF, 불빛 OFF) ───
+    /// <summary>
+    /// 버튼에서 손을 뗀 순간 실행 (소리 OFF, 불빛 OFF) ───
+    /// </summary>
     private void StopFeedback()
     {
-        // morseAudioSource.Stop();
-
         // 소리 끄기 (뚝 끊기면 귀가 아프니 부드럽게 줄어들며 꺼지도록 코루틴 실행)
         if (morseAudioSource != null && morseAudioSource.isPlaying)
         {
@@ -482,7 +488,10 @@ public class TelegraphKey : PuzzleController, IInteractable
         }
     }
 
-    // 아주 빠르게 볼륨을 줄여 뚝 끊기는 느낌을 없애는 코루틴
+    /// <summary>
+    /// 아주 빠르게 볼륨을 줄여 뚝 끊기는 느낌을 없애는 코루틴
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator FadeOutAudio()
     {
         float startVolume = morseAudioSource.volume;
@@ -504,10 +513,10 @@ public class TelegraphKey : PuzzleController, IInteractable
     }
 
     /// <summary>
-    /// 퍼즐 입력(모스부호 입력, 제출) 활성화 여부 설정
+    /// 모스 부호 입력(+제출) 잠금 여부 설정
     /// </summary>
-    /// <param name="isLock">활성화 여부</param>
-    private void SetPuzzleInputLock(bool isLock)
+    /// <param name="isLock">잠금 여부</param>
+    private void SetMorseInputLock(bool isLock)
     {
         _isPuzzleInputLocked = isLock;
 
@@ -529,7 +538,7 @@ public class TelegraphKey : PuzzleController, IInteractable
     /// <param name="morseCode">코드 메시지</param>
     private IEnumerator SubmitCode(string morseCode)
     {
-        SetPuzzleInputLock(true);
+        SetMorseInputLock(true); // 모스부호 입력 막음
 
         // 데이터와 화면 UI를 깨끗하게 비워줌
         _currentWord.Clear();
@@ -541,7 +550,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         if (IsSubmarineLeft) // 본부 잠수함이 이미 떠난 경우 -> 응답 없음
         {
             yield return StartCoroutine(TypeText("... ... 응답 없음.", 0.1f));
-            SetPuzzleInputLock(false);
+            SetMorseInputLock(false);
             yield break;
         }
 
@@ -551,6 +560,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         {
             Debug.Log("SOS 신호 성공! 본부 잠수함 응답 시퀀스 시작.");
             yield return StartCoroutine(SuccessResponse());
+            // 모스부호 입력 막은 걸 풀어주지 않음 (이제 더 이상 입력할 일이 없으므로)
         }
         else
         {
@@ -570,11 +580,10 @@ public class TelegraphKey : PuzzleController, IInteractable
                 yield return StartCoroutine(PlayMorseString(".ㅡ. .ㅡㅡ. ㅡ"));
 
             }
+            SetMorseInputLock(false); // 모스부호 입력 막은 거 해제
         }
 
         IsCommunicating = false;
-
-        SetPuzzleInputLock(false);
     }
 
     /// <summary>
@@ -583,7 +592,9 @@ public class TelegraphKey : PuzzleController, IInteractable
     /// <returns></returns>
     private IEnumerator SuccessResponse()
     {
-        noiseAudioSource.Play();
+        SetInputLock(true); // 나가지 못하도록 입력 막기
+
+        noiseAudioSource.Play(); // 노이즈 재생
 
         string sosDetails = "SOS... 본부 응답하라. 실험체가 폭주하여 괴물로 변이하였다. 본인을 제외한 전원 사망. 즉시 구출을 요청한다. 반복한다. 즉시 구출을...";
 
@@ -594,7 +605,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         yield return new WaitForSeconds(1f);
         contextText.text = ""; // 기존 텍스트 초기화
 
-        noiseAudioSource.Stop();
+        noiseAudioSource.Stop(); // 노이즈 중지
 
         // HAS 문장 수신
         yield return StartCoroutine(PlayMorseString(HAS_SIGNAL));
@@ -603,16 +614,11 @@ public class TelegraphKey : PuzzleController, IInteractable
 
         yield return StartCoroutine(TypeText("[통신 자동 녹음 완료]", 0.1f));
 
-        // yield return new WaitForSeconds(3f); // 1차와 2차 사이의 약간의 대기 타임
+        // yield return new WaitForSeconds(2f);
 
-        // Debug.Log("본부 잠수함: HAS 2차 송신 시작");
-        // yield return StartCoroutine(PlayMorseString(hasSignal));
-
-        yield return new WaitForSeconds(2f);
-
-        // 본부 잠수함이 FIN(.._. .. _.)을 보냄
+        // 본부 잠수함이 FIN(..ㅡ. .. ㅡ.)을 보냄
         Debug.Log("본부 잠수함: FIN 송신 (연락 종료)");
-        yield return StartCoroutine(PlayMorseString(".._. .. _."));
+        yield return StartCoroutine(PlayMorseString("..ㅡ. .. ㅡ."));
 
         yield return new WaitForSeconds(1f);
 
@@ -620,8 +626,9 @@ public class TelegraphKey : PuzzleController, IInteractable
         radarController.LeaveSubmarine();
         IsSubmarineLeft = true; // 이제 더 이상 신호를 주고받을 수 없도록 플래그 차단
 
-        // E키 사용 가능
-        KeyE.performed += OnKeyEPerformed;
+        SetInputLock(false); // 입력 잠금 해제
+        KeyE.performed += OnKeyEPerformed; // E키 사용 가능
+        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
 
     /// <summary>
@@ -635,11 +642,11 @@ public class TelegraphKey : PuzzleController, IInteractable
         noiseAudioSource.Play();
 
         // 단음/장음 기준 시간 설정
-        float dotDuration = 0.15f; // 1단위
-        float dashDuration = 0.45f; // 3단위
-        float symbolGap = 0.2f; // 1단위 + 0.05f(소리 페이드 아웃)
-        float letterGap = 0.45f; // 3단위
-        float wordGap = 1.05f; // 7단위
+        float dotDuration = 0.2f; // 1단위
+        float dashDuration = 0.6f; // 3단위
+        float symbolGap = 0.5f; // 1단위 + 0.05f(소리 페이드 아웃)
+        float letterGap = 1.2f; // 3단위
+        float wordGap = 2.5f; // 7단위
 
         // 응답 시작 시 초록불 켜주기
         SetLampFeedback(Color.green * 4f);
@@ -713,7 +720,7 @@ public class TelegraphKey : PuzzleController, IInteractable
     /// </summary>
     public void PlayRecording()
     {
-        StartCoroutine(PlayRecordingCoroutine());
+        _currentPlayRecordingCoroutine = StartCoroutine(PlayRecordingCoroutine());
     }
 
     /// <summary>
@@ -722,21 +729,45 @@ public class TelegraphKey : PuzzleController, IInteractable
     /// <returns></returns>
     private IEnumerator PlayRecordingCoroutine()
     {
-        SetPuzzleInputLock(true);
-
         noiseAudioSource.Play();
-
         contextText.text = ""; // 기존 텍스트 초기화
 
-        yield return StartCoroutine(PlayMorseString(HAS_SIGNAL));
+        _currentPlayMorseCoroutine = StartCoroutine(PlayMorseString(HAS_SIGNAL));
+        yield return _currentPlayMorseCoroutine;
+        _currentPlayMorseCoroutine = null;
 
         yield return new WaitForSeconds(1f);
 
-        yield return StartCoroutine(TypeText("[녹음 재생 완료]", 0.1f));
+        _currentTypeTextCoroutine = StartCoroutine(TypeText("[녹음 재생 완료]", 0.1f));
+        yield return _currentTypeTextCoroutine;
+        _currentTypeTextCoroutine = null;
 
         noiseAudioSource.Stop();
 
-        SetPuzzleInputLock(false);
+        _currentPlayRecordingCoroutine = null;
+    }
+
+    private void StopRecording()
+    {
+        StopCoroutine(_currentPlayRecordingCoroutine);
+        _currentPlayRecordingCoroutine = null;
+
+        if (_currentPlayMorseCoroutine != null)
+        {
+            StopCoroutine(_currentPlayMorseCoroutine);
+            _currentTypeTextCoroutine = null;
+            _communicationLightMaterial.DisableKeyword("_EMISSION");
+            _isResponding = false;
+
+        }
+        if (_currentTypeTextCoroutine != null)
+        {
+            StopCoroutine(_currentTypeTextCoroutine);
+            _currentPlayRecordingCoroutine = null;
+        }
+
+        noiseAudioSource.Stop();
+        _currentPlayRecordingCoroutine = null;
     }
     #endregion
 }

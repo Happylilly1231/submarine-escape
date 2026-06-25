@@ -250,7 +250,7 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        sb.AppendLine("맵 보기 [Tab]");
+        sb.AppendLine("맵/목표/노트 [Tab]");
         if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
             sb.AppendLine("아이템 버리기 [Q]");
 

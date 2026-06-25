@@ -611,9 +611,9 @@
             "id": "7c0fe542-d38f-4cc9-a7e5-efb22b4eba6d",
             "actions": [
                 {
-                    "name": "ToggleMap",
+                    "name": "ToggleInGameMenu",
                     "type": "Button",
-                    "id": "1f11af43-3f70-4fcc-aaeb-2bd8485ece71",
+                    "id": "1f02194f-d6ad-49de-960b-1a5b9a076b90",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -627,38 +627,9 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
-                },
-                {
-                    "name": "ToggleInGameMenu",
-                    "type": "Button",
-                    "id": "1f02194f-d6ad-49de-960b-1a5b9a076b90",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "UpDownKey",
-                    "type": "Button",
-                    "id": "afb9e098-7870-4983-977e-06c2199c0f4d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
-                {
-                    "name": "",
-                    "id": "880338bc-6231-4b86-b47b-d24edac882cb",
-                    "path": "<Keyboard>/tab",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "ToggleMap",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
                 {
                     "name": "",
                     "id": "9f6ba36b-deea-46d6-843a-98da2e6adedb",
@@ -728,46 +699,13 @@
                 {
                     "name": "",
                     "id": "84f077e8-b2b9-4358-bcd0-342b3fae234c",
-                    "path": "<Keyboard>/v",
+                    "path": "<Keyboard>/tab",
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
                     "action": "ToggleInGameMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
-                },
-                {
-                    "name": "1D Axis",
-                    "id": "1df62e9a-ef3e-4d16-8f9e-78fff32303f3",
-                    "path": "1DAxis",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "UpDownKey",
-                    "isComposite": true,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "negative",
-                    "id": "a7dcea87-49c7-4c48-b770-beca3a9ba854",
-                    "path": "<Keyboard>/downArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "UpDownKey",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "positive",
-                    "id": "c7fd380a-6ee0-4cc2-8409-eb06846ceb1f",
-                    "path": "<Keyboard>/upArrow",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "UpDownKey",
-                    "isComposite": false,
-                    "isPartOfComposite": true
                 }
             ]
         }

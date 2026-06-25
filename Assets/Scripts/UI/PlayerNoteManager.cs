@@ -83,6 +83,10 @@ public class PlayerNoteManager : MonoBehaviour
             _rightPages[i].SetActive(false);
         }
 
+        // UI 페이지 넘버 갱신 -> (현재 페이지 넘버) / (마지막 페이지 넘버)
+        _leftPageNumText.text = $"{_currentSpreadIdx * 2 + 1} / {_totalPageCount}";
+        _rightPageNumText.text = $"{_currentSpreadIdx * 2 + 2} / {_totalPageCount}";
+
         // 새 노트로 초기화
         InitNewNote();
     }
@@ -164,10 +168,6 @@ public class PlayerNoteManager : MonoBehaviour
             return;
 
         OpenPages(spreadIdx);
-
-        // UI 페이지 넘버 갱신 -> (현재 페이지 넘버) / (마지막 페이지 넘버)
-        _leftPageNumText.text = $"{_currentSpreadIdx * 2 + 1} / {_totalPageCount}";
-        _rightPageNumText.text = $"{_currentSpreadIdx * 2 + 2} / {_totalPageCount}";
     }
 
     /// <summary>
@@ -190,66 +190,9 @@ public class PlayerNoteManager : MonoBehaviour
 
         // 현재 페이지들로 설정
         _currentSpreadIdx = spreadIdx;
+
+        // UI 페이지 넘버 갱신 -> (현재 페이지 넘버) / (마지막 페이지 넘버)
+        _leftPageNumText.text = $"{_currentSpreadIdx * 2 + 1} / {_totalPageCount}";
+        _rightPageNumText.text = $"{_currentSpreadIdx * 2 + 2} / {_totalPageCount}";
     }
-
-    // // 글자가 타이핑될 때마다 실행되는 함수
-    // private void OnMemoTextChanged(string currentText)
-    // {
-    //     // 현재 보고 있는 페이지 방에 실시간으로 글자를 덮어씌움
-    //     NotePages[currentMemoIdx] = currentText;
-    // }
-
-    // /// <summary>
-    // /// 메모 포커스 여부 설정
-    // /// </summary>
-    // /// <param name="isFocus">포커스 여부</param>
-    // public void SetFocusMemo(bool isFocus)
-    // {
-    //     if (isFocus)
-    //     {
-    //         memoInputField.ActivateInputField();
-    //         memoInputField.MoveTextEnd(false); // 텍스트 맨 뒤로 커서 이동
-    //         bool isToggleMenuEnabled = SubmarineInGameManager.instance.playerInput.actions["ToggleMenu"].enabled;
-    //         InputManager.instance.SaveAndDisableAllInputs(); // 인풋 비활성화(현재 여부들 저장)
-    //         SubmarineInGameManager.instance.playerInput.actions["TogglInGameMenu"].Enable();
-    //         if (isToggleMenuEnabled)
-    //             SubmarineInGameManager.instance.playerInput.actions["ToggleMenu"].Enable();
-    //     }
-    //     else
-    //     {
-    //         memoInputField.DeactivateInputField();
-    //         InputManager.instance.RestoreInputsFromSnapshot(); // 인풋 활성화 여부 복구
-    //     }
-    // }
-
-    // // 배열에 있던 텍스트를 불러와서 화면에 뿌려주는 함수
-    // public void UpdateMemoUI(float direction)
-    // {
-    //     // 페이지 인덱스 계산 (0~4 범위 제한)
-    //     if (direction > 0 && currentMemoIdx < NotePages.Length - 1) // 위 -> 다음 페이지
-    //     {
-    //         currentMemoIdx++;
-    //     }
-    //     else if (direction < 0 && currentMemoIdx > 0) // 아래 -> 이전 페이지
-    //     {
-    //         currentMemoIdx--;
-    //     }
-    //     else
-    //         return;
-
-    //     // 해당 페이지 저장된 글 불러오기
-    //     memoInputField.text = NotePages[currentMemoIdx];
-
-    //     // UI 페이지 넘버 갱신 -> (현재 페이지 넘버) / (마지막 페이지 넘버)
-    //     pageNumberUIText.text = $"{currentMemoIdx + 1} / {NotePages.Length}";
-
-    //     // 페이지가 바뀌어도 바로 타이핑할 수 있게 포커스 유지
-    //     SetFocusMemo(true);
-    // }
-
-    // private void OnDestroy()
-    // {
-    //     // 오브젝트가 파괴될 때 리스너도 깔끔하게 제거
-    //     memoInputField.onValueChanged.RemoveListener(OnMemoTextChanged);
-    // }
 }

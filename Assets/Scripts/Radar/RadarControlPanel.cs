@@ -102,7 +102,7 @@ public class RadarControlPanel : InteractableBase
         float repairTime = 3f;
         float timer = repairTime;
 
-        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
         // SubmarineInGameManager.instance.SetPuzzleFocus(true);
 
         inventoryManager.UpdateActionText();

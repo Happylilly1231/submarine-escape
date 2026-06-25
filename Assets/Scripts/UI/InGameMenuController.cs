@@ -90,8 +90,9 @@ public class InGameMenuController : MonoBehaviour
     {
         if (IsOpen)
         {
-            inGameMenuUI.SetActive(false);
             IsOpen = false;
+            inGameMenuUI.SetActive(false);
+            FocusManager.Instance.PopFocusState();
         }
     }
 

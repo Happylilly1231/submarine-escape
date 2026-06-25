@@ -137,9 +137,6 @@ public class RadarController : PuzzleController
                 _currentSpeedMultiplier = Mathf.MoveTowards(_currentSpeedMultiplier, 1f, _accelerationSpeed * Time.deltaTime);
             }
 
-            Debug.Log("_currentSpeedMultiplier: " + _currentSpeedMultiplier + " / " + telegraphKey.IsCommunicating);
-
-
             // 위험 -> 빨간색 배경 / 아니면 기본 초록색 배경
             if (isDanger)
             {
