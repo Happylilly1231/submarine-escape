@@ -155,7 +155,7 @@ public class SeaWaterValve : InteractableBase
     {
         FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
         // SubmarineInGameManager.instance.SetFocus(true); // 포커스
-        SubmarineInGameManager.instance.SetPlayerGeoActive(false); // 플레이어 모습 안 보이게
+        PlayerManager.Instance.SetPlayerGeoActive(false); // 플레이어 모습 안 보이게
 
         hatchLightObj.SetActive(true); // 해치 비추는 조명 켜기
         SubmarineInGameManager.instance.SetActiveInGameUI(false);

@@ -102,7 +102,7 @@ public class RadarController : PuzzleController
     private void Update()
     {
         // 정지 중이거나 아직 업데이트 시작 안됐을 때(전력 복구 X) -> 아무것도 안 함
-        if (SubmarineInGameManager.instance.IsPausing || !IsUpdateStart)
+        if (GameManager.instance.IsPausing || !IsUpdateStart)
             return;
 
         // 심해 괴물 타이머 계산 (보여지는 중 아닐 때는 사라졌을 때이므로 계산 X) & 위치 갱신
@@ -383,7 +383,7 @@ public class RadarController : PuzzleController
     private void OnTextInput(char c)
     {
         // 입력 불가 시 or 게임 정지 중 -> 아무것도 안 하고 종료
-        if (!_canType || SubmarineInGameManager.instance.IsPausing) return;
+        if (!_canType || GameManager.instance.IsPausing) return;
 
         // 엔터 -> 제출
         if (c == '\n' || c == '\r')

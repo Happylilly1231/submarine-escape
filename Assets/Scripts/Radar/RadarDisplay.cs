@@ -335,7 +335,7 @@ public class RadarDisplay : MonoBehaviour
         while (t < 1f)
         {
             // 정지 중일 때 -> 아무것도 안 함
-            if (SubmarineInGameManager.instance.IsPausing)
+            if (GameManager.instance.IsPausing)
                 yield return null;
 
             t += Time.deltaTime / duration;

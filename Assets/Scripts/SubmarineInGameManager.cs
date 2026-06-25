@@ -14,9 +14,9 @@ using UnityEngine.UI;
 /// </summary>
 public class SubmarineInGameManager : MonoBehaviour
 {
-    // 정지
-    private bool _isPausing = false; // 정지 중 여부
-    public bool IsPausing { get => _isPausing; set => _isPausing = value; }
+    // // 정지
+    // private bool _isPausing = false; // 정지 중 여부
+    // public bool IsPausing { get => _isPausing; set => _isPausing = value; }
 
     // 경보
     [SerializeField] private Button alertButton; // 임시 - 경보 버튼
@@ -58,8 +58,8 @@ public class SubmarineInGameManager : MonoBehaviour
     private bool _isFireSuccess = false;
     public bool IsFireSuccess { get => _isFireSuccess; set => _isFireSuccess = value; }
 
-    // 현재 퍼즐
-    public PuzzleController CurrentPuzzleController { get; private set; } = null;
+    // // 현재 퍼즐
+    // public PuzzleController CurrentPuzzleController { get; private set; } = null;
 
     // 포커스
     private int _focusRequestCount = 0; // 포커스 요청 횟수 카운트
@@ -129,47 +129,35 @@ public class SubmarineInGameManager : MonoBehaviour
         // AudioManager.Instance.StopBGM();
     }
 
-    /// <summary>
-    /// Escape키 입력에 따라 메뉴 열기/열기 해제
-    /// </summary>
-    public void OnToggleMenu(InputAction.CallbackContext context)
-    {
-        // 정지 버튼(ESC) 눌렀을 때
-        if (context.performed)
-        {
-            ToggleMenuAndSetPause();
-        }
-    }
-
     // Ctrl + F1 디버깅 탭 토글(ESC로 메뉴를 연 상태에서만 사용 가능)
     public void OnToggleDebug(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            if (!GameManager.instance.MenuUI.activeSelf) return; // 메뉴가 열려있지 않을 때는 디버깅 UI 활성화/비활성화 불가능
+            if (!MenuUIController.instance.MenuUI.activeSelf) return; // 메뉴가 열려있지 않을 때는 디버깅 UI 활성화/비활성화 불가능
 
             MenuUIController.instance.ToggleDebuggingUI(); // 디버깅 UI 활성화/비활성화
         }
     }
 
-    /// <summary>
-    /// 메뉴 켜기/끄기 & 정지 여부 함께 설정
-    /// </summary>
-    public void ToggleMenuAndSetPause()
-    {
-        GameManager.instance.ToggleMenu(); // 메뉴 켜기/끄기
+    // /// <summary>
+    // /// 메뉴 켜기/끄기 & 정지 여부 함께 설정
+    // /// </summary>
+    // public void ToggleMenuAndSetPause()
+    // {
+    //     GameManager.instance.ToggleMenu(); // 메뉴 켜기/끄기
 
-        if (GameManager.instance.MenuUI.activeSelf) // 메뉴를 켰을 때
-        {
-            playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
-            Pause(); // 정지
-        }
-        else // 메뉴를 껐을 때
-        {
-            playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
-            Resume(); // 정지 해제(플레이)
-        }
-    }
+    //     if (GameManager.instance.MenuUI.activeSelf) // 메뉴를 켰을 때
+    //     {
+    //         playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
+    //         Pause(); // 정지
+    //     }
+    //     else // 메뉴를 껐을 때
+    //     {
+    //         playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+    //         Resume(); // 정지 해제(플레이)
+    //     }
+    // }
 
     /// <summary>
     /// 게임 초기 설정
@@ -187,27 +175,25 @@ public class SubmarineInGameManager : MonoBehaviour
         // Resume(); // 재시작
     }
 
-    /// <summary>
-    /// 게임 정지
-    /// </summary>
-    public void Pause()
-    {
-        Debug.Log("정지");
-        _isPausing = true; // 정지 중으로 설정
+    // /// <summary>
+    // /// 게임 정지
+    // /// </summary>
+    // public void Pause()
+    // {
+    //     Debug.Log("정지");
+    //     _isPausing = true; // 정지 중으로 설정
 
-        Time.timeScale = 0f; // 시간 정지
-        AudioListener.pause = true; // 오디오 듣기 정지
+    //     Time.timeScale = 0f; // 시간 정지
+    //     AudioListener.pause = true; // 오디오 듣기 정지
 
-        FocusManager.Instance.PushFocusState(GameFocusState.ESCMenu); // 퍼즐 포커스 상태로 변경
+    //     FocusManager.Instance.PushFocusState(GameFocusState.ESCMenu); // 퍼즐 포커스 상태로 변경
 
-        // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
-        // playerInput.actions["ToggleMenu"].Enable(); // 메뉴 토글 액션 활성화
-        // playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화
+    //     // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
+    //     // playerInput.actions["ToggleMenu"].Enable(); // 메뉴 토글 액션 활성화
+    //     // playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화
 
-        // GameManager.instance.SetCursorVisible(true); // 커서 보이기
-
-
-    }
+    //     // GameManager.instance.SetCursorVisible(true); // 커서 보이기
+    // }
 
     public void IntroPause()
     {
@@ -221,44 +207,44 @@ public class SubmarineInGameManager : MonoBehaviour
         // AudioListener.pause = false; // 오디오 듣기 정지 해제
     }
 
-    /// <summary>
-    /// 게임 정지 해제
-    /// </summary>
-    public void Resume()
-    {
-        Debug.Log("재시작");
-        _isPausing = false; // 정지 중 아님으로 설정
+    // /// <summary>
+    // /// 게임 정지 해제
+    // /// </summary>
+    // public void Resume()
+    // {
+    //     Debug.Log("재시작");
+    //     _isPausing = false; // 정지 중 아님으로 설정
 
-        Time.timeScale = 1.0f; // 시간 정지 해제
-        AudioListener.pause = false; // 오디오 듣기 정지 해제
+    //     Time.timeScale = 1.0f; // 시간 정지 해제
+    //     AudioListener.pause = false; // 오디오 듣기 정지 해제
 
-        FocusManager.Instance.PopFocusState();
+    //     FocusManager.Instance.PopFocusState();
 
-        // // 액션 맵 복구 로직
-        // // 퍼즐 중이라면 Puzzle 맵 활성화
-        // if (CurrentPuzzleController != null)
-        //     InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
-        // // 일반 상태라면 Player 맵 활성화
-        // else
-        //     InputManager.instance.SwitchActionMapWithPermanent("Player");
-        // playerInput.actions["ToggleDebug"].Disable();
+    //     // // 액션 맵 복구 로직
+    //     // // 퍼즐 중이라면 Puzzle 맵 활성화
+    //     // if (CurrentPuzzleController != null)
+    //     //     InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
+    //     // // 일반 상태라면 Player 맵 활성화
+    //     // else
+    //     //     InputManager.instance.SwitchActionMapWithPermanent("Player");
+    //     // playerInput.actions["ToggleDebug"].Disable();
 
 
-        // // 액션 맵 복구 로직
-        // // 퍼즐 중이라면 Puzzle 맵 활성화
-        // if (CurrentPuzzleController != null)
-        //     playerInput.SwitchCurrentActionMap("Puzzle");
-        // // 일반 상태라면 Player 맵 활성화
-        // else
-        //     playerInput.SwitchCurrentActionMap("Player");
+    //     // // 액션 맵 복구 로직
+    //     // // 퍼즐 중이라면 Puzzle 맵 활성화
+    //     // if (CurrentPuzzleController != null)
+    //     //     playerInput.SwitchCurrentActionMap("Puzzle");
+    //     // // 일반 상태라면 Player 맵 활성화
+    //     // else
+    //     //     playerInput.SwitchCurrentActionMap("Player");
 
-        // // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
-        // playerInput.actions.FindActionMap("Permanent")?.Enable();
+    //     // // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
+    //     // playerInput.actions.FindActionMap("Permanent")?.Enable();
 
-        // // 인게임 메뉴 비활성화 상태에서만 -> 커서 숨기기 (인게임 메뉴는 퍼즐에서도 켤 수 있어서 HaveToCursor를 true로 하지 않기 때문)
-        // if (!isInGameMenuActive)
-        //     GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
-    }
+    //     // // 인게임 메뉴 비활성화 상태에서만 -> 커서 숨기기 (인게임 메뉴는 퍼즐에서도 켤 수 있어서 HaveToCursor를 true로 하지 않기 때문)
+    //     // if (!isInGameMenuActive)
+    //     //     GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
+    // }
 
     /// <summary>
     /// 경보 발생
@@ -311,33 +297,6 @@ public class SubmarineInGameManager : MonoBehaviour
         ColorBlock colorBlock = alertButton.colors;
         colorBlock.normalColor = Color.white;
         alertButton.colors = colorBlock;
-    }
-
-    /// <summary>
-    /// 플레이어 외형 활성화 여부 설정
-    /// </summary>
-    /// <param name="isActive">활성화 여부</param>
-    public void SetPlayerGeoActive(bool isActive)
-    {
-        playerGeo.SetActive(isActive);
-    }
-
-    /// <summary>
-    /// 카메라 컨트롤러 활성화 여부 설정
-    /// </summary>
-    /// <param name="isEnable">활성화 여부</param>
-    public void SetCameraControllerEnable(bool isEnable)
-    {
-        playerCameraController.enabled = isEnable;
-    }
-
-    /// <summary>
-    /// 현재 퍼즐 컨트롤러 갱신
-    /// </summary>
-    /// <param name="puzzleController">퍼즐 컨트롤러</param>
-    public void SetCurrentPuzzleController(PuzzleController puzzleController)
-    {
-        CurrentPuzzleController = puzzleController;
     }
 
     /// <summary>

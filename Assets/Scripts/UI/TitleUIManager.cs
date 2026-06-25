@@ -37,8 +37,8 @@ public class TitleUIManager : MonoBehaviour
     [SerializeField] private Button backButton; // 세이브 포인트 뒤로 버튼
     [SerializeField] private List<Button> saveBtns;
 
-    // 생성된 C# 클래스 이름 (파일 이름과 동일)
-    private PlayerInputActions playerInputActions;
+    // // 생성된 C# 클래스 이름 (파일 이름과 동일)
+    // private PlayerInputActions playerInputActions;
 
     void Awake()
     {
@@ -52,7 +52,7 @@ public class TitleUIManager : MonoBehaviour
         });
         endingFrameButton.onClick.AddListener(GameManager.instance.EndingGallery);
         quitButton.onClick.AddListener(GameManager.instance.QuitGame);
-        menuButton.onClick.AddListener(GameManager.instance.ToggleMenu);
+        menuButton.onClick.AddListener(() => MenuUIController.instance.ToggleMenu());
 
         // 기존 이름 선택
         defaultNameButton.onClick.AddListener(() =>
@@ -82,39 +82,40 @@ public class TitleUIManager : MonoBehaviour
         savePointButton.onClick.AddListener(() => TogglePanel(EPanelType.SavePoint));
         backButton.onClick.AddListener(() => TogglePanel(EPanelType.GameMenu));
 
-        playerInputActions = new PlayerInputActions(); // 메모리에 인풋 시스템 인스턴스 생성
+        // playerInputActions = new PlayerInputActions(); // 메모리에 인풋 시스템 인스턴스 생성
     }
 
-    void OnEnable()
-    {
-        // 타이틀에서 사용할 액션 맵 활성화
-        playerInputActions.Player.Enable();
-    }
+    // void OnEnable()
+    // {
+    //     // 타이틀에서 사용할 액션 맵 활성화
+    //     playerInputActions.Player.Enable();
+    // }
 
-    void OnDisable()
-    {
-        // 스크립트가 비활성화될 때 인풋도 비활성화
-        playerInputActions.Player.Disable();
-        playerInputActions.Dispose(); // 연결된 모든 리소스 해제(메모리 청소)
-    }
+    // void OnDisable()
+    // {
+    //     // 스크립트가 비활성화될 때 인풋도 비활성화
+    //     playerInputActions.Player.Disable();
+    //     playerInputActions.Dispose(); // 연결된 모든 리소스 해제(메모리 청소)
+    // }
 
     void Start()
     {
-        // 타이틀 화면이 시작되면 커서를 보이게 설정
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.SetCursorVisible(true);
-        }
+        FocusManager.Instance.PushFocusState(GameFocusState.InGameMenu);
+        // // 타이틀 화면이 시작되면 커서를 보이게 설정
+        // if (GameManager.instance != null)
+        // {
+        //     GameManager.instance.SetCursorVisible(true);
+        // }
     }
 
-    void Update()
-    {
-        // 입력 감지 (예: 아무 키나 눌러서 시작 또는 특정 액션)
-        if (playerInputActions.Player.ToggleMenu.WasPressedThisFrame())
-        {
-            GameManager.instance.ToggleMenu();
-        }
-    }
+    // void Update()
+    // {
+    //     // 입력 감지 (예: 아무 키나 눌러서 시작 또는 특정 액션)
+    //     if (playerInputActions.Player.ToggleMenu.WasPressedThisFrame())
+    //     {
+    //         MenuUIController.instance.ToggleMenu();
+    //     }
+    // }
 
     /// <summary>
     /// 플레이어 이름 세팅 패널과 입력 패널, 버튼 패널을 토글하는 메서드

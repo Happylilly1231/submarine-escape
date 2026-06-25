@@ -148,7 +148,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 정지 중 -> 이동 불가
-        if (SubmarineInGameManager.instance.IsPausing) return;
+        if (GameManager.instance.IsPausing) return;
 
         // 움직임 허용 안됨 -> 이동 불가, 단, 중력 적용 중일 때는 중력에 의한 움직임만 예외적으로 가능
         if (!_canMove)

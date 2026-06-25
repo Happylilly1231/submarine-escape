@@ -22,7 +22,7 @@ public class RadarClickHandler : MonoBehaviour, IPointerClickHandler
     /// <param name="eventData">클릭 이벤트 데이터</param>
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (SubmarineInGameManager.instance.CurrentPuzzleController is not RadarController)
+        if (FocusManager.Instance.CurrentPuzzleController is not RadarController)
             return;
 
         // 현재 영역 안에서 클릭 발생한 로컬 위치 가져오기

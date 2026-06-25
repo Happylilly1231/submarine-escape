@@ -112,8 +112,12 @@ public enum ESavePointType
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private GameObject menuUI;
-    public GameObject MenuUI => menuUI;
+    // [SerializeField] private GameObject menuUI;
+    // public GameObject MenuUI => menuUI;
+
+    // 정지
+    private bool _isPausing = false; // 정지 중 여부
+    public bool IsPausing { get => _isPausing; set => _isPausing = value; }
 
     private bool _isClear = false; // 클리어 여부 변수
     public bool IsClear => _isClear;
@@ -184,66 +188,55 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 커서 보여줘야하는지 여부 설정
-    /// </summary>
-    /// <param name="isShow"></param>
-    public void SetHaveToShowCursor(bool isShow)
-    {
-        _haveToShowCursor = isShow;
-    }
+    // /// <summary>
+    // /// 커서 보여줘야하는지 여부 설정
+    // /// </summary>
+    // /// <param name="isShow"></param>
+    // public void SetHaveToShowCursor(bool isShow)
+    // {
+    //     _haveToShowCursor = isShow;
+    // }
 
     /// <summary>
-    /// 커서 활성화/비활성화 요청 (카운터 기반)
+    /// 게임 정지
     /// </summary>
-    /// <param name="isShow"커서 표시 여부</param>
-    public void RequestCursor(bool isShow)
+    public void Pause()
     {
-        // 카운트 업데이트
-        if (isShow)
-            _cursorRequestCount++;
-        else
-            _cursorRequestCount = Mathf.Max(0, _cursorRequestCount - 1);
+        Debug.Log("정지");
+        _isPausing = true; // 정지 중으로 설정
 
-        // 최종 상태 반영 (카운트가 0보다 크면 무조건 커서를 보여줌)
-        if (_cursorRequestCount > 0)
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-        else
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-        }
+        Time.timeScale = 0f; // 시간 정지
+        AudioListener.pause = true; // 오디오 듣기 정지
+
+        FocusManager.Instance.PushFocusState(GameFocusState.ESCMenu); // 퍼즐 포커스 상태로 변경
     }
 
-    public void ToggleMenu()
+    /// <summary>
+    /// 게임 정지 해제
+    /// </summary>
+    public void Resume()
     {
-        menuUI.SetActive(!menuUI.activeSelf);
-        if (menuUI.activeSelf)
-        {
-            MenuUIController.instance.OpenTab(0);
-        }
+        Debug.Log("재시작");
+        _isPausing = false; // 정지 중 아님으로 설정
+
+        Time.timeScale = 1.0f; // 시간 정지 해제
+        AudioListener.pause = false; // 오디오 듣기 정지 해제
+
+        FocusManager.Instance.PopFocusState();
     }
 
-    public void ExitMenu()
-    {
-        menuUI.SetActive(false);
-        // 인게임 매니저가 존재한다면(플레이 중)
-        if (SubmarineInGameManager.instance != null)
-        {
-            if (SubmarineInGameManager.instance.IsPausing) // 정지 중이면
-            {
-                SubmarineInGameManager.instance.Resume(); // 정지 해제(플레이)
-            }
-            else // 플레이 중이면
-            {
-                SubmarineInGameManager.instance.Pause(); // 정지
-            }
-        }
-    }
-
+    // public void ExitMenu()
+    // {
+    //     menuUI.SetActive(false);
+    //     if (IsPausing) // 정지 중이면
+    //     {
+    //         Resume(); // 정지 해제(플레이)
+    //     }
+    //     else // 플레이 중이면
+    //     {
+    //         Pause(); // 정지
+    //     }
+    // }
 
     // 난이도 설정
     public void SetDifficulty(Difficulty difficulty)
@@ -268,9 +261,9 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartGame()
     {
-        if (menuUI.activeSelf)
+        if (MenuUIController.instance.MenuUI.activeSelf)
         {
-            menuUI.SetActive(false);
+            MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("SubmarineScene");
@@ -379,9 +372,9 @@ public class GameManager : MonoBehaviour
         // Cursor.lockState = CursorLockMode.None; // 마우스 고정 해제
         Time.timeScale = 1.0f; // 시간 정지 해제
 
-        if (menuUI.activeSelf)
+        if (MenuUIController.instance.MenuUI.activeSelf)
         {
-            menuUI.SetActive(false);
+            MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("EndingScene"); // 엔딩 씬으로 이동
@@ -393,9 +386,9 @@ public class GameManager : MonoBehaviour
     public void ReturnToTitle()
     {
         CurrentPanelType = EPanelType.GameMenu;
-        if (menuUI.activeSelf)
+        if (MenuUIController.instance.MenuUI.activeSelf)
         {
-            menuUI.SetActive(false);
+            MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("TitleScene"); // 추후 씬 이름 수정 예정
@@ -403,9 +396,9 @@ public class GameManager : MonoBehaviour
 
     public void EndingGallery()
     {
-        if (menuUI.activeSelf)
+        if (MenuUIController.instance.MenuUI.activeSelf)
         {
-            menuUI.SetActive(false);
+            MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
         SceneManager.LoadScene("EndingFrameScene");

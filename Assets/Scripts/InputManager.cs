@@ -5,8 +5,6 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] private PlayerInput playerInput;
-
     // 맵 상태와 개별 액션 상태를 모두 저장하기 위한 딕셔너리들
     private Dictionary<string, bool> actionMapStates = new Dictionary<string, bool>();
     private Dictionary<string, bool> individualActionStates = new Dictionary<string, bool>();
@@ -35,8 +33,8 @@ public class InputManager : MonoBehaviour
     /// </summary>
     public void DisableAllInputs()
     {
-        playerInput.currentActionMap.Disable();
-        playerInput.actions.FindActionMap("Permanent")?.Disable();
+        PlayerManager.Instance.playerInput.currentActionMap.Disable();
+        PlayerManager.Instance.playerInput.actions.FindActionMap("Permanent")?.Disable();
     }
 
     /// <summary>
@@ -47,7 +45,7 @@ public class InputManager : MonoBehaviour
         actionMapStates.Clear();
         individualActionStates.Clear();
 
-        foreach (var map in playerInput.actions.actionMaps)
+        foreach (var map in PlayerManager.Instance.playerInput.actions.actionMaps)
         {
             // 맵 상태 저장
             actionMapStates[map.name] = map.enabled;
@@ -70,7 +68,7 @@ public class InputManager : MonoBehaviour
     /// </summary>
     public void RestoreInputsFromSnapshot()
     {
-        foreach (var map in playerInput.actions.actionMaps)
+        foreach (var map in PlayerManager.Instance.playerInput.actions.actionMaps)
         {
             if (actionMapStates.TryGetValue(map.name, out bool wasMapEnabled))
             {
@@ -106,7 +104,7 @@ public class InputManager : MonoBehaviour
     /// </summary>
     public void SwitchActionMapWithPermanent(string actionMapName)
     {
-        playerInput.SwitchCurrentActionMap(actionMapName);
-        playerInput.actions.FindActionMap("Permanent")?.Enable();
+        PlayerManager.Instance.playerInput.SwitchCurrentActionMap(actionMapName);
+        PlayerManager.Instance.playerInput.actions.FindActionMap("Permanent")?.Enable();
     }
 }

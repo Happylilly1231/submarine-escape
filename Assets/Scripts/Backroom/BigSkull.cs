@@ -129,7 +129,7 @@ public class BigSkull : BackroomEntity
     {
         while (true)
         {
-            yield return new WaitUntil(() => !SubmarineInGameManager.instance.IsPausing);
+            yield return new WaitUntil(() => !GameManager.instance.IsPausing);
 
             // 시작 위치, 목표 위치 설정 (먼 곳에서 시작)
             SetupSpawnPosAndTargetPos();
@@ -150,7 +150,7 @@ public class BigSkull : BackroomEntity
             // 목표 위치에 도달하지 않은 동안 -> 목표 위치로 이동 / 차징
             while (!reached)
             {
-                yield return new WaitUntil(() => !SubmarineInGameManager.instance.IsPausing);
+                yield return new WaitUntil(() => !GameManager.instance.IsPausing);
 
                 // 차징 여부 판단 (플레이어가 해골을 바라보고 있는지 여부)
                 bool canCharge = CheckCanCharge();

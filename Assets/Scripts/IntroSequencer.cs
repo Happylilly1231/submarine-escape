@@ -123,7 +123,8 @@ public class IntroSequencer : MonoBehaviour
         _animator.SetLayerWeight(1, 1f); // 플레이어 레이어 켜기
 
         // 게임 재개 및 UI 표시
-        SubmarineInGameManager.instance.Resume();
+        FocusManager.Instance.ResetFocusState(GameFocusState.None); // 일반 포커스 상태로 초기화
+        // SubmarineInGameManager.instance.Resume();
         SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
     }
 }

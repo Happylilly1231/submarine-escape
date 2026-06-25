@@ -15,17 +15,15 @@ public enum GameFocusState
 
 public class FocusManager : MonoBehaviour
 {
-    [SerializeField] private PlayerInput playerInput;
-    [SerializeField] private PlayerCameraController playerCameraController;
-    [SerializeField] private PlayerMove playerMove;
-    [SerializeField] private PlayerInteractor playerInteractor;
-    [SerializeField] private InGameMenuController inGameMenuController;
+    public InGameMenuController inGameMenuController { get; set; }
 
     // 현재 포커스 상태
     public GameFocusState CurrentFocusState { get; private set; } = GameFocusState.None;
 
     // 이전 포커스 상태 기록(스택)
     private Stack<GameFocusState> _focusStateHistory = new Stack<GameFocusState>();
+
+    public PuzzleController CurrentPuzzleController { get; private set; } = null;
 
     public static FocusManager Instance { get; private set; }
 
@@ -42,13 +40,15 @@ public class FocusManager : MonoBehaviour
         }
     }
 
-    private void Start()
+    /// <summary>
+    /// 새로운 포커스 상태로 완전히 전환하고 스택을 초기화할 때 사용
+    /// </summary>
+    public void ResetFocusState(GameFocusState newState)
     {
-        // playerInput = SubmarineInGameManager.instance.player.GetComponent<PlayerInput>(); // 플레이어 입력 컴포넌트 가져오기
-        // playerCameraController = Camera.main.GetComponent<PlayerCameraController>(); // 플레이어 카메라 컨트롤러 컴포넌트 가져오기
-        // playerMove = SubmarineInGameManager.instance.player.GetComponent<PlayerMove>(); // 플레이어 이동 컴포넌트 가져오기
-        // playerInteractor = SubmarineInGameManager.instance.player.GetComponent<PlayerInteractor>(); // 플레이어 인터랙터 컴포넌트 가져오기
-        // inGameMenuController = FindAnyObjectByType<InGameMenuController>();
+        // 강제로 완전히 새 상태로 갈 때는 기존 히스토리를 비움
+        _focusStateHistory.Clear();
+
+        TransitionToState(newState);
     }
 
     /// <summary>
@@ -99,13 +99,13 @@ public class FocusManager : MonoBehaviour
         switch (CurrentFocusState)
         {
             case GameFocusState.None:
-                SetPlayerCanMove(true); // 플레이어 이동/회전 가능
+                PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
                 SetCenterUIActive(true); // 가운데 UI 요소 켜기
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
                 break;
 
             case GameFocusState.GameTimePauseSequence:
-                SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
 
@@ -115,23 +115,24 @@ public class FocusManager : MonoBehaviour
                 if (oldState == GameFocusState.Puzzle)
                 {
                     // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController != null)
+                    if (CurrentPuzzleController != null)
                     {
-                        SubmarineInGameManager.instance.CurrentPuzzleController.ExitPuzzle();
+                        CurrentPuzzleController.ExitPuzzle();
                     }
                 }
                 else if (oldState == GameFocusState.InGameMenu)
                 {
-                    inGameMenuController.CloseInGameMenu();
+                    if (inGameMenuController != null)
+                        inGameMenuController.CloseInGameMenu();
                 }
                 break;
 
             case GameFocusState.Puzzle:
-                SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
-                if (SubmarineInGameManager.instance.CurrentPuzzleController != null)
+                if (CurrentPuzzleController != null)
                 {
-                    bool isCursorVisible = SubmarineInGameManager.instance.CurrentPuzzleController.IsCurrentMouseRequired;
+                    bool isCursorVisible = CurrentPuzzleController.IsCurrentMouseRequired;
                     GameManager.instance.SetCursorVisible(isCursorVisible); // 커서 보이기 여부 설정
                 }
                 else
@@ -141,7 +142,7 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.InGameMenu:
-                SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
@@ -180,7 +181,7 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.InGameMenu:
-                bool isToggleMenuEnabled = playerInput.actions["ToggleMenu"].enabled; // ESC 메뉴 토글 액션 켜져있는지 여부 저장
+                bool isToggleMenuEnabled = PlayerManager.Instance.playerInput.actions["ToggleMenu"].enabled; // ESC 메뉴 토글 액션 켜져있는지 여부 저장
                 if (oldState == GameFocusState.Puzzle) // 퍼즐 -> 인게임 메뉴
                 {
                     InputManager.instance.SaveAndDisableAllInputs(); // 저장 & 모든 인풋 비활성화
@@ -189,28 +190,18 @@ public class FocusManager : MonoBehaviour
                 {
                     InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
                 }
-                playerInput.actions["ToggleInGameMenu"].Enable(); // 인게임 메뉴 토글 액션 활성화
+                PlayerManager.Instance.playerInput.actions["ToggleInGameMenu"].Enable(); // 인게임 메뉴 토글 액션 활성화
                 // ESC 메뉴 토글 액션이 켜져있었으면 활성화
                 if (isToggleMenuEnabled)
-                    playerInput.actions["ToggleMenu"].Enable();
+                    PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable();
                 break;
 
             case GameFocusState.ESCMenu:
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
-                playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
-                playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요)
+                PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
+                PlayerManager.Instance.playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요)
                 break;
         }
-    }
-
-    /// <summary>
-    /// 플레이어 움직임(이동, 회전) 가능 여부 설정
-    /// </summary>
-    /// <param name="canMove">가능 여부</param>
-    private void SetPlayerCanMove(bool canMove)
-    {
-        playerCameraController.enabled = canMove;
-        playerMove.SetMoveable(canMove);
     }
 
     /// <summary>
@@ -221,12 +212,21 @@ public class FocusManager : MonoBehaviour
     {
         if (isActive)
         {
-            playerInteractor.SetActiveAimUI(true); // 조준점 켜기
+            PlayerManager.Instance.playerInteractor.SetActiveAimUI(true); // 조준점 켜기
         }
         else
         {
-            playerInteractor.SetActiveAimUI(false); // 조준점 끄기
-            playerInteractor.ClearDetectionText(); // 상호작용 감지 텍스트 클리어
+            PlayerManager.Instance.playerInteractor.SetActiveAimUI(false); // 조준점 끄기
+            PlayerManager.Instance.playerInteractor.ClearDetectionText(); // 상호작용 감지 텍스트 클리어
         }
+    }
+
+    /// <summary>
+    /// 현재 퍼즐 컨트롤러 갱신
+    /// </summary>
+    /// <param name="puzzleController">퍼즐 컨트롤러</param>
+    public void SetCurrentPuzzleController(PuzzleController puzzleController)
+    {
+        CurrentPuzzleController = puzzleController;
     }
 }

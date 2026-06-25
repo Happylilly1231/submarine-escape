@@ -44,6 +44,8 @@ public class InGameMenuController : MonoBehaviour
 
     private void Start()
     {
+        FocusManager.Instance.inGameMenuController = this; // 포커스 매니저 자기 변수에 자신 할당
+
         _toggleInGameMenuAction = SubmarineInGameManager.instance.playerInput.actions["ToggleInGameMenu"];
 
         _toggleInGameMenuAction.performed += OnToggleInGameMenu;

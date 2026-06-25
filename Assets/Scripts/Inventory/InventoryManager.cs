@@ -221,14 +221,14 @@ public class InventoryManager : MonoBehaviour
             switch (currentItem.ItemType)
             {
                 case EItemType.Toggle:
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null) sb.AppendLine("켜기/끄기 [Mouse LMB]");
+                    if (FocusManager.Instance.CurrentPuzzleController == null) sb.AppendLine("켜기/끄기 [Mouse LMB]");
                     break;
                 case EItemType.Consumable:
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
+                    if (FocusManager.Instance.CurrentPuzzleController == null)
                         sb.AppendLine("사용 [E]");
                     break;
                 case EItemType.Puzzle: // 퍼즐 상호작용 중이라면 표시
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController != null)
+                    if (FocusManager.Instance.CurrentPuzzleController != null)
                     {
                         if (currentItem.ItemName == "Hammer") sb.AppendLine("엔진 수리 [Space]");
                         else if (currentItem.ItemName == "Screwdriver") sb.AppendLine("나사 제거 [E]");
@@ -236,7 +236,7 @@ public class InventoryManager : MonoBehaviour
                     }
                     break;
                 case EItemType.UI:
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
+                    if (FocusManager.Instance.CurrentPuzzleController == null)
                     {
                         // if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
                         if (_isViewingUI) sb.AppendLine("닫기 [E]");
@@ -244,18 +244,18 @@ public class InventoryManager : MonoBehaviour
                     }
                     break;
                 case EItemType.Wearable:
-                    if (SubmarineInGameManager.instance.CurrentPuzzleController == null)
+                    if (FocusManager.Instance.CurrentPuzzleController == null)
                         sb.AppendLine("입기 [E]");
                     break;
             }
         }
 
         sb.AppendLine("맵/목표/노트 [Tab]");
-        if (currentItem != null && SubmarineInGameManager.instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
+        if (currentItem != null && FocusManager.Instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
             sb.AppendLine("아이템 버리기 [Q]");
 
         // SOS 신호 퍼즐 상호작용 메시지
-        if (SubmarineInGameManager.instance.CurrentPuzzleController is TelegraphKey telegraphKey)
+        if (FocusManager.Instance.CurrentPuzzleController is TelegraphKey telegraphKey)
         {
             sb.AppendLine("모스 부호 입력 [Mouse LMB]");
             sb.AppendLine("최종 메시지 송신 [Mouse RMB]");
@@ -463,7 +463,7 @@ public class InventoryManager : MonoBehaviour
     public void OnItemDrop(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
-        if (SubmarineInGameManager.instance.IsPausing) return;
+        if (GameManager.instance.IsPausing) return;
 
         if (_selectedSlotIndex < 0) return;
 

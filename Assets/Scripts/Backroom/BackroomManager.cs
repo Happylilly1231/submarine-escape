@@ -277,7 +277,7 @@ public class BackroomManager : MonoBehaviour
                 rotation = Quaternion.LookRotation(direction);
             }
             playerMove.PlayerTeleport(originalPos, rotation);
-            SubmarineInGameManager.instance.SetCameraControllerEnable(true); // 플레이어 카메라 컨트롤러 활성화
+            PlayerManager.Instance.SetCameraControllerEnable(true); // 플레이어 카메라 컨트롤러 활성화
         });
 
         // 잠시 정적 (완전 암전 상태)

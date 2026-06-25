@@ -204,7 +204,7 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         Sequence seq = DOTween.Sequence();
 
         // 주사기 빼는 모습 보는 위치로 카메라 이동
-        SubmarineInGameManager.instance.SetCameraControllerEnable(false); // 플레이어 카메라 컨트롤러 비활성화
+        PlayerManager.Instance.SetCameraControllerEnable(false); // 플레이어 카메라 컨트롤러 비활성화
         Camera.main.transform.position = viewPoint.position;
         Camera.main.transform.rotation = viewPoint.rotation;
 

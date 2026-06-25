@@ -86,7 +86,7 @@ public abstract class PuzzleController : MonoBehaviour
     public void SetMouseRequired(bool isRequired)
     {
         IsCurrentMouseRequired = isRequired;
-        GameManager.instance.SetHaveToShowCursor(isRequired);
+        // GameManager.instance.SetHaveToShowCursor(isRequired);
         GameManager.instance.SetCursorVisible(isRequired);
     }
 
@@ -101,12 +101,12 @@ public abstract class PuzzleController : MonoBehaviour
     /// <param name="viewPoint"></param>
     public virtual void ActivatePuzzle()
     {
-        SubmarineInGameManager.instance.SetCurrentPuzzleController(this); // 현재 퍼즐 컨트롤러를 지금 컨트롤러로 갱신
-        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = true; // 퍼즐 활성화 상태로 변경
+        FocusManager.Instance.SetCurrentPuzzleController(this); // 현재 퍼즐 컨트롤러를 지금 컨트롤러로 갱신
+        PlayerManager.Instance.playerInteractor.IsPuzzleActive = true; // 퍼즐 활성화 상태로 변경
         FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
         InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화 (퍼즐에 들어가는 동안만, StartPuzzle에서 해제)
         // SubmarineInGameManager.instance.SetPuzzleFocus(true, this);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(false); // 플레이어 외형 안 보이게
+        PlayerManager.Instance.SetPlayerGeoActive(false); // 플레이어 외형 안 보이게
 
         Sequence seq = DOTween.Sequence();
         seq.Append(Camera.main.transform.DOMove(viewPoint.position, 1.5f)
@@ -136,7 +136,7 @@ public abstract class PuzzleController : MonoBehaviour
 
         if (IsCurrentMouseRequired)
         {
-            GameManager.instance.SetHaveToShowCursor(true);
+            // GameManager.instance.SetHaveToShowCursor(true);
             GameManager.instance.SetCursorVisible(true);
         }
 
@@ -169,11 +169,11 @@ public abstract class PuzzleController : MonoBehaviour
 
         // OnPuzzleExited?.Invoke();
 
-        SubmarineInGameManager.instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
+        FocusManager.Instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
         SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
         FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
         // SubmarineInGameManager.instance.SetPuzzleFocus(false);
-        SubmarineInGameManager.instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
+        PlayerManager.Instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
 

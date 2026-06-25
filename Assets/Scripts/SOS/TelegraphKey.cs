@@ -606,6 +606,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         contextText.text = ""; // 기존 텍스트 초기화
 
         noiseAudioSource.Stop(); // 노이즈 중지
+        SetInputLock(false); // 입력 잠금 해제
 
         // HAS 문장 수신
         yield return StartCoroutine(PlayMorseString(HAS_SIGNAL));
@@ -626,7 +627,6 @@ public class TelegraphKey : PuzzleController, IInteractable
         radarController.LeaveSubmarine();
         IsSubmarineLeft = true; // 이제 더 이상 신호를 주고받을 수 없도록 플래그 차단
 
-        SetInputLock(false); // 입력 잠금 해제
         KeyE.performed += OnKeyEPerformed; // E키 사용 가능
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }

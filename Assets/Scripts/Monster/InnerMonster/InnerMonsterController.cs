@@ -256,7 +256,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     private void Update()
     {
         // 게임 정지 중일 때 or 추출 당하는 중 -> 작동 X
-        if (SubmarineInGameManager.instance.IsPausing || IsBeingExtracted)
+        if (GameManager.instance.IsPausing || IsBeingExtracted)
             return;
 
         // 플레이어와의 거리 계산

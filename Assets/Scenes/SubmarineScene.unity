@@ -3242,18 +3242,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3687d0dce6061c840a562a43c174b0f2, type: 3}
---- !u!114 &99093879 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 993496960145663652, guid: 3687d0dce6061c840a562a43c174b0f2,
-    type: 3}
-  m_PrefabInstance: {fileID: 99093878}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5644dd43a66196145a896167b0f47914, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &99641109
 GameObject:
   m_ObjectHideFlags: 0
@@ -11011,6 +10999,12 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 391766179}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &401988492 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8852864228118113280, guid: 56ae13bcd975bcd448a584c5719f4f71,
+    type: 3}
+  m_PrefabInstance: {fileID: 1645802924}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &402044446
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14411,12 +14405,6 @@ Transform:
   - {fileID: 384835351}
   m_Father: {fileID: 811018759}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &571713373 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2783964131803498761, guid: f349ffc62bb883f4a9d9f67af42a254c,
-    type: 3}
-  m_PrefabInstance: {fileID: 2019254684}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &572551908
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44566,7 +44554,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 915b021fefa5032409ffe74ae12e49ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInput: {fileID: 1662923088}
 --- !u!4 &1478052560
 Transform:
   m_ObjectHideFlags: 0
@@ -47269,6 +47256,55 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1538137852}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1540573943
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1540573945}
+  - component: {fileID: 1540573944}
+  m_Layer: 0
+  m_Name: PlayerManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1540573944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540573943}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb7c2fff56c19948a7803435edc6e50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInput: {fileID: 1662923088}
+  playerCameraController: {fileID: 1165907104}
+  playerMove: {fileID: 1645802930}
+  playerInteractor: {fileID: 1127793084}
+  playerGeo: {fileID: 401988492}
+--- !u!4 &1540573945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540573943}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1540697690
 GameObject:
   m_ObjectHideFlags: 0
@@ -47298,7 +47334,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 796dc27cc2e7bf34884d813fa06bba04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  menuUI: {fileID: 571713373}
   playerName: 
   CurrentPanelType: 1
 --- !u!4 &1540697692
@@ -50541,7 +50576,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_ActionEvents.Array.data[10].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 104537695}
+      objectReference: {fileID: 2019254686}
     - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
         type: 3}
       propertyPath: m_ActionEvents.Array.data[11].m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -50551,15 +50586,10 @@ PrefabInstance:
         type: 3}
       propertyPath: m_ActionEvents.Array.data[23].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
-        type: 3}
-      propertyPath: m_ActionEvents.Array.data[24].m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
       objectReference: {fileID: 1237458160}
     - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
         type: 3}
-      propertyPath: m_ActionEvents.Array.data[25].m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      propertyPath: m_ActionEvents.Array.data[24].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 104537695}
     - target: {fileID: 3685600775984150395, guid: 56ae13bcd975bcd448a584c5719f4f71,
@@ -61666,6 +61696,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2019254686 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6201825945519429282, guid: f349ffc62bb883f4a9d9f67af42a254c,
+    type: 3}
+  m_PrefabInstance: {fileID: 2019254684}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92e50bb40ed80ab4cb5983c4ed83ef80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2019763911
 GameObject:
   m_ObjectHideFlags: 0
@@ -61710,11 +61752,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73be92b5134222f4abc4b569f441ed91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInput: {fileID: 1662923088}
-  playerCameraController: {fileID: 1165907104}
-  playerMove: {fileID: 1645802930}
-  playerInteractor: {fileID: 1127793084}
-  inGameMenuController: {fileID: 99093879}
 --- !u!1 &2024063549
 GameObject:
   m_ObjectHideFlags: 0
@@ -66268,12 +66305,13 @@ SceneRoots:
   - {fileID: 1980088022}
   - {fileID: 1540697692}
   - {fileID: 1339406576}
-  - {fileID: 2019254684}
+  - {fileID: 2019763912}
   - {fileID: 1478052560}
   - {fileID: 1644822164}
+  - {fileID: 2019254684}
+  - {fileID: 1540573945}
   - {fileID: 1292945048}
   - {fileID: 104537700}
-  - {fileID: 2019763912}
   - {fileID: 1237458162}
   - {fileID: 723067465}
   - {fileID: 1502852660}
