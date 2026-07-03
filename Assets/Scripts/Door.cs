@@ -80,7 +80,8 @@ public class Door : MonoBehaviour, IInteractable
     private float GetTargetAngleBasedOnPlayer()
     {
         // 플레이어의 현재 위치 가져오기
-        Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
+        //Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
+        Vector3 playerPos = PlayerManager.Instance.playerMove.transform.position;
 
         // 플레이어와 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
         float distToFront = Vector3.Distance(playerPos, frontPos);
@@ -90,7 +91,7 @@ public class Door : MonoBehaviour, IInteractable
         return (distToFront < distToBack) ? -90f : 90f;
     }
 
-    private void OpenDoor(float angle)
+    public virtual void OpenDoor(float angle)
     {
         _isMoving = true;
 

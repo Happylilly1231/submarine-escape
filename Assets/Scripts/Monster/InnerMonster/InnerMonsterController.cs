@@ -49,6 +49,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public Animator Animator { get => _animator; set => _animator = value; }
     private NavMeshAgent _nav; // NavMeshAgent
     public NavMeshAgent Nav { get => _nav; set => _nav = value; }
+    public bool IsInCutscene { get; set; } = false; // 컷씬 중인지 여부
     public LayerMask doorLayer;
     public LayerMask destroyEquipmentLayer;
     private Transform _monsterModelTransform;

@@ -164,7 +164,7 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void InitGame()
     {
-        FocusManager.Instance.TransitionToState(GameFocusState.None);
+        //FocusManager.Instance.TransitionToState(GameFocusState.None);
         // GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
 
         // // AudioManager.Instance.PlayBGM(AudioManager.Instance.fanSound);

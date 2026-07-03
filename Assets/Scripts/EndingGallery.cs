@@ -54,6 +54,7 @@ public class EndingGallery : MonoBehaviour
 
     void Start()
     {
+        GameManager.instance.SetCursorVisible(true); // 커서 보이게
         UpdateGallery();
         SetupClickEvents();
     }

@@ -57,7 +57,7 @@ public abstract class PuzzleController : MonoBehaviour
     {
         IsPuzzleStarted = false;
 
-        playerInput = SubmarineInGameManager.instance.playerInput;
+        playerInput = PlayerManager.Instance.playerInput;
 
         _click = playerInput.actions["Click"];
         _point = playerInput.actions["Point"];
@@ -115,7 +115,7 @@ public abstract class PuzzleController : MonoBehaviour
         seq.Join(Camera.main.transform.DORotateQuaternion(viewPoint.rotation, 1.5f)
         .SetEase(Ease.OutQuad));
 
-        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
+        if (inventoryManager != null) inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
 
         seq.OnComplete(() =>
         {
@@ -170,11 +170,14 @@ public abstract class PuzzleController : MonoBehaviour
         // OnPuzzleExited?.Invoke();
 
         FocusManager.Instance.SetCurrentPuzzleController(null); // 현재 퍼즐 컨트롤러 null로 초기화
-        SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
+        if (SubmarineInGameManager.instance != null)
+        {
+            SubmarineInGameManager.instance.playerInteractor.IsPuzzleActive = false; // 퍼즐 비활성화 상태로 변경
+        }
         FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
         // SubmarineInGameManager.instance.SetPuzzleFocus(false);
         PlayerManager.Instance.SetPlayerGeoActive(true); // 플레이어 외형 보이게
-        inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
+        if (inventoryManager != null) inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
 
     /// <summary>

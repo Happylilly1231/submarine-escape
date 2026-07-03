@@ -48,6 +48,15 @@ namespace InnerMonsterStates
             }
             owner.Nav.SetDestination(_targetPos);
 
+            // 컷씬 중일 때는 건너뜀
+            if (owner.IsInCutscene)
+            {
+                _isClose = false;
+                owner.CanMove(true);
+                owner.Animator.SetBool("isChaseWaiting", false);
+                return;
+            }
+
             // 플레이어와의 거리에 따른 애니메이션 설정 초기화
             _isClose = Vector3.Distance(owner.transform.position, _targetPos) < _stopDistance;
             if (_isClose) // 플레이어와 가까우면(플레이어가 시야 내에 존재) -> Chase Idle 애니메이션
