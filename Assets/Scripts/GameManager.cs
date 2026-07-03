@@ -386,12 +386,12 @@ public class GameManager : MonoBehaviour
     public void ReturnToTitle()
     {
         CurrentPanelType = EPanelType.GameMenu;
-        if (MenuUIController.instance.MenuUI.activeSelf)
+        if (MenuUIController.instance && MenuUIController.instance.MenuUI.activeSelf)
         {
             MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
-        SceneManager.LoadScene("TitleScene"); // 추후 씬 이름 수정 예정
+        SceneManager.LoadScene("Title3DScene"); // 추후 씬 이름 수정 예정
     }
 
     public void EndingGallery()

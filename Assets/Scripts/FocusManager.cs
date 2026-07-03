@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public enum GameFocusState
 {
@@ -38,6 +39,35 @@ public class FocusManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void Start()
+    {
+        // 게임 시작 시 None 상태의 UI, 커서, 인풋 설정을 실행 - 타이틀 씬에서 커서 안 보이게 설정
+        ResetFocusState(GameFocusState.None);
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    /// <summary>
+    /// 씬이 로드되면 자동으로 호출되는 함수
+    /// <para> - 씬 전환 시 포커스 상태를 None으로 초기화</para>
+    /// </summary>
+    /// <param name="scene">로드된 씬</param>
+    /// <param name="mode">로드 모드</param>
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // 씬 전환 시 포커스 상태를 None으로 초기화
+        ResetFocusState(GameFocusState.None);
+        Debug.Log($"{scene.name} 씬 로드됨. 포커스 None으로 초기화.");
     }
 
     /// <summary>
@@ -109,7 +139,7 @@ public class FocusManager : MonoBehaviour
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
 
-                GameTime.Instance.SetPause(true); // 게임 시간 정지
+                if (GameTime.Instance != null) GameTime.Instance.SetPause(true); // 게임 시간 정지
 
                 // 연출이 보이도록 모든 창 다 끄고 나가기
                 if (oldState == GameFocusState.Puzzle)
