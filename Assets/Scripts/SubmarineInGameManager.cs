@@ -38,19 +38,19 @@ public class AlertAreaInfo
 public class SubmarineInGameManager : MonoBehaviour
 {
     // 경보
-    [SerializeField] private Button alertButton; // 임시 - 경보 버튼
+    // [SerializeField] private Button alertButton; // 임시 - 경보 버튼
     private bool _isAlerting = false; // 경보 발생 중 여부
     public bool IsAlerting => _isAlerting;
-    [SerializeField] private Transform escapeRoomPos; // 탈출실 위치
-    public bool hasEverOpenedEscapeDoor = false; // 탈출실 문이 한 번이라도 열렸는지 여부
+    // [SerializeField] private Transform escapeRoomPos; // 탈출실 위치
+    // public bool hasEverOpenedEscapeDoor = false; // 탈출실 문이 한 번이라도 열렸는지 여부
 
-    // 파괴될 장비
-    [SerializeField] private GameObject[] destroyEquipments; // 파괴되는 장비 배열
-    public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
-    private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
-    public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
-    private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
-    public Transform CurrentTargetPos => _currentTargetPos;
+    // // 파괴될 장비
+    // [SerializeField] private GameObject[] destroyEquipments; // 파괴되는 장비 배열
+    // public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
+    // private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
+    // public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
+    // private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
+    // public Transform CurrentTargetPos => _currentTargetPos;
 
     // 문
     private Door[] _doors;
@@ -79,6 +79,7 @@ public class SubmarineInGameManager : MonoBehaviour
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
     public event Action OnAlertEnded; // 경보 발생 종료 이벤트
+    public event Action OnMachinarySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
 
     // 사운드
     [Header("Sound")]
@@ -253,6 +254,10 @@ public class SubmarineInGameManager : MonoBehaviour
 
         // 경보 발생 시작 이벤트 알림
         OnAlertStarted?.Invoke();
+
+        // 기계실 경보 발생 시작 이벤트 알림
+        if (alertArea == AlertArea.MachinerySpace)
+            OnMachinarySpaceAlertStarted?.Invoke();
 
         Debug.Log("경보 발생!");
     }

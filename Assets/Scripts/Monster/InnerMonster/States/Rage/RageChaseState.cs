@@ -17,19 +17,24 @@ namespace InnerMonsterStates
         private float _rageSpeed = 10f; // 폭주 속도
         private List<Door> _doorsOnPathList = new List<Door>(); // 경로 상의 문 리스트(해당 문만 파괴하도록 해야 하므로 필요)
         private float _detectDestroyObjDistance = 1.5f; // 파괴 오브젝트 감지 거리
-        private bool _isChasingEscapeRoom; // 탈출실이 목적지인지 여부
-        private bool _reachedEscapeRoom = false; // 탈출실에 도착했는지 여부
+        // private bool _isChasingEscapeRoom; // 탈출실이 목적지인지 여부
+        // private bool _reachedEscapeRoom = false; // 탈출실에 도착했는지 여부
         // private Vector3 _currentAlertPos; // 현재 경보 발생 위치
+        private bool _isCompleteGetDoorsOnPathList = false;
 
         public void Enter(InnerMonsterController owner)
         {
-            owner.CanMove(true); // 이동
+            owner.CanMove(false); // 이동 불가 (경로 상 문을 얻었을 때 true로 바꿔줄 것)
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
             owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 경보 발생 위치를 향해 이동
             owner.ChangeMonsterModelCenter(true, 0.3f); // 몬스터 모델 중심 변경
 
             // 경로 상의 문 리스트 얻기
-            owner.StartCoroutine(GetDoorsOnPathList(owner));
+            owner.GetDoorsOnPathList(_doorsOnPathList, () =>
+            {
+                _isCompleteGetDoorsOnPathList = true;
+                owner.CanMove(true);
+            });
 
             // // 탈출실이 목적지인지 여부는 탈출실 문이 한번이라도 열렸는지 여부와 같음
             // _isChasingEscapeRoom = SubmarineInGameManager.instance.hasEverOpenedEscapeDoor;
@@ -40,17 +45,29 @@ namespace InnerMonsterStates
 
         public void Update(InnerMonsterController owner)
         {
-            Debug.Log(Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) + " / " + SubmarineInGameManager.instance.CurrentDestroyPos.position);
+            // 경로 상 문을 아직 얻지 못했을 때 -> 얻을 때까지 움직이지 않고 기다리기
+            if (!_isCompleteGetDoorsOnPathList)
+                return;
+
+            Debug.Log(Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) + " / " + SubmarineInGameManager.instance.CurrentDestroyPos);
+
             // 현재 파괴할 위치(목적지) 도달 -> 파괴할 장치 O - 폭주 파괴 상태로 전환
             if (Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) < 0.1f)
             {
-                // 탈출실에 들어간 경우
+                // 탈출실 경보 때문에 탈출실에 들어간 경우
                 if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.EscapeRoom)
                 {
                     FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
-                    // 연출
+                    // 연출!!!
                     GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
                     return;
+                }
+                // 기계실 경보 때문에 기계실에 들어간 경우
+                else if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
+                {
+                    FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
+                    // 연출!!!
+                    GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버
                 }
 
                 // 그 외 -> 현재 파괴해야 할 오브젝트로 설정
@@ -166,44 +183,6 @@ namespace InnerMonsterStates
         {
             owner.Animator.SetBool("isRageChasing", false); // 폭주 추적 애니메이션 종료
             owner.StopPlaying();
-        }
-
-        /// <summary>
-        /// 경로 상의 문 리스트 얻기 함수
-        /// </summary>
-        private IEnumerator GetDoorsOnPathList(InnerMonsterController monster)
-        {
-            // 경로 계산 완료 대기
-            while (monster.Nav.pathPending)
-            {
-                yield return monster.WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
-
-                yield return null;
-            }
-
-            // 경로의 코너 배열 가져오기
-            Vector3[] corners = monster.Nav.path.corners;
-
-            // 코너 ~ 다음 코너 구간마다 RayCastAll 함수로 경로 상의 문 검출 -> DoorsOnPathList에 추가
-            for (int i = 0; i < corners.Length - 1; i++)
-            {
-                Vector3 start = corners[i] + Vector3.up * 1f; // 현재 코너
-                Vector3 end = corners[i + 1] + Vector3.up * 1f; // 다음 코너
-                Vector3 dir = (end - start).normalized; // 현재 코너에서 다음 코너로의 정규화된 방향
-                float dist = Vector3.Distance(start, end); // 현재 코너에서 다음 코너까지의 거리
-
-                // RayCastAll로 현재 코너에서 다음 코너로의 방향으로 다음 코너까지의 거리만큼만 문 레이어에 대해서만 검사(최대한 레이캐스트 범위를 한정함)
-                RaycastHit[] hits = Physics.RaycastAll(start, dir, dist, monster.doorLayer);
-                foreach (var hit in hits)
-                {
-                    Door door = hit.collider.GetComponent<Door>();
-                    if (door != null && !_doorsOnPathList.Contains(door)) // 현재 리스트에 저장되지 않은 문들만 -> 리스트에 추가
-                    {
-                        door.gameObject.GetComponent<Renderer>().material.color = Color.red; // 해당 문 빨간색으로 표시
-                        _doorsOnPathList.Add(door); // 리스트에 추가
-                    }
-                }
-            }
         }
     }
 }
