@@ -49,7 +49,7 @@ namespace InnerMonsterStates
             if (!_isCompleteGetDoorsOnPathList)
                 return;
 
-            Debug.Log(Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) + " / " + SubmarineInGameManager.instance.CurrentDestroyPos);
+            // Debug.Log(Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) + " / " + SubmarineInGameManager.instance.CurrentDestroyPos);
 
             // 현재 파괴할 위치(목적지) 도달 -> 파괴할 장치 O - 폭주 파괴 상태로 전환
             if (Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) < 0.1f)

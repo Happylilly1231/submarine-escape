@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class EscapeRoomHydraulicSystemPanel : IInteractable
+public class EscapeRoomHydraulicSystemPanel : MonoBehaviour, IInteractable
 {
+    [SerializeField] private Door escapeRoomDoor; // 탈출실 문
     private bool _isBroken = false; // 고장 여부
+
+    private void Start()
+    {
+        Broke();
+    }
 
     #region IInteractable
     public bool CanInteractwithSelectedItem(Item item)
@@ -16,9 +22,9 @@ public class EscapeRoomHydraulicSystemPanel : IInteractable
     public string GetInteractText()
     {
         if (_isBroken)
-            return "Escape Hydraulic Panel is broken.";
+            return "Escape Door Hydraulic Panel is broken.";
         else
-            return "Escape Room Hydraulic System Panel";
+            return "Escape Door Hydraulic Panel";
     }
 
     public void Interact()
@@ -33,5 +39,6 @@ public class EscapeRoomHydraulicSystemPanel : IInteractable
     public void Broke()
     {
         _isBroken = true;
+        escapeRoomDoor.isRepairNeed = true; // 탈출실 문 수리 필요로 변경
     }
 }

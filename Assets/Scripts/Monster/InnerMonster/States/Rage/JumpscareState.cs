@@ -56,19 +56,19 @@ namespace InnerMonsterStates
                 PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinarySpaceInnerPos.position, owner.machinarySpaceInnerPos.rotation);
 
                 // owner.Animator.SetTrigger("JumpscareStart");
-                owner.StartCoroutine(CameraTrackSequence(owner, owner.jumpscareZoomInPos, 1f)); // 괴물 얼굴 카메라가 따라가도록 하기
+                owner.StartCoroutine(CameraTrackSequence(owner, owner.jumpscareZoomInPos, 2f)); // 괴물 얼굴 카메라가 따라가도록 하기
             });
 
             // 1초 동안 괴물 얼굴 보여주기
-            seq.AppendInterval(1f);
+            seq.AppendInterval(2f);
 
             // 카메라 문틀이 보일 때까지 이동 & 괴물이 앞으로 다가옴
-            seq.Append(Camera.main.transform.DOMove(owner.jumpscareZoomOutPos.position, 0.5f)
+            seq.Append(Camera.main.transform.DOMove(owner.jumpscareZoomOutPos.position, 1f)
                 .SetEase(Ease.OutQuad));
             seq.JoinCallback(() =>
             {
                 owner.Nav.enabled = false;
-                owner.transform.DOMove(owner.monsterApproachPos.position, 0.5f);
+                owner.transform.DOMove(owner.monsterApproachPos.position, 1f);
                 owner.Nav.enabled = true;
                 // owner.CanMove(true); // 이동
                 // owner.Nav.speed = _approachSpeed; // 폭주 속도로 변경

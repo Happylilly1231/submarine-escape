@@ -44,7 +44,10 @@ namespace InnerMonsterStates
                     _destroyTime = 60f;
                     break;
                 case EDestroyObjType.Equipment:
-                    _destroyTime = 3.5f;
+                    if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.TorpedoRoom) // 어뢰실 장치의 경우 늦게 부서지게 함
+                        _destroyTime = 20f;
+                    else
+                        _destroyTime = 3.5f;
                     break;
             }
 
@@ -59,6 +62,7 @@ namespace InnerMonsterStates
                 owner.LookAtTarget(owner.currentDestroyObjPos); // 현재 파괴 오브젝트를 바라보도록 회전
 
                 _timer += Time.deltaTime;
+
                 if (_timer > _destroyTime)
                 {
                     RageDestroy(owner); // 폭주 파괴
@@ -123,14 +127,18 @@ namespace InnerMonsterStates
                 case EDestroyObjType.Equipment: // 현재 파괴될 장비를 파괴한 경우
                     switch (SubmarineInGameManager.instance.CurrentAlertArea)
                     {
+                        // 장치 이미 부순 경우도 처리 잘하기!!!
                         case AlertArea.Galley:
                             // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 식당의 가스레인지를 부술 때 기름이 쏟아지며 폭발하는 모습만 딱 연출로 보여주면서 게임 오버
+                            GameManager.instance.GameOver(EEndingType.SubmarineExplode); // 게임 오버
                             break;
                         case AlertArea.Storage01:
                             // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 창고01의 샘플병을 부수며 깨지는 소리나는 모습만 딱 연출로 잠깐 보여주고 다시 플레이어 카메라로 돌아옴
+                            // 이미 부순 경우 부수는 모션만!!!
                             break;
                         case AlertArea.EngineRoom:
                             // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 엔진실의 엔진을 부수면서 파지직 소리와 함께 불이 다 꺼지는 걸 연출로 보여주고 다시 플레이어 카메라로 돌아옴
+                            // 이미 부순 경우 부수는 모션만!!!
                             break;
                         case AlertArea.ControlRoom:
                             switch (SubmarineInGameManager.instance.CurrentDestroyEquipmentIndex)
@@ -148,6 +156,7 @@ namespace InnerMonsterStates
                                     break;
                                 case 3: // 통신 장치
                                     // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 조종실의 통신 장비를 부수면서 삐삐삐— 소리와 함께 망가지고 통신기가 검정색으로 되는 모습을 연출로 보여주고 다시 플레이어 카메라로 돌아옴
+                                    // 이미 부순 경우 부수는 모션만!!!
                                     break;
                             }
                             break;

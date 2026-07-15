@@ -79,7 +79,7 @@ public class SubmarineInGameManager : MonoBehaviour
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
     public event Action OnAlertEnded; // 경보 발생 종료 이벤트
-    public event Action OnMachinarySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
+    public event Action<int, GameObject, Transform> OnMachinarySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
 
     // 사운드
     [Header("Sound")]
@@ -223,6 +223,10 @@ public class SubmarineInGameManager : MonoBehaviour
         if (CurrentAlertArea == AlertArea.EscapeRoom)
             return;
 
+        int prevDestroyEquipmentIndex = CurrentDestroyEquipmentIndex;
+        GameObject prevDestroyEquipmentObj = CurrentDestroyEquipmentObj;
+        Transform prevDestroyPos = CurrentDestroyPos;
+
         // 경보 발생 중이었으면 이전 경보는 해제 
         // (2가지 경우 - 1. 경보 관리 시스템 패널 경보는 기계실 문 경보를 해제할 수 O / 2. 기계실 문 경보는 어뢰 발사로 인한 경보를 해제할 수 O)
         if (_isAlerting)
@@ -257,7 +261,7 @@ public class SubmarineInGameManager : MonoBehaviour
 
         // 기계실 경보 발생 시작 이벤트 알림
         if (alertArea == AlertArea.MachinerySpace)
-            OnMachinarySpaceAlertStarted?.Invoke();
+            OnMachinarySpaceAlertStarted?.Invoke(prevDestroyEquipmentIndex, prevDestroyEquipmentObj, prevDestroyPos);
 
         Debug.Log("경보 발생!");
     }

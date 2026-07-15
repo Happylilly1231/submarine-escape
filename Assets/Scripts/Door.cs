@@ -19,6 +19,7 @@ public class Door : MonoBehaviour, IInteractable
     private bool _isMoving = false;
     public bool isLocked;
     public bool isAdditionalLocked = false; // 추가적으로 잠금됨
+    public bool isRepairNeed = false; // 수리 필요 여부
 
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
@@ -47,6 +48,7 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isMoving) return "";
+        if (isRepairNeed) return "Broken (Needs Repair)";
         if (isLocked) return "Locked";
         if (isAdditionalLocked) return "Still Locked";
         return isOpened ? "close [E]" : "open [E]";
@@ -57,7 +59,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked || isAdditionalLocked) return;
+        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed) return;
 
         if (!isOpened)
         {

@@ -371,7 +371,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.DrawRay(eyePos, dirToPlayer * _detectDistance, Color.red);
         if (Physics.Raycast(eyePos, dirToPlayer, out RaycastHit hit, _detectDistance, mask))
         {
-            Debug.Log(hit.collider.gameObject);
             if (hit.collider.CompareTag("Player")) // 레이가 플레이어에 닿으면 -> 감지 O
                 return true;
         }
@@ -564,7 +563,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// </summary>
     public bool CanAttack()
     {
-        Debug.Log(CanDetect() + "/" + (_distToPlayer <= _rangeAttackDistance) + "/" + (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting));
+        // Debug.Log(CanDetect() + "/" + (_distToPlayer <= _rangeAttackDistance) + "/" + (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting));
         if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
         {
             return true;
@@ -782,7 +781,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             RaycastHit[] hits = Physics.RaycastAll(start, dir, dist, doorLayer);
             foreach (var hit in hits)
             {
-                Debug.Log("hit: " + hit.collider.gameObject);
+                // Debug.Log("hit: " + hit.collider.gameObject);
                 Door door = hit.collider.GetComponent<Door>();
                 if (door != null && !doorsOnPathList.Contains(door)) // 현재 리스트에 저장되지 않은 문들만 -> 리스트에 추가
                 {
@@ -800,63 +799,99 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// <summary>
     /// 점프스케어 시작
     /// </summary>
-    public void JumpscareStart()
+    public void JumpscareStart(int prevDestroyEquipmentIndex, GameObject prevDestroyEquipmentObj, Transform prevDestroyPos)
     {
-        // 만약 현 상태가 Rage 중 하나였다면 (현재 상태머신이 폭주 상태머신이었다면) -> 파괴 로직 바로 코드로 처리
-        if (_currentFsm == _rageFsm)
+        Debug.Log(prevDestroyEquipmentIndex + " / " + prevDestroyEquipmentObj + " / " + prevDestroyPos);
+
+        //  만약 현 상태가 Rage 중 하나였다면 (현재 상태머신이 폭주 상태머신이었다면) -> 파괴 로직 바로 코드로 처리
+        if (_currentFsm == _rageFsm && prevDestroyEquipmentObj != null)
         {
-            // 현재 경로 상에 있는 문 얻어오기
+            // 현재 경보 발생 위치를 이전(원래) 목적지로 함
+            Nav.SetDestination(prevDestroyPos.position);
+            // 목적지로 가는 경로 상에 있는 문 얻어오기
             List<Door> doorsOnPathList = new List<Door>();
             GetDoorsOnPathList(doorsOnPathList, () =>
             {
-                // 해당 문 전부 파괴 처리
+                // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
                 foreach (var door in doorsOnPathList)
                 {
+                    Debug.Log("파괴된 문: " + door);
                     door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
                 }
-
-                // 현재 파괴해야하는 장치가 있으면 -> 파괴 처리
-                if (SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
-                    DestroyEquipmentImmediately();
-
+                Debug.Log("파괴 장치: " + prevDestroyEquipmentObj);
+                // 파괴해야하는 장치가 있었으면 -> 파괴 처리
+                if (prevDestroyEquipmentObj != null)
+                    DestroyEquipmentImmediately(prevDestroyEquipmentIndex, prevDestroyEquipmentObj);
                 // 파괴된 게 있으면 -> 파괴 소리 재생
                 if (doorsOnPathList.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
                     AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
+
+                // 현재 목적지로 설정 (기계실 안)
+                Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+                // 목적지로 가는 경로 상에 있는 문 얻어오기
+                List<Door> doorsOnPathList2 = new List<Door>();
+                GetDoorsOnPathList(doorsOnPathList2, () =>
+                {
+                    // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
+                    foreach (var door in doorsOnPathList2)
+                    {
+                        if (door.CompareTag("MachinarySpaceDoor"))
+                            continue;
+                        Debug.Log("파괴된 문: " + door);
+                        door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
+                    }
+                    // 파괴된 게 있으면 -> 파괴 소리 재생
+                    if (doorsOnPathList2.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
+                        AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
+                    ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
+                });
             });
         }
-
-        ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
+        else
+        {
+            // 현재 목적지로 설정 (기계실 안)
+            Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+            // 목적지로 가는 경로 상에 있는 문 얻어오기
+            List<Door> doorsOnPathList2 = new List<Door>();
+            GetDoorsOnPathList(doorsOnPathList2, () =>
+            {
+                // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
+                foreach (var door in doorsOnPathList2)
+                {
+                    if (door.CompareTag("MachinarySpaceDoor"))
+                        continue;
+                    Debug.Log("파괴된 문: " + door);
+                    door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
+                }
+                // 파괴된 게 있으면 -> 파괴 소리 재생
+                if (doorsOnPathList2.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
+                    AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
+                ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
+            });
+        }
     }
 
     /// <summary>
-    /// 현재 파괴해야할 장치 즉시 파괴 (연출 X, 코드로 로직만 처리)
+    /// 파괴했어야할 장치 즉시 파괴 (연출 X, 코드로 로직만 처리)
     /// </summary>
-    public void DestroyEquipmentImmediately()
+    public void DestroyEquipmentImmediately(int prevDestroyEquipmentIndex, GameObject prevDestroyEquipmentObj)
     {
         // 현재 파괴해야 할 오브젝트로 설정
-        currentDestroyObj = SubmarineInGameManager.instance.CurrentDestroyEquipmentObj;
+        currentDestroyObj = prevDestroyEquipmentObj;
         currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴해야 할 오브젝트 타입 -> 장비로 설정
 
-        switch (SubmarineInGameManager.instance.CurrentAlertArea)
+        switch (prevDestroyEquipmentIndex)
         {
-            case AlertArea.ControlRoom:
-                switch (SubmarineInGameManager.instance.CurrentDestroyEquipmentIndex)
-                {
-                    case 0: // 레이더 조작 패널
-                            // 파괴 효과 연출 필요
-                        currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
-                        break;
-                    case 1: // 어뢰 자동 탑재 스위치
-                            // 스위치 off
-                        currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
-                        break;
-                    case 2: // 탈출실 유압 패널
-                        currentDestroyObj.GetComponent<EscapeRoomHydraulicSystemPanel>().Broke(); // 고장
-                        break;
-                    case 3: // 통신 장치
-                            // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 조종실의 통신 장비를 부수면서 삐삐삐— 소리와 함께 망가지고 통신기가 검정색으로 되는 모습을 연출로 보여주고 다시 플레이어 카메라로 돌아옴
-                        break;
-                }
+            case 0: // 레이더 조작 패널
+                    // 파괴 효과 연출 필요
+                currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
+                break;
+            case 1: // 어뢰 자동 탑재 스위치
+                    // 스위치 off
+                currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
+                break;
+            case 2: // 탈출실 유압 패널
+                currentDestroyObj.GetComponent<EscapeRoomHydraulicSystemPanel>().Broke(); // 고장
                 break;
         }
         Debug.Log(currentDestroyObj + "을(를) 파괴했습니다.");
