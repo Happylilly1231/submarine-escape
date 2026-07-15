@@ -23,7 +23,8 @@ public enum EDestroyObjType
     None = 0,
     Door,
     EscapeRoomDoor,
-    CurrentDestroyEquipment
+    MachinarySpaceDoor,
+    Equipment
 }
 
 /// <summary>
@@ -108,9 +109,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     // 폭주
     private bool _isRageStartEnd = false;
     public bool IsRageStartEnd { get => _isRageStartEnd; set => _isRageStartEnd = value; }
-    public EDestroyObjType currentDestroyObjType;
+    public EDestroyObjType currentDestroyObjType = EDestroyObjType.None;
     public GameObject currentDestroyObj = null; // 현재 파괴해야 할 오브젝트
-    public Vector3 currentDestroyPos;
+    public Vector3 currentDestroyObjPos;
 
     // 휘청임
     private bool _isStaggering; // 현재 휘청임 중인지 여부
@@ -216,7 +217,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _rageFsm = new StateMachine<InnerMonsterController>(this);
 
         doorLayer = LayerMask.GetMask("Door");
-        destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
+        // destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
 
         WaitUntilNotBeingExtracted = new WaitUntil(() => !IsBeingExtracted);
     }

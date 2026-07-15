@@ -45,7 +45,11 @@ public class IntroSequencer : MonoBehaviour
         transform.position = new Vector3(9.2f, 0.12f, 4.5f);
         transform.rotation = Quaternion.Euler(0f, -90f, 0f);
 
-        SubmarineInGameManager.instance.IntroPause(); // 인트로 시퀀스 시작
+        // SubmarineInGameManager.instance.IntroPause(); // 인트로 시퀀스 시작
+        // 인트로 시퀀스 시작
+        Debug.Log("인트로 시퀀스 시작");
+        FocusManager.Instance.TransitionToState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 연출 포커스 상태로 변경
+        PlayerManager.Instance.playerCameraController.enabled = true; // 카메라는 활성화
 
         // 애니메이션이 끝날 때까지 대기
         yield return new WaitUntil(() =>

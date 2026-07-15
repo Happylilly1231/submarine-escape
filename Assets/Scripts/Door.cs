@@ -98,8 +98,29 @@ public class Door : MonoBehaviour, IInteractable
         // 탈출실 문을 연 경우
         if (gameObject.CompareTag("EscapeRoomDoor"))
         {
-            SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
-            SubmarineInGameManager.instance.AlertOn(); // 경보 발생
+            // SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
+            SubmarineInGameManager.instance.AlertOn(AlertArea.EscapeRoom); // 경보 발생
+
+        }
+        // 기계실 문을 연 경우
+        else if (gameObject.CompareTag("MachinarySpaceDoor"))
+        {
+            // 비상 폐쇄 중인 상태 & 외부에서 열었을 때만 -> 경보 발생
+            if (SubmarineInGameManager.instance.machinarySpaceDoorRepairController.IsEmergencyLockdown) // 비상 폐쇄 중인지 검사
+            {
+                Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
+
+                Vector2 playerXZ = new Vector2(playerPos.x, playerPos.z);
+                Vector2 frontXZ = new Vector2(frontPos.x, frontPos.z);
+                Vector2 backXZ = new Vector2(backPos.x, backPos.z);
+
+                // 평면 거리 계산 (제곱 거리 사용)
+                float frontSqrDist = (frontXZ - playerXZ).sqrMagnitude;
+                float backSqrDist = (backXZ - playerXZ).sqrMagnitude;
+
+                if (frontSqrDist < backSqrDist) // 외부에서 열었을 때만
+                    SubmarineInGameManager.instance.AlertOn(AlertArea.MachinerySpace); // 기계실 문 경보 발생
+            }
         }
 
         _occlusionPortal.open = true;

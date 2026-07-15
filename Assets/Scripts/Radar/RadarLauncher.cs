@@ -84,7 +84,7 @@ public class RadarLauncher : MonoBehaviour
         _radarDisplay.UpdateFireButtonActive(); // 발사 버튼 활성화 여부 갱신
 
         // 경보 발생
-        SubmarineInGameManager.instance.AlertOn();
+        SubmarineInGameManager.instance.AlertOn(AlertArea.ControlRoom, _radarController.CurrentTorpedoIndex); // 0, 1, 2
     }
 
     /// <summary>

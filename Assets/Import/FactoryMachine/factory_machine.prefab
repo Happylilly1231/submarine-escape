@@ -188,6 +188,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9120754275672044432}
+  - component: {fileID: 5979960065929751912}
+  - component: {fileID: 287376292766689453}
   m_Layer: 0
   m_Name: factory_machine
   m_TagString: Untagged
@@ -211,6 +213,48 @@ Transform:
   - {fileID: 7045529266657427985}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5979960065929751912
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6269686526077064098}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.954546, y: 1.4525118, z: 3.0215454}
+  m_Center: {x: 0.015295982, y: -0.31045103, z: 0.50045013}
+--- !u!65 &287376292766689453
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6269686526077064098}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.0265207, y: 2.1858177, z: 1.1830368}
+  m_Center: {x: -0.010110378, y: -0.06268597, z: -1.4517307}
 --- !u!1 &6448479096029428828
 GameObject:
   m_ObjectHideFlags: 0
