@@ -26,6 +26,7 @@ public class AlertAreaInfo
     public AlertArea alertArea; // 경보 구역
     public GameObject[] destroyEquipments; // 파괴 장치 배열
     public List<Transform> destroyPosTransforms = new List<Transform>(); // 파괴 위치 배열 (탈출실, 기계실 - 파괴할 장치는 없지만, 임의로 탈출실 안, 기계실 안을 파괴 위치로 설정)
+    public List<Transform> sequenceCameraPosList = new List<Transform>();
 }
 
 /// <summary>
@@ -79,7 +80,8 @@ public class SubmarineInGameManager : MonoBehaviour
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
     public event Action OnAlertEnded; // 경보 발생 종료 이벤트
-    public event Action<int, GameObject, Transform> OnMachinarySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
+    public event Action OnMachinerySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
+    public event Action OnNonMachinerySpaceAlertStarted; // 기계실 경보 제외 경보 발생 시작 이벤트
 
     // 사운드
     [Header("Sound")]
@@ -106,6 +108,7 @@ public class SubmarineInGameManager : MonoBehaviour
     public int CurrentDestroyEquipmentIndex { get; private set; } = -1; // 현재 경보 발생 구역에서 괴물이 파괴할 장치 인덱스 (-1: 없음)
     public GameObject CurrentDestroyEquipmentObj { get; private set; } = null; // 현재 경보 발생 구역에서 괴물이 파괴할 장치 오브젝트
     public Transform CurrentDestroyPos { get; private set; } = null;
+    public Transform CurrentSequenceCameraPos { get; private set; } = null;
     public MachinarySpaceDoorRepairController machinarySpaceDoorRepairController;
 
 
@@ -223,17 +226,50 @@ public class SubmarineInGameManager : MonoBehaviour
         if (CurrentAlertArea == AlertArea.EscapeRoom)
             return;
 
-        int prevDestroyEquipmentIndex = CurrentDestroyEquipmentIndex;
-        GameObject prevDestroyEquipmentObj = CurrentDestroyEquipmentObj;
-        Transform prevDestroyPos = CurrentDestroyPos;
+        // AlertArea prevAlertArea = CurrentAlertArea;
+        // int prevDestroyEquipmentIndex = CurrentDestroyEquipmentIndex;
+        // GameObject prevDestroyEquipmentObj = CurrentDestroyEquipmentObj;
+        // Transform prevDestroyPos = CurrentDestroyPos;
+        // Transform prevSequenceCameraPos = CurrentSequenceCameraPos;
 
-        // 경보 발생 중이었으면 이전 경보는 해제 
-        // (2가지 경우 - 1. 경보 관리 시스템 패널 경보는 기계실 문 경보를 해제할 수 O / 2. 기계실 문 경보는 어뢰 발사로 인한 경보를 해제할 수 O)
+        // 경보 발생 중이었을 때 (탈출실 제외)
         if (_isAlerting)
-            AlertOff();
+        {
+            // 경보 발생 끝 이벤트 알림
+            OnAlertEnded?.Invoke();
+        }
 
         _isAlerting = true; // 경보 발생 중으로 설정
 
+        // 다른 경보 발생 중에 기계실 경보가 울리는 게 아니라면 -> 현재 경보 발생 위치 변경 (기계실로 바꿔주는 건 괴물 쪽에서 처리)
+        if (!(alertArea == AlertArea.MachinerySpace && CurrentAlertArea != AlertArea.None))
+            ChangeCurrentAlertPos(alertArea, destroyEquimentIndex);
+
+        AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound); // 경보 소리 재생
+
+        // 경보 발생 시작 이벤트 알림
+        OnAlertStarted?.Invoke();
+
+        // 기계실 경보 발생해야 하는 경우 -> 괴물에 이벤트 알려주고 바로 종료 (아직 기계실 경보로 바꾸지 않음)
+        if (alertArea == AlertArea.MachinerySpace)
+        {
+            OnMachinerySpaceAlertStarted?.Invoke();
+        }
+        else
+        {
+            OnNonMachinerySpaceAlertStarted?.Invoke();
+        }
+
+        Debug.Log("경보 발생!");
+    }
+
+    /// <summary>
+    /// 현재 경보 발생 위치 변경
+    /// </summary>
+    /// <param name="alertArea"></param>
+    /// <param name="destroyEquimentIndex"></param>
+    public void ChangeCurrentAlertPos(AlertArea alertArea, int destroyEquimentIndex = -1)
+    {
         CurrentAlertArea = alertArea;
         CurrentDestroyEquipmentIndex = destroyEquimentIndex;
 
@@ -242,28 +278,15 @@ public class SubmarineInGameManager : MonoBehaviour
         {
             CurrentDestroyEquipmentObj = null;
             CurrentDestroyPos = alertAreaInfo.destroyPosTransforms[0];
+            if (alertAreaInfo.sequenceCameraPosList.Count > 0)
+                CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[0];
         }
         else
         {
             CurrentDestroyEquipmentObj = alertAreaInfo.destroyEquipments[destroyEquimentIndex];
             CurrentDestroyPos = alertAreaInfo.destroyPosTransforms[destroyEquimentIndex];
+            CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[destroyEquimentIndex];
         }
-
-        // // 임시 - 경보 버튼 빨간색으로 변경(후에 지워야 함)
-        // ColorBlock colorBlock = alertButton.colors;
-        // colorBlock.normalColor = Color.red;
-        // alertButton.colors = colorBlock;
-
-        AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound);
-
-        // 경보 발생 시작 이벤트 알림
-        OnAlertStarted?.Invoke();
-
-        // 기계실 경보 발생 시작 이벤트 알림
-        if (alertArea == AlertArea.MachinerySpace)
-            OnMachinarySpaceAlertStarted?.Invoke(prevDestroyEquipmentIndex, prevDestroyEquipmentObj, prevDestroyPos);
-
-        Debug.Log("경보 발생!");
     }
 
     /// <summary>
@@ -277,6 +300,7 @@ public class SubmarineInGameManager : MonoBehaviour
         CurrentDestroyEquipmentIndex = -1;
         CurrentDestroyEquipmentObj = null;
         CurrentDestroyPos = null;
+        CurrentSequenceCameraPos = null;
 
         _audioSource.Stop();
         Debug.Log("경보 해제");
@@ -344,7 +368,7 @@ public class SubmarineInGameManager : MonoBehaviour
     // }
 
     /// <summary>
-    /// 인게임 UI 활성화 여부 설정
+    /// 인게임 UI(인벤토리, 스탯, 상호작용) 활성화 여부 설정
     /// </summary>
     /// <param name="isActive">활성화 여부</param>
     public void SetActiveInGameUI(bool isActive)

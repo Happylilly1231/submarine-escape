@@ -33,8 +33,6 @@ namespace InnerMonsterStates
                 owner.currentAttackType = EAttackType.JumpscareRageAttack; // 현재 공격 타입 -> 점프스케어 폭주 공격
                 owner.Animator.Play("Rage StateMachine.RageAttack"); // 폭주 공격 애니메이션 재생
 
-                // Door.OnDoorClosed += ChangeStateToRageStart;
-
                 // 점프스케어 QTE 시작
                 StartJumpscareQTE();
             }
@@ -52,8 +50,6 @@ namespace InnerMonsterStates
             {
                 owner.Animator.Play("RageChase");
                 owner.ChangeState(new RageChaseState());
-                // owner.Animator.Play("Idle");
-                // owner.ChangeState(new IdleState());
                 return;
             }
 
@@ -68,10 +64,7 @@ namespace InnerMonsterStates
             owner.StopPlaying();
 
             if (owner.IsShowingJumpscare)
-            {
-                // Door.OnDoorClosed -= ChangeStateToRageStart;
                 owner.IsShowingJumpscare = false;
-            }
         }
 
         /// <summary>
@@ -88,12 +81,12 @@ namespace InnerMonsterStates
         /// <returns></returns>
         private IEnumerator QTECheckSequence()
         {
-            float durationLimit = 2.0f; // 현실 시간 2초 제한
+            float durationLimit = 1f; // 현실 시간 1초 제한
             float timer = 0f;
             bool isSuccess = false;
 
-            // 슬로우 모션 적용 (게임 내 속도는 0.3배로 느려짐)
-            Time.timeScale = 0.3f;
+            // 슬로우 모션 적용 (게임 내 속도는 0.5배로 느려짐)
+            Time.timeScale = 0.5f;
 
             // UI 활성화
             monster.jumpscareQTEUI.SetActive(true);
@@ -104,7 +97,7 @@ namespace InnerMonsterStates
                 // timescale 영향 없이 '실제 현실 시간' 누적
                 timer += Time.unscaledDeltaTime;
 
-                // UI의 360도 원 게이지를 현실 시간 2초에 맞춰 줄여나감
+                // UI의 360도 원 게이지를 현실 시간 1초에 맞춰 줄여나감
                 monster.gaugeImage.fillAmount = Mathf.Clamp01(1f - (timer / durationLimit));
 
                 // E 키 입력 감지
@@ -147,9 +140,7 @@ namespace InnerMonsterStates
             PlayerManager.Instance.SetPlayerGeoActive(true); // 플레이어 활성화
             monster.machinarySpaceDoor.CloseDoor(); // 기계실 문 자동으로 닫기
             // 쾅 소리 재생?
-            FocusManager.Instance.PopFocusState(); // 포커스 해제
-
-            DOTween.To(() => monster.jumpscareVolume.weight, x => monster.jumpscareVolume.weight = x, 0f, 0.2f);
+            FocusManager.Instance.PopFocusState(); // 점프스케어 포커스 해제
         }
 
         /// <summary>

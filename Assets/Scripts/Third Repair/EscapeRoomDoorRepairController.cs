@@ -28,6 +28,8 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
+        if (!escapeRoomDoor.isRepairNeed) // 수리 필요 x일 때 -> 열기 불가 메시지
+            return "Unable to Open";
         if (!_isComplete)
             return "Open [E]";
         else
@@ -36,7 +38,7 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
 
     public void Interact()
     {
-        if (_isComplete)
+        if (_isComplete || !escapeRoomDoor.isRepairNeed)
             return;
 
         ActivatePuzzle(); // 패널 활성화

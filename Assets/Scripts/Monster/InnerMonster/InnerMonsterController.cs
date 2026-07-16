@@ -32,7 +32,7 @@ public enum EDestroyObjType
     None = 0,
     Door,
     EscapeRoomDoor,
-    MachinarySpaceDoor,
+    MachinerySpaceDoor,
     Equipment
 }
 
@@ -121,6 +121,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public EDestroyObjType currentDestroyObjType = EDestroyObjType.None;
     public GameObject currentDestroyObj = null; // 현재 파괴해야 할 오브젝트
     public Vector3 currentDestroyObjPos;
+    public bool IsDestroySequencing { get; set; } = false;
+    public DestroySequencer destroySequencer; // 파괴 연출 스크립트
 
     // 휘청임
     private bool _isStaggering; // 현재 휘청임 중인지 여부
@@ -143,6 +145,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public Transform jumpscareZoomOutPos; // 점프스케어 연출 때 줌아웃 위치
     public Transform monsterApproachPos; // 괴물 접근 위치
     public bool IsShowingJumpscare { get; set; } = false; // 현재 점프스케어 보여주는 중인지 여부
+    public bool IsDestroyImmediately { get; set; } = false; // 현재 즉시 파괴 여부
     public bool IsJumpscareAttackSuccess { get; set; } = false; // 점프스케어 공격 성공 여부
     public GameObject jumpscareQTEUI; // 점프스케어 QTE UI
     public Image gaugeImage; // QTE 게이지 이미지
@@ -186,20 +189,20 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         // 이벤트 구독
         LightingManager.instance.OnLightChanged += ChangeStatValue; // 전등 상태 변경 -> 몬스터 스탯 수치 변경
-        SubmarineInGameManager.instance.OnAlertStarted += RageStart; // 경보 발생 시작 -> 폭주 시작
         PlayerMutation.OnSpikeHitFloor += CanChaseHitSoundSource; // 플레이어 가시 생성 시 가시로 바닥 칠 때 -> 소리 난 곳으로 추적 가능으로 설정
         PlayerMutation.OnMutationCompleted += OnMutationCompleted; // 플레이어 완전 괴물화 -> 플레이어 완전 괴물화되었음으로 설정
-        SubmarineInGameManager.instance.OnMachinarySpaceAlertStarted += JumpscareStart; // 기계실 경보 발생 시작 -> 점프스케어 시작
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted += RageStart; // 기계실 제외 경보 발생 시작 -> 폭주 시작
+        SubmarineInGameManager.instance.OnMachinerySpaceAlertStarted += JumpscareStart; // 기계실 경보 발생 시작 -> 점프스케어 시작
     }
 
     private void OnDisable()
     {
         // 이벤트 구독 해제
         LightingManager.instance.OnLightChanged -= ChangeStatValue;
-        SubmarineInGameManager.instance.OnAlertStarted -= RageStart;
         PlayerMutation.OnSpikeHitFloor -= CanChaseHitSoundSource;
         PlayerMutation.OnMutationCompleted -= OnMutationCompleted;
-        SubmarineInGameManager.instance.OnMachinarySpaceAlertStarted -= JumpscareStart;
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= RageStart;
+        SubmarineInGameManager.instance.OnMachinerySpaceAlertStarted -= JumpscareStart;
     }
 
     private void Start()
@@ -554,6 +557,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         {
             Debug.Log("점프스케어 폭주 공격! - 실패");
         }
+        DOTween.To(() => jumpscareVolume.weight, x => jumpscareVolume.weight = x, 0f, 0.5f);
     }
     #endregion
 
@@ -785,7 +789,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
                 Door door = hit.collider.GetComponent<Door>();
                 if (door != null && !doorsOnPathList.Contains(door)) // 현재 리스트에 저장되지 않은 문들만 -> 리스트에 추가
                 {
-                    door.gameObject.GetComponent<Renderer>().material.color = Color.red; // 해당 문 빨간색으로 표시
+                    // door.gameObject.GetComponent<Renderer>().material.color = Color.red; // 해당 문 빨간색으로 표시
                     doorsOnPathList.Add(door); // 리스트에 추가
                 }
             }
@@ -799,104 +803,63 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// <summary>
     /// 점프스케어 시작
     /// </summary>
-    public void JumpscareStart(int prevDestroyEquipmentIndex, GameObject prevDestroyEquipmentObj, Transform prevDestroyPos)
+    public void JumpscareStart()
     {
-        Debug.Log(prevDestroyEquipmentIndex + " / " + prevDestroyEquipmentObj + " / " + prevDestroyPos);
+        // 점프스케어 포커스
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // (플레이어 정지)
 
-        //  만약 현 상태가 Rage 중 하나였다면 (현재 상태머신이 폭주 상태머신이었다면) -> 파괴 로직 바로 코드로 처리
-        if (_currentFsm == _rageFsm && prevDestroyEquipmentObj != null)
+        ResetAttackCoolDown(); // 공격 쿨타임 리셋
+
+        // 현재 상태가 폭주면 -> 파괴해야할 거 파괴하기
+        if (_currentFsm == _rageFsm)
         {
-            // 현재 경보 발생 위치를 이전(원래) 목적지로 함
-            Nav.SetDestination(prevDestroyPos.position);
-            // 목적지로 가는 경로 상에 있는 문 얻어오기
+            // 해당 파괴할 목적지로 가는 경로 상의 문 중 열린 문 파괴
+            Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 경보 발생 위치를 이전(원래) 목적지로 함
             List<Door> doorsOnPathList = new List<Door>();
             GetDoorsOnPathList(doorsOnPathList, () =>
             {
-                // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
                 foreach (var door in doorsOnPathList)
                 {
-                    Debug.Log("파괴된 문: " + door);
+                    if (door.isOpened) continue; // 문 열려있으면 파괴 X
                     door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
                 }
-                Debug.Log("파괴 장치: " + prevDestroyEquipmentObj);
-                // 파괴해야하는 장치가 있었으면 -> 파괴 처리
-                if (prevDestroyEquipmentObj != null)
-                    DestroyEquipmentImmediately(prevDestroyEquipmentIndex, prevDestroyEquipmentObj);
-                // 파괴된 게 있으면 -> 파괴 소리 재생
-                if (doorsOnPathList.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
-                    AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
 
-                // 현재 목적지로 설정 (기계실 안)
-                Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
-                // 목적지로 가는 경로 상에 있는 문 얻어오기
-                List<Door> doorsOnPathList2 = new List<Door>();
-                GetDoorsOnPathList(doorsOnPathList2, () =>
-                {
-                    // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
-                    foreach (var door in doorsOnPathList2)
-                    {
-                        if (door.CompareTag("MachinarySpaceDoor"))
-                            continue;
-                        Debug.Log("파괴된 문: " + door);
-                        door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
-                    }
-                    // 파괴된 게 있으면 -> 파괴 소리 재생
-                    if (doorsOnPathList2.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
-                        AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
-                    ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
-                });
+                Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 파괴 위치로 순간이동
+                IsDestroyImmediately = true; // 즉시 파괴 여부 true
+                currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴 종류 -> 장치로 설정
+                ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환 (바로 폭주 파괴 상태로 전환될 것)
             });
         }
-        else
+        else // 현재 상태가 일반이면 -> 현재 목적지로 가는 경로 상 문 즉시 파괴 후 점프스케어 상태로 전환
         {
-            // 현재 목적지로 설정 (기계실 안)
-            Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
-            // 목적지로 가는 경로 상에 있는 문 얻어오기
-            List<Door> doorsOnPathList2 = new List<Door>();
-            GetDoorsOnPathList(doorsOnPathList2, () =>
-            {
-                // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
-                foreach (var door in doorsOnPathList2)
-                {
-                    if (door.CompareTag("MachinarySpaceDoor"))
-                        continue;
-                    Debug.Log("파괴된 문: " + door);
-                    door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
-                }
-                // 파괴된 게 있으면 -> 파괴 소리 재생
-                if (doorsOnPathList2.Count > 0 || SubmarineInGameManager.instance.CurrentDestroyEquipmentObj != null)
-                    AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
-                ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
-            });
+            DestroyDoorsAndTransitionToJumpscare();
         }
     }
 
     /// <summary>
-    /// 파괴했어야할 장치 즉시 파괴 (연출 X, 코드로 로직만 처리)
+    /// 현재 목적지로 가는 경로 상 문 즉시 파괴 후 점프스케어 상태로 전환
     /// </summary>
-    public void DestroyEquipmentImmediately(int prevDestroyEquipmentIndex, GameObject prevDestroyEquipmentObj)
+    public void DestroyDoorsAndTransitionToJumpscare()
     {
-        // 현재 파괴해야 할 오브젝트로 설정
-        currentDestroyObj = prevDestroyEquipmentObj;
-        currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴해야 할 오브젝트 타입 -> 장비로 설정
-
-        switch (prevDestroyEquipmentIndex)
+        Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+        // 목적지로 가는 경로 상에 있는 문 얻어오기
+        List<Door> doorsOnPathList2 = new List<Door>();
+        GetDoorsOnPathList(doorsOnPathList2, () =>
         {
-            case 0: // 레이더 조작 패널
-                    // 파괴 효과 연출 필요
-                currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
-                break;
-            case 1: // 어뢰 자동 탑재 스위치
-                    // 스위치 off
-                currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
-                break;
-            case 2: // 탈출실 유압 패널
-                currentDestroyObj.GetComponent<EscapeRoomHydraulicSystemPanel>().Broke(); // 고장
-                break;
-        }
-        Debug.Log(currentDestroyObj + "을(를) 파괴했습니다.");
-        currentDestroyObj = null; // 현재 파괴해야 할 오브젝트 없음으로 설정
-        currentDestroyObjType = EDestroyObjType.None;
+            // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
+            foreach (var door in doorsOnPathList2)
+            {
+                if (door.isOpened) continue; // 문 열려있으면 파괴 X
+                if (door.CompareTag("MachinarySpaceDoor"))
+                    continue;
+                door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
+            }
+            // 파괴된 게 있으면 -> 파괴 소리 재생
+            if (doorsOnPathList2.Count > 0)
+                AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
+
+            ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
+        });
     }
     #endregion
 

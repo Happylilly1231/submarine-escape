@@ -51,13 +51,13 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
     private void OnEnable()
     {
-        SubmarineInGameManager.instance.OnAlertStarted += ActivateAlarmingUI;
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted += ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded += DeactivateAlarmingUI;
     }
 
     private void OnDisable()
     {
-        SubmarineInGameManager.instance.OnAlertStarted -= ActivateAlarmingUI;
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded -= DeactivateAlarmingUI;
     }
 
@@ -140,10 +140,6 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     #region 퍼즐용 함수
     private void ActivateAlarmingUI()
     {
-        // 기계실 문 경보 발생 경우 -> 패널에서는 경보 발생 중으로 인지하지 못함
-        if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
-            return;
-
         alarmingUI.SetActive(true);
 
         UnselectArea(); // 선택 해제
@@ -236,6 +232,20 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
             infoText.text = $"[선택됨] 선택 구역: {_currentSelectedArea} - 선택 구역에서 경보 발생 [E]";
         }
+    }
+
+    /// <summary>
+    /// 구역 버튼 비활성화
+    /// </summary>
+    /// <param name="alertArea"></param>
+    public void DeactivateAreaButton(AlertArea alertArea)
+    {
+        int idx = (int)(alertArea - 1);
+        areaImgButtons[idx].interactable = false; // 상호작용 불가능으로 설정
+        Image areaImg = areaImgButtons[idx].GetComponent<Image>();
+        Color c = areaImg.color;
+        c.a = 10f / 255f;
+        areaImg.color = c;
     }
     #endregion
 }

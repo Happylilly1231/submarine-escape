@@ -39,6 +39,7 @@ public class EscapeRoomDoorLock : InteractableBase
     private void Unlock()
     {
         FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 포커스
+        SubmarineInGameManager.instance.InteractorUI.SetActive(false); // 상호작용 UI 비활성화
 
         Sequence seq = DOTween.Sequence();
 
@@ -55,6 +56,7 @@ public class EscapeRoomDoorLock : InteractableBase
             {
                 escapeRoomDoor.isLocked = false;
                 lockedObj.SetActive(false);
+                SubmarineInGameManager.instance.InteractorUI.SetActive(true); // 상호작용 UI 활성화
                 FocusManager.Instance.PopFocusState(); // 포커스 해제
             });
     }

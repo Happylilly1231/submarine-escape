@@ -68,6 +68,7 @@ namespace InnerMonsterStates
                     FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
                     // 연출!!!
                     GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버
+                    return;
                 }
 
                 // 그 외 -> 현재 파괴해야 할 오브젝트로 설정
@@ -143,7 +144,7 @@ namespace InnerMonsterStates
             {
                 // 경로 상의 문에 닿으면 -> 폭주 파괴 상태로 전환
                 Door door = hit.collider.GetComponent<Door>();
-                if (door != null && _doorsOnPathList.Contains(door)) // 경로 상의 문 리스트에 존재하면
+                if (door != null && _doorsOnPathList.Contains(door) && !door.isOpened) // 경로 상의 문 리스트에 존재 & 해당 문이 닫혀있으면
                 {
                     // 현재 파괴해야 할 오브젝트로 설정
                     owner.currentDestroyObj = hit.collider.gameObject;
@@ -171,7 +172,7 @@ namespace InnerMonsterStates
                     }
                     else if (hit.collider.CompareTag("MachinarySpaceDoor")) // 기계실 문
                     {
-                        owner.currentDestroyObjType = EDestroyObjType.MachinarySpaceDoor; // 현재 파괴해야 할 오브젝트 타입 -> 기계실 문으로 설정
+                        owner.currentDestroyObjType = EDestroyObjType.MachinerySpaceDoor; // 현재 파괴해야 할 오브젝트 타입 -> 기계실 문으로 설정
                     }
 
                     owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환

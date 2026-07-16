@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace InnerMonsterStates
 {
@@ -11,11 +12,19 @@ namespace InnerMonsterStates
         {
             owner.CanMove(false); // 이동 정지
             owner.ChangeMonsterModelCenter(false); // 몬스터 모델 중심 기본으로 돌림
+
+            AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound);
+            owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
+            // 모든 문 NavMeshObstacle 비활성화
+            foreach (Door door in SubmarineInGameManager.instance.Doors)
+            {
+                if (door.gameObject.activeSelf)
+                    door.gameObject.GetComponent<NavMeshObstacle>().enabled = false;
+            }
+
             owner.Nav.updateRotation = false; // 회전 수동으로 변경
 
             owner.IsShowingJumpscare = true;
-
-            FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // (플레이어 정지)
 
             PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinarySpaceAlertPlayerPos.position, owner.machinarySpaceAlertPlayerPos.rotation); // 플레이어를 문 앞으로 위치 보정 (순간이동) (카메라 컨트롤러 켜짐)
             PlayerManager.Instance.SetCameraControllerEnable(true); // 카메라 컨트롤러 활성화
@@ -44,18 +53,11 @@ namespace InnerMonsterStates
                 PlayerManager.Instance.SetCameraControllerEnable(false); // 카메라 컨트롤러 비활성화
             });
 
-            // // 카메라가 괴물 얼굴 빡 줌인하도록 이동 (돌아보면서 얼굴쪽으로 갈 것)
-            // seq.Append(Camera.main.transform.DOMove(owner.jumpscareZoomInPos.position, 1.5f)
-            //     .SetEase(Ease.OutQuad));
-            // seq.Join(Camera.main.transform.DORotateQuaternion(owner.jumpscareZoomInPos.rotation, 1.5f)
-            //     .SetEase(Ease.OutQuad));
-
             seq.AppendCallback(() =>
             {
                 // 이때 플레이어 위치를 기계실 안으로 순간이동 (카메라에는 안 나옴)
                 PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinarySpaceInnerPos.position, owner.machinarySpaceInnerPos.rotation);
 
-                // owner.Animator.SetTrigger("JumpscareStart");
                 owner.StartCoroutine(CameraTrackSequence(owner, owner.jumpscareZoomInPos, 2f)); // 괴물 얼굴 카메라가 따라가도록 하기
             });
 
@@ -70,9 +72,6 @@ namespace InnerMonsterStates
                 owner.Nav.enabled = false;
                 owner.transform.DOMove(owner.monsterApproachPos.position, 1f);
                 owner.Nav.enabled = true;
-                // owner.CanMove(true); // 이동
-                // owner.Nav.speed = _approachSpeed; // 폭주 속도로 변경
-                // owner.Nav.SetDestination(owner.monsterApproachPos.position);
             });
 
             // 완료 -> 폭주 공격 상태로 전환

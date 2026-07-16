@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -19,6 +20,7 @@ namespace InnerMonsterStates
     {
         private float _destroyTime; // 파괴하는데 걸리는 시간
         private float _timer; // 타이머
+        // private bool _isSequencing = false; // 연출 보여주는 중인지 여부
 
         public void Enter(InnerMonsterController owner)
         {
@@ -31,24 +33,35 @@ namespace InnerMonsterStates
             AudioManager.Instance.PlayGlobalOneShot(owner.destroyRageSound);
             _timer = 0f; // 타이머 초기화
 
-            // 파괴하는데 걸리는 시간 설정
-            switch (owner.currentDestroyObjType)
+            if (owner.IsDestroyImmediately) // 즉시 파괴 경우 -> 즉시 파괴
             {
-                case EDestroyObjType.Door:
-                    _destroyTime = 7f;
-                    break;
-                case EDestroyObjType.EscapeRoomDoor:
-                    _destroyTime = 30f;
-                    break;
-                case EDestroyObjType.MachinarySpaceDoor:
-                    _destroyTime = 60f;
-                    break;
-                case EDestroyObjType.Equipment:
-                    if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.TorpedoRoom) // 어뢰실 장치의 경우 늦게 부서지게 함
-                        _destroyTime = 20f;
-                    else
-                        _destroyTime = 3.5f;
-                    break;
+                Debug.Log("즉시 파괴");
+                RageDestroy(owner);
+            }
+            else // 즉시 파괴 X
+            {
+                // 파괴하는데 걸리는 시간 설정 & 문은 빨간색으로 변경
+                switch (owner.currentDestroyObjType)
+                {
+                    case EDestroyObjType.Door:
+                        _destroyTime = 7f;
+                        owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
+                        break;
+                    case EDestroyObjType.EscapeRoomDoor:
+                        _destroyTime = 30f;
+                        owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
+                        break;
+                    case EDestroyObjType.MachinerySpaceDoor:
+                        _destroyTime = 60f;
+                        owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
+                        break;
+                    case EDestroyObjType.Equipment:
+                        if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.TorpedoRoom) // 어뢰실 장치의 경우 늦게 부서지게 함
+                            _destroyTime = 20f;
+                        else
+                            _destroyTime = 3.5f;
+                        break;
+                }
             }
 
             // 이벤트 구독
@@ -57,6 +70,8 @@ namespace InnerMonsterStates
 
         public void Update(InnerMonsterController owner)
         {
+            if (owner.IsDestroySequencing) return;
+
             if (owner.currentDestroyObj != null)
             {
                 owner.LookAtTarget(owner.currentDestroyObjPos); // 현재 파괴 오브젝트를 바라보도록 회전
@@ -68,13 +83,37 @@ namespace InnerMonsterStates
                     RageDestroy(owner); // 폭주 파괴
                 }
             }
+
+            switch (owner.currentDestroyObjType)
+            {
+                case EDestroyObjType.Door:
+                case EDestroyObjType.EscapeRoomDoor:
+                case EDestroyObjType.MachinerySpaceDoor:
+                    if (owner.currentDestroyObj.GetComponent<Door>().isOpened) // 파괴 중이었는데 문이 열리면
+                    {
+                        owner.ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환(아직 경보 발생 중이기 때문)
+                    }
+                    break;
+            }
         }
 
         public void Exit(InnerMonsterController owner)
         {
-            owner.Animator.SetBool("isRageDestroying", false);
+            if (owner.currentDestroyObj != null)
+            {
+                // 문 빨간색인 거 원래 색으로 변경
+                switch (owner.currentDestroyObjType)
+                {
+                    case EDestroyObjType.Door:
+                    case EDestroyObjType.EscapeRoomDoor:
+                    case EDestroyObjType.MachinerySpaceDoor:
+                        owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.white; // 문 원래색으로 변경
+                        break;
+                }
+            }
+
+            ResetCurrentDestroyObj(owner); // 현재 파괴 장치 초기화 (중간에 다른 상태로 전환된 거면 어차피 RageChaseState에서 넘어올 때 다시 currentDestroyObj 등 맞게 할당될 것)
             owner.StopPlaying();
-            owner.currentDestroyObjType = 0; // 현재 파괴해야할 오브젝트 타입 0으로 초기화
             owner.Nav.updateRotation = true; // 회전 자동으로 변경
 
             // 이벤트 구독 해제
@@ -91,32 +130,35 @@ namespace InnerMonsterStates
         /// </summary>
         private void RageDestroy(InnerMonsterController monster)
         {
-            AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound);
+            Debug.Log(monster.currentDestroyObjType + " / " + SubmarineInGameManager.instance.CurrentAlertArea);
+            PlayDestroyingSound(monster);
             // 타입에 따른 후처리
             switch (monster.currentDestroyObjType)
             {
                 case EDestroyObjType.Door: // 일반 문을 파괴한 경우
                     monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
-                    ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
                     monster.ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환(아직 경보 발생 중이기 때문)
                     break;
 
                 case EDestroyObjType.EscapeRoomDoor: // 탈출실 문을 파괴한 경우
                     monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
-                    ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
-                    FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
-                    // 탈출실 문 파괴하고 괴물이 들어가서 포효하고 끝나는 연출 추가 예정!!!
-                    GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
-                    break;
+                    // 연출
+                    monster.destroySequencer.DestroySequence(monster, () =>
+                    {
+                        GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
+                    });
+                    return;
 
-                case EDestroyObjType.MachinarySpaceDoor: // 기계실 문을 파괴한 경우
+                case EDestroyObjType.MachinerySpaceDoor: // 기계실 문을 파괴한 경우
                     monster.currentDestroyObj.SetActive(false); // 파괴 -> 현재는 비활성화
-                    ResetCurrentDestroyObj(monster); // 현재 파괴해야 할 오브젝트 리셋
                     if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) // 현재 기계실 문 경보가 발생 중일 때만 -> 게임 오버
                     {
-                        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
-                        // 괴물을 바라보고 괴물에게 공격당해 죽는 연출 추가 예정!!!
-                        GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버
+                        // 연출
+                        monster.destroySequencer.DestroySequence(monster, () =>
+                        {
+                            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버
+                        });
+                        return;
                     }
                     else // 기계실 문 경보 발생 중 X -> 일반 문 파괴 경우와 동일
                     {
@@ -127,18 +169,20 @@ namespace InnerMonsterStates
                 case EDestroyObjType.Equipment: // 현재 파괴될 장비를 파괴한 경우
                     switch (SubmarineInGameManager.instance.CurrentAlertArea)
                     {
-                        // 장치 이미 부순 경우도 처리 잘하기!!!
                         case AlertArea.Galley:
-                            // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 식당의 가스레인지를 부술 때 기름이 쏟아지며 폭발하는 모습만 딱 연출로 보여주면서 게임 오버
-                            GameManager.instance.GameOver(EEndingType.SubmarineExplode); // 게임 오버
-                            break;
+                            // 연출
+                            monster.destroySequencer.DestroySequence(monster, () =>
+                            {
+                                GameManager.instance.GameOver(EEndingType.SubmarineExplode); // 게임 오버
+                            });
+                            return; // 게임 오버이므로 즉시 종료
                         case AlertArea.Storage01:
-                            // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 창고01의 샘플병을 부수며 깨지는 소리나는 모습만 딱 연출로 잠깐 보여주고 다시 플레이어 카메라로 돌아옴
-                            // 이미 부순 경우 부수는 모션만!!!
-                            break;
                         case AlertArea.EngineRoom:
-                            // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 엔진실의 엔진을 부수면서 파지직 소리와 함께 불이 다 꺼지는 걸 연출로 보여주고 다시 플레이어 카메라로 돌아옴
-                            // 이미 부순 경우 부수는 모션만!!!
+                            // 연출
+                            monster.destroySequencer.DestroySequence(monster, () =>
+                            {
+                                CompleteDestroyEquipmentNotGameOver(monster);
+                            });
                             break;
                         case AlertArea.ControlRoom:
                             switch (SubmarineInGameManager.instance.CurrentDestroyEquipmentIndex)
@@ -146,17 +190,23 @@ namespace InnerMonsterStates
                                 case 0: // 레이더 조작 패널
                                     // 파괴 효과 연출 필요
                                     monster.currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
+                                    CompleteDestroyEquipmentNotGameOver(monster);
                                     break;
                                 case 1: // 어뢰 자동 탑재 스위치
                                     // 스위치 off
                                     monster.currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
+                                    CompleteDestroyEquipmentNotGameOver(monster);
                                     break;
                                 case 2: // 탈출실 유압 패널
                                     monster.currentDestroyObj.GetComponent<EscapeRoomHydraulicSystemPanel>().Broke(); // 고장
+                                    CompleteDestroyEquipmentNotGameOver(monster);
                                     break;
                                 case 3: // 통신 장치
-                                    // 플레이어 카메라가 괴물을 비추는 카메라로 전환되고, 괴물이 조종실의 통신 장비를 부수면서 삐삐삐— 소리와 함께 망가지고 통신기가 검정색으로 되는 모습을 연출로 보여주고 다시 플레이어 카메라로 돌아옴
-                                    // 이미 부순 경우 부수는 모션만!!!
+                                    // 연출
+                                    monster.destroySequencer.DestroySequence(monster, () =>
+                                    {
+                                        CompleteDestroyEquipmentNotGameOver(monster);
+                                    });
                                     break;
                             }
                             break;
@@ -164,13 +214,36 @@ namespace InnerMonsterStates
                             // 연출 X
                             break;
                     }
-                    ResetCurrentDestroyObj(monster);
-                    SubmarineInGameManager.instance.AlertOff(); // 경보 해제
-                    monster.monsterEyeRenderer.material = monster.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
-
-                    // 모든 문 NavMeshObstacle 다시 활성화하고, 한 프레임 대기 후(버그 해결 목적) 순찰 상태로 전환
-                    monster.StartCoroutine(DoorObstaclesOnAndGoPatrolState(monster)); // 상태에는 Monobehaviour 없으므로 주체인 monster에서 실행
                     break;
+            }
+        }
+
+        /// <summary>
+        /// 게임 오버 아닐 때 장치 파괴 완료 시 로직
+        /// </summary>
+        public void CompleteDestroyEquipmentNotGameOver(InnerMonsterController monster)
+        {
+            Debug.Log(monster.currentDestroyObj + "을(를) 파괴했습니다.");
+            ResetCurrentDestroyObj(monster);
+            FocusManager.Instance.PopFocusState(); // 포커스 해제
+            monster.IsDestroySequencing = false; // 파괴 연출 종료
+
+            if (monster.IsDestroyImmediately) // 즉시 파괴
+            {
+                // 이제 파괴 연출 끝났으므로, 기계실로 현재 경보 위치 변경
+                SubmarineInGameManager.instance.ChangeCurrentAlertPos(AlertArea.MachinerySpace);
+                monster.DestroyDoorsAndTransitionToJumpscare(); // 현재 목적지로 가는 경로 상 문 즉시 파괴 후 점프스케어 상태로 전환
+
+                // 즉시 파괴 여부 초기화
+                monster.IsDestroyImmediately = false;
+            }
+            else // 즉시 파괴 아닌 경우
+            {
+                SubmarineInGameManager.instance.AlertOff(); // 경보 해제
+                monster.monsterEyeRenderer.material = monster.originalEyeMaterial; // 내부 괴물의 눈 머티리얼 원래 머티리얼(하얀색)로 변경
+
+                // 모든 문 NavMeshObstacle 다시 활성화하고, 한 프레임 대기 후(버그 해결 목적) 순찰 상태로 전환
+                monster.StartCoroutine(DoorObstaclesOnAndGoPatrolState(monster)); // 상태에는 Monobehaviour 없으므로 주체인 monster에서 실행
             }
         }
 
@@ -179,7 +252,6 @@ namespace InnerMonsterStates
         /// </summary>
         private void ResetCurrentDestroyObj(InnerMonsterController monster)
         {
-            Debug.Log(monster.currentDestroyObj + "을(를) 파괴했습니다.");
             monster.currentDestroyObj = null; // 현재 파괴해야 할 오브젝트 없음으로 설정
             monster.currentDestroyObjType = EDestroyObjType.None;
             monster.Animator.SetBool("isRageDestroying", false);
@@ -205,12 +277,6 @@ namespace InnerMonsterStates
 
             // 순찰 상태로 전환
             monster.ChangeState(new PatrolState());
-        }
-
-        private void CompleteDestroyingEscapeRoomDoor()
-        {
-            Sequence seq = DOTween.Sequence();
-
         }
     }
 }
