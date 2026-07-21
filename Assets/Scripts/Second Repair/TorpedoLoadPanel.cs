@@ -101,6 +101,10 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 
         // 패널이 활성화되어 있을 때
 
+        // 탑재 중일 때는 아무것도 처리하지 않음
+        if (_isLoading)
+            return;
+
         // 조이스틱 드래그 중 -> 조이스틱, 들 것 움직이기
         if (_isJoystickDragging)
         {

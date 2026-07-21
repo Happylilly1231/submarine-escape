@@ -87,6 +87,11 @@ public class AudioManager : MonoBehaviour
         bgmSource.Stop();
     }
 
+    public void StopSFX()
+    {
+        sfxSource.Stop();
+    }
+
     /// <summary>
     /// 해당 오디오 소스에서 안전하게 재생(매 프레임 반복되는 곳에서 호출 시 한 번만 Play(Loop)되도록 함)
     /// </summary>

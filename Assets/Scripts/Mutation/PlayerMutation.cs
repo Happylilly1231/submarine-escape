@@ -127,7 +127,7 @@ public class PlayerMutation : MonoBehaviour
 
         seq.Append(FXManager.instance.fadeImage.DOFade(1f, 1f)); // 화면이 완전히 검게 변함
 
-        // 완료되면 -> 탈출 성공
+        // 완료되면 -> 게임 오버
         seq.OnComplete(() =>
         {
             mutationAudioSource.Stop();

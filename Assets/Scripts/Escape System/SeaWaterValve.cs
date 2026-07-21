@@ -17,6 +17,7 @@ public class SeaWaterValve : InteractableBase
     public Volume underwaterVolume; // 물속 효과가 담긴 볼륨
 
     private bool _isActivated = false; // 작동되었는지 여부
+    public bool IsActivated => _isActivated;
     private float _targetHeight = 4.4f; // 물이 차오를 최종 높이
     private float _duration = 10f;    // 차오르는 데 걸리는 시간
     private float _underwaterCutoff = 600f; // 물속 소리 주파수

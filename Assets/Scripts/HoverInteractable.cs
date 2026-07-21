@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class HoverInteractable : MonoBehaviour
+public class HoverInteractable : MonoBehaviour
 {
     protected Outline outline; // 아웃라인
-    // private PuzzleController _puzzleController = null; // 퍼즐 컨트롤러
 
     public virtual void Awake()
     {

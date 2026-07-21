@@ -91,6 +91,10 @@ public class RadarController : PuzzleController
         base.Start();
 
         SetCurrentTorpedoState(TorpedoState.Normal);
+
+        // 선택 여부 초기화
+        SelectPlanarPos(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
     }
 
     private void OnEnable()
@@ -223,6 +227,9 @@ public class RadarController : PuzzleController
     {
         base.StartPuzzle();
 
+        // 인게임 UI 비활성화
+        SubmarineInGameManager.instance.SetActiveInGameUI(false);
+
         // 수동 전환이 아직 되지 않았을 때 -> 키 입력 이벤트 구독(수동 전환 코드 입력 위해서)
         if (!_isManualModeActive)
         {
@@ -253,6 +260,9 @@ public class RadarController : PuzzleController
     {
         base.ExitPuzzle();
 
+        // 인게임 UI 활성화
+        SubmarineInGameManager.instance.SetActiveInGameUI(true);
+
         // 수동 전환이 아직 되지 않았을 때 -> 키 입력 이벤트 구독 해제
         if (!_isManualModeActive)
         {
@@ -269,6 +279,10 @@ public class RadarController : PuzzleController
         }
 
         // 화면 끄지 않음
+
+        // 선택 여부 초기화
+        SelectPlanarPos(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
 
         // 인벤토리 다시 보이게 하기
         inventoryManager.OpenInventory();

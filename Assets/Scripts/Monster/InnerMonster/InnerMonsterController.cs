@@ -7,7 +7,12 @@ using System.Linq;
 using InnerMonsterStates;
 using System;
 using DG.Tweening;
+using UnityEngine.UI;
+using UnityEngine.Rendering;
 
+/// <summary>
+/// 공격 타입
+/// </summary>
 public enum EAttackType
 {
     HitAttack,
@@ -15,15 +20,20 @@ public enum EAttackType
     JumpAttack,
     ThrowAttack,
     RageDestroyAttack,
-    RageAttack
+    RageAttack,
+    JumpscareRageAttack
 }
 
+/// <summary>
+/// 파괴 오브젝트 타입
+/// </summary>
 public enum EDestroyObjType
 {
     None = 0,
     Door,
     EscapeRoomDoor,
-    CurrentDestroyEquipment
+    MachinerySpaceDoor,
+    Equipment
 }
 
 /// <summary>
@@ -54,6 +64,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public LayerMask destroyEquipmentLayer;
     private Transform _monsterModelTransform;
     private CapsuleCollider _collider;
+    public SeaWaterValve seaWaterValve;
 
 
     // 플레이어 관련
@@ -108,9 +119,13 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     // 폭주
     private bool _isRageStartEnd = false;
     public bool IsRageStartEnd { get => _isRageStartEnd; set => _isRageStartEnd = value; }
-    public EDestroyObjType currentDestroyObjType;
+    public EDestroyObjType currentDestroyObjType = EDestroyObjType.None;
     public GameObject currentDestroyObj = null; // 현재 파괴해야 할 오브젝트
-    public Vector3 currentDestroyPos;
+    public Door currentDestroyDoor = null; // 현재 파괴해야 할 문
+    public Vector3 currentDestroyObjPos;
+    public bool IsDestroySequencing { get; set; } = false;
+    public DestroySequencer destroySequencer; // 파괴 연출 스크립트
+    public int currentDestroyAttackCount = 0;
 
     // 휘청임
     private bool _isStaggering; // 현재 휘청임 중인지 여부
@@ -124,8 +139,25 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool IsBeingExtracted { get; set; } = false; // 추출 당하는 중
     public WaitUntil WaitUntilNotBeingExtracted { get; set; } // 대기 조건
 
+    // 점프스케어
+    [Header("Jumpscare")]
+    public Transform machinerySpaceAlertPlayerPos; // 기계실 경보 발생 시 플레이어를 기계실 문 앞으로 위치 보정시키기 위해 필요
+    public Transform machinerySpaceAlertMonsterPos; // 기계실 경보 발생 시 괴물이 순간이동해서 나타날 위치
+    public Transform machinerySpaceInnerPos; // 기계실 내부 위치
+    public Transform jumpscareZoomInPos; // 점프스케어 연출 때 괴물 얼굴 줌인 위치
+    public Transform jumpscareZoomOutPos; // 점프스케어 연출 때 줌아웃 위치
+    public Transform monsterApproachPos; // 괴물 접근 위치
+    public bool IsShowingJumpscare { get; set; } = false; // 현재 점프스케어 보여주는 중인지 여부
+    public bool IsDestroyImmediately { get; set; } = false; // 현재 즉시 파괴 여부
+    public bool IsJumpscareAttackSuccess { get; set; } = false; // 점프스케어 공격 성공 여부
+    public GameObject jumpscareQTEUI; // 점프스케어 QTE UI
+    public Image gaugeImage; // QTE 게이지 이미지
+    public Door machinerySpaceDoor; // 기계실 문
+    public Volume jumpscareVolume; // 점프스케어 볼륨 
+
     // 이벤트
     public static event Action<InnerMonsterController> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
+    public static event Action<InnerMonsterController> OnAnimationRageDestroyAttackTouched; // 폭주 파괴 공격 애니메이션 닿는 타이밍 이벤트
 
     // 사운드
     [Header("Sound")]
@@ -144,81 +176,38 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public AudioClip destroyingSound;
     public AudioClip destroyCompleteSound;
     public AudioSource audioSource;
+    public AudioSource destroyAudioSource;
 
-    private void OnEnable()
-    {
-        // 이벤트 구독
-        LightingManager.instance.OnLightChanged += ChangeStatValue; // 전등 상태 변경 -> 몬스터 스탯 수치 변경
-        SubmarineInGameManager.instance.OnAlertStarted += RageStart; // 경보 발생 시작 -> 폭주 시작
-        PlayerMutation.OnSpikeHitFloor += CanChaseHitSoundSource; // 플레이어 가시 생성 시 가시로 바닥 칠 때 -> 소리 난 곳으로 추적 가능으로 설정
-        PlayerMutation.OnMutationCompleted += OnMutationCompleted; // 플레이어 완전 괴물화 -> 플레이어 완전 괴물화되었음으로 설정
-    }
-
-    private void OnDisable()
-    {
-        // 이벤트 구독 해제
-        LightingManager.instance.OnLightChanged -= ChangeStatValue;
-        SubmarineInGameManager.instance.OnAlertStarted -= RageStart;
-        PlayerMutation.OnSpikeHitFloor -= CanChaseHitSoundSource;
-        PlayerMutation.OnMutationCompleted -= OnMutationCompleted;
-    }
-
-    /// <summary>
-    /// 플레이어 완전 괴물화되었음으로 설정
-    /// </summary>
-    private void OnMutationCompleted()
-    {
-        IsPlayerMutationCompeleted = true;
-    }
-
-    /// <summary>
-    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능으로 설정
-    /// </summary>
-    private void CanChaseHitSoundSource(Vector3 hitPos)
-    {
-        CanChaseHitPos = true;
-        CurrentHitPos = hitPos;
-        _chaseHitPosTimerCoroutine = StartCoroutine(ChaseHitPosTimerCoroutine());
-    }
-
-    /// <summary>
-    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 (일정 시간이 지나면 더는 추적하지 않게)
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator ChaseHitPosTimerCoroutine()
-    {
-        float timer = 0f;
-        while (timer < 7f)
-        {
-            yield return WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
-
-            timer += Time.deltaTime;
-            yield return null;
-        }
-        Debug.Log("7초 끝!");
-        CanChaseHitPos = false;
-    }
-
-    /// <summary>
-    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 즉시 종료
-    /// </summary>
-    public void EndChastHitPosTimer()
-    {
-        CanChaseHitPos = false;
-        if (_chaseHitPosTimerCoroutine != null)
-            StopCoroutine(_chaseHitPosTimerCoroutine);
-        _chaseHitPosTimerCoroutine = null;
-    }
-
+    #region Life Cycle
     private void Awake()
     {
         _fsm = new StateMachine<InnerMonsterController>(this);
         _rageFsm = new StateMachine<InnerMonsterController>(this);
 
         doorLayer = LayerMask.GetMask("Door");
-        destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
+        // destroyEquipmentLayer = LayerMask.GetMask("DestroyEquipment");
 
         WaitUntilNotBeingExtracted = new WaitUntil(() => !IsBeingExtracted);
+    }
+
+    private void OnEnable()
+    {
+        // 이벤트 구독
+        LightingManager.instance.OnLightChanged += ChangeStatValue; // 전등 상태 변경 -> 몬스터 스탯 수치 변경
+        PlayerMutation.OnSpikeHitFloor += CanChaseHitSoundSource; // 플레이어 가시 생성 시 가시로 바닥 칠 때 -> 소리 난 곳으로 추적 가능으로 설정
+        PlayerMutation.OnMutationCompleted += OnMutationCompleted; // 플레이어 완전 괴물화 -> 플레이어 완전 괴물화되었음으로 설정
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted += RageStart; // 기계실 제외 경보 발생 시작 -> 폭주 시작
+        SubmarineInGameManager.instance.OnMachinerySpaceAlertStarted += JumpscareStart; // 기계실 경보 발생 시작 -> 점프스케어 시작
+    }
+
+    private void OnDisable()
+    {
+        // 이벤트 구독 해제
+        LightingManager.instance.OnLightChanged -= ChangeStatValue;
+        PlayerMutation.OnSpikeHitFloor -= CanChaseHitSoundSource;
+        PlayerMutation.OnMutationCompleted -= OnMutationCompleted;
+        SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= RageStart;
+        SubmarineInGameManager.instance.OnMachinerySpaceAlertStarted -= JumpscareStart;
     }
 
     private void Start()
@@ -238,7 +227,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _playerStatus = playerTransform.GetComponent<PlayerStatus>();
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
-        audioSource = GetComponent<AudioSource>();
 
         // 웨이포인트 배열 가져오기
         _wayPoints = wayPointsParent.GetComponentsInChildren<Transform>().Where(t => t != wayPointsParent).ToArray();
@@ -288,7 +276,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 현재 상태 머신 업데이트
         _currentFsm.Update();
     }
+    #endregion
 
+    #region State Machine
     // 상태 전환
     public void ChangeState(IState<InnerMonsterController> newState)
     {
@@ -305,70 +295,58 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
         _currentFsm.ChangeState(newState); // 상태 변경
     }
+    #endregion
 
+    #region Player Mutation
     /// <summary>
-    /// 폭주 시작
+    /// 플레이어 완전 괴물화되었음으로 설정
     /// </summary>
-    private void RageStart()
+    private void OnMutationCompleted()
     {
-        ChangeState(new RageStartState()); // 폭주 시작 상태로 전환
+        IsPlayerMutationCompeleted = true;
     }
 
     /// <summary>
-    /// 타겟을 바라보도록 회전
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능으로 설정
     /// </summary>
-    /// <param name="targetPos">타겟 위치</param>
-    public void LookAtTarget(Vector3 targetPos)
+    private void CanChaseHitSoundSource(Vector3 hitPos)
     {
-        Vector3 targetDir = targetPos - transform.position;
-        targetDir.y = 0;
-        Debug.DrawRay(transform.position, transform.forward * 5f, Color.yellow);
-        Debug.DrawRay(transform.position, targetDir * 5f, Color.white);
-        // 벡터의 제곱근 거리(sqrMagnitude)가 아주 작은 값보다 클 때만 회전 실행
-        if (targetDir.sqrMagnitude > 0.001f)
+        CanChaseHitPos = true;
+        CurrentHitPos = hitPos;
+        _chaseHitPosTimerCoroutine = StartCoroutine(ChaseHitPosTimerCoroutine());
+    }
+
+    /// <summary>
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 (일정 시간이 지나면 더는 추적하지 않게)
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator ChaseHitPosTimerCoroutine()
+    {
+        float timer = 0f;
+        while (timer < 7f)
         {
-            transform.rotation = Quaternion.LookRotation(targetDir);
+            yield return WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
+            timer += Time.deltaTime;
+            yield return null;
         }
-        Quaternion lookRotation = Quaternion.LookRotation(targetDir);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+        Debug.Log("7초 끝!");
+        CanChaseHitPos = false;
     }
 
     /// <summary>
-    /// 이동 가능 여부 설정 
+    /// 플레이어가 가시로 치는 소리 난 곳 추적 가능 시간 타이머 계산 즉시 종료
     /// </summary>
-    public void CanMove(bool canMove)
+    public void EndChastHitPosTimer()
     {
-        _nav.isStopped = !canMove;
-        if (!canMove)
-            _nav.velocity = Vector3.zero;
+        CanChaseHitPos = false;
+        if (_chaseHitPosTimerCoroutine != null)
+            StopCoroutine(_chaseHitPosTimerCoroutine);
+        _chaseHitPosTimerCoroutine = null;
     }
+    #endregion
 
-    /// <summary>
-    /// 목적지로 향하는 경로가 유효한지 여부 반환
-    /// </summary>
-    public bool IsPathValid(Vector3 targetPos)
-    {
-        NavMeshPath path = new NavMeshPath();
-        if (_nav.CalculatePath(targetPos, path))
-        {
-            return path.status == NavMeshPathStatus.PathComplete; // 경로가 완전한지 여부 반환
-        }
-        // 경로 계산을 못하면
-        return false; // 목적지가 navMesh 위에 있지 않음
-    }
-
-    /// <summary>
-    /// 공격(폭주 공격 포함) 중 여부에 따른 시야각 중심 위치 변경
-    /// </summary>
-    /// <param name="isAttacking">공격(폭주 공격 포함) 중 여부</param>
-    public void ChangeFovCenter(bool isAttacking)
-    {
-        if (isAttacking)
-            _fovCenterTransform = transform;
-        else
-            _fovCenterTransform = monsterHeadTransform;
-    }
-
+    #region Chase
     /// <summary>
     /// 감지 가능 여부 반환
     /// </summary>
@@ -408,44 +386,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     }
 
     /// <summary>
-    /// 씬에서 시야 레이(좌, 중, 우) 그리기
-    /// </summary>
-    /// <param name="eyePos">눈높이 위치</param>
-    private void DrawVisionRays(Vector3 eyePos)
-    {
-        Debug.DrawRay(eyePos, _fovCenterTransform.forward * _detectDistance, Color.green);
-        // 오른쪽 시야각 끝 레이
-        Vector3 rightDir = Quaternion.Euler(0, _fov / 2f, 0) * _fovCenterTransform.forward;
-        Debug.DrawRay(eyePos, rightDir * _detectDistance, Color.yellow);
-        // 왼쪽 시야각 끝 레이
-        Vector3 leftDir = Quaternion.Euler(0, -_fov / 2f, 0) * _fovCenterTransform.forward;
-        Debug.DrawRay(eyePos, leftDir * _detectDistance, Color.yellow);
-    }
-
-    /// <summary>
-    /// 변경 여부에 따른 몬스터 모델 중심 변경
-    /// <para>- 몬스터의 머리가 애니메이션 때문에 콜라이더 바깥으로 나가기 때문에 필요</para>
-    /// </summary>
-    /// <param name="isChange">변경 여부, false면 기본으로 되돌림</param>
-    /// <param name="zValue">변경할 z 값(기본은 0.5f), false면 기본으로 되돌림</param>
-    public void ChangeMonsterModelCenter(bool isChange, float zValue = 0.5f)
-    {
-        Vector3 centerPos = _collider.center;
-        if (isChange)
-        {
-            centerPos.z = zValue;
-            _monsterModelTransform.DOLocalMoveZ(-zValue, 0.5f);
-        }
-
-        else
-        {
-            centerPos.z = 0f;
-            _monsterModelTransform.DOLocalMoveZ(0f, 0.5f);
-        }
-        _collider.center = centerPos;
-    }
-
-    /// <summary>
     /// 추적 종료 딜레이 시작
     /// </summary>
     /// <param name="lastPos">추적 범위 내에서 플레이어의 마지막 위치</param>
@@ -477,7 +417,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             StartLookAround(); // 두리번거리기 시작
         }
     }
+    #endregion
 
+    #region Look Around
     /// <summary>
     /// 두리번거리기 시작(추적 불가능 상태 -> Idle 상태로 전환)
     /// </summary>
@@ -507,19 +449,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _isLookingAroundAfterAction = false; // 행동 후 두리번거리는 중 아님으로 설정
         _animator.SetBool("isLookingAround", false); // 애니메이션 파라미터 설정(-> Chase)
     }
-
-    /// <summary>
-    /// 공격 가능 여부(원거리 기준) 반환
-    /// </summary>
-    public bool CanAttack()
-    {
-        if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
-        {
-            return true;
-        }
-        return false; // 그 외 -> 공격 불가능
-    }
-
+    #endregion
 
     #region Melee Attack
     /// <summary>
@@ -578,8 +508,34 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("점프 공격!");
         _playerStat.Damage(15f * _attackForce);
     }
-    #endregion
 
+    /// <summary>
+    /// 점프 애니메이션에서 실제 점프 시작 이벤트
+    /// </summary>
+    public void OnJumpStart()
+    {
+        Debug.Log("점프 시작");
+        _isJumping = true; // 점프 중으로 설정
+        CanMove(true); // 이동 정지 해제
+    }
+
+    /// <summary>
+    /// 점프 애니메이션에서 실제 점프 종료 이벤트
+    /// </summary>
+    public void OnJumpEnd()
+    {
+        Debug.Log("점프 종료");
+        _isJumping = false; // 점프 중 아님으로 설정
+        CanMove(false); // 이동 정지
+        AudioManager.Instance.PlayGlobalOneShot(jumpLandingSound);
+        if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
+        {
+            // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)
+
+            StartCoroutine(_playerStatus.StunEffect()); // 스턴 효과
+        }
+    }
+    #endregion
 
     #region Rage Attack
     /// <summary>
@@ -592,6 +548,50 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     }
     #endregion
 
+    #region Jumpscare Rage Attack
+    /// <summary>
+    /// 점프스케어 폭주 공격(성공 - 즉사 / 실패 - 아무것도 X)
+    /// </summary>
+    public void JumpscareRageAttack()
+    {
+        if (IsJumpscareAttackSuccess)
+        {
+            Debug.Log("점프스케어 폭주 공격! - 성공");
+            _playerStat.Die(EEndingType.MonsterDeath); // 즉사
+        }
+        else
+        {
+            Debug.Log("점프스케어 폭주 공격! - 실패");
+        }
+        DOTween.To(() => jumpscareVolume.weight, x => jumpscareVolume.weight = x, 0f, 0.5f);
+    }
+    #endregion
+
+    #region Attack
+    /// <summary>
+    /// 공격 가능 여부(원거리 기준) 반환
+    /// </summary>
+    public bool CanAttack()
+    {
+        // Debug.Log(CanDetect() + "/" + (_distToPlayer <= _rangeAttackDistance) + "/" + (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting));
+        if (CanDetect() && _distToPlayer <= _rangeAttackDistance && (!_isAttackCoolDown || SubmarineInGameManager.instance.IsAlerting)) // 감지 가능 & 플레이어와의 거리가 원거리 공격 거리 이내 & 공격 쿨타임 진행 중이 아니거나 경보 발생 중(경보 발생 시 공격 쿨타임 X)일 때 -> 공격 가능
+        {
+            return true;
+        }
+        return false; // 그 외 -> 공격 불가능
+    }
+
+    /// <summary>
+    /// 공격(폭주 공격 포함) 중 여부에 따른 시야각 중심 위치 변경
+    /// </summary>
+    /// <param name="isAttacking">공격(폭주 공격 포함) 중 여부</param>
+    public void ChangeFovCenter(bool isAttacking)
+    {
+        if (isAttacking)
+            _fovCenterTransform = transform;
+        else
+            _fovCenterTransform = monsterHeadTransform;
+    }
 
     /// <summary>
     /// 공격 애니메이션에서 공격이 플레이어에게 실제로 닿을 때 호출되는 이벤트
@@ -606,9 +606,22 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             return;
         }
 
+        if (currentAttackType == EAttackType.JumpscareRageAttack)
+        {
+            JumpscareRageAttack();
+            return;
+        }
+
         // 폭주 공격 실행(회피 불가능)
         if (currentAttackType == EAttackType.RageAttack)
         {
+            // 기계실 경보 시 폭주 공격이면(기계실 안으로 들어가서 플레이어를 감지하고 공격이 된 것) -> 바로 폭주 공격 실행(즉사)
+            if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
+            {
+                RageAttack();
+                return;
+            }
+
             if (CanDetect() && DistToPlayer <= _rageAttackDistance) // 공격 모션이 실제 닿는지 여부(폭주 공격 거리 기준)
                 RageAttack();
             return;
@@ -669,8 +682,15 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _isAttackCoolDown = true; // 공격 쿨타임 진행 중으로 설정
         _attackCoolDownTimer = 0f; // 공격 쿨타임 타이머 0으로 초기화
 
-        if (_currentFsm == _rageFsm) // 현재 상태 머신이 폭주 상태 머신이라면(폭주 진행 중) -> 폭주 추적 상태로 전환 후 종료
+        if (_currentFsm == _rageFsm) // 현재 상태 머신이 폭주 상태 머신이라면(폭주 진행 중) -> 폭주 추적 상태로 전환 후 종료 (점프스케어 공격은 예외)
         {
+            // 점프스케어 공격이었으면 -> 폭주 시작 상태로 전환
+            if (currentAttackType == EAttackType.JumpscareRageAttack)
+            {
+                ChangeState(new RageStartState());
+                return;
+            }
+
             ChangeState(new RageChaseState());
             return;
         }
@@ -707,7 +727,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _isAttackCoolDown = false;
         _attackCoolDownTimer = 0f;
     }
+    #endregion
 
+    #region Stagger
     /// <summary>
     /// 휘청임 애니메이션 종료 이벤트
     /// </summary>
@@ -718,32 +740,17 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             throwObj.SetActive(false); // 투사체 비활성화
         StartAttackCoolDown(); // 공격이 실행됐으나 종료 발생 X(애니메이션 종료 이베트가 발생하지 않으므로 공격 쿨타임 시작 안됨) -> 공격 쿨타임 시작
     }
+    #endregion
 
+
+
+    #region Rage
     /// <summary>
-    /// 점프 애니메이션에서 실제 점프 시작 이벤트
+    /// 폭주 시작
     /// </summary>
-    public void OnJumpStart()
+    private void RageStart()
     {
-        Debug.Log("점프 시작");
-        _isJumping = true; // 점프 중으로 설정
-        CanMove(true); // 이동 정지 해제
-    }
-
-    /// <summary>
-    /// 점프 애니메이션에서 실제 점프 종료 이벤트
-    /// </summary>
-    public void OnJumpEnd()
-    {
-        Debug.Log("점프 종료");
-        _isJumping = false; // 점프 중 아님으로 설정
-        CanMove(false); // 이동 정지
-        AudioManager.Instance.PlayGlobalOneShot(jumpLandingSound);
-        if (_distToPlayer <= 3f) // 일정 범위 내일 때 -> 스턴
-        {
-            // 플레이어에게 점프해서 다가온다는 효과음, 쿵 하는 효과음 필요!!!(없으면 플레이어가 뒤돌아 있을 때 스턴이 걸리면 이유를 알기 어려움)
-
-            StartCoroutine(_playerStatus.StunEffect()); // 스턴 효과
-        }
+        ChangeState(new RageStartState()); // 폭주 시작 상태로 전환
     }
 
     /// <summary>
@@ -753,6 +760,206 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         // 폭주 시작 애니메이션 종료 이벤트 알림
         OnRageStartAnimationEnded?.Invoke(this);
+    }
+
+    public void OnRageDestroyAttackTouched()
+    {
+        if (_currentFsm == _rageFsm)
+        {
+            currentDestroyAttackCount++;
+            OnAnimationRageDestroyAttackTouched?.Invoke(this);
+            Debug.Log(currentDestroyAttackCount);
+        }
+    }
+
+    /// <summary>
+    /// 경로 상의 문 리스트 얻기 함수
+    /// </summary>
+    public void GetDoorsOnPathList(List<Door> doorsOnPathList, Action onComplete)
+    {
+        StartCoroutine(GetDoorsOnPathListCoroutine(doorsOnPathList, onComplete));
+    }
+
+    /// <summary>
+    /// 경로 상의 문 리스트 얻기 코루틴
+    /// </summary>
+    public IEnumerator GetDoorsOnPathListCoroutine(List<Door> doorsOnPathList, Action onComplete)
+    {
+        // SetDestination 호출 직후 유니티가 내부적으로 pathPending을 true로 바꿀 수 있게 "1프레임 무조건 대기"
+        yield return null;
+
+        // 경로 계산 완료 대기
+        while (Nav.pathPending)
+        {
+            yield return WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
+
+            yield return null;
+        }
+
+        // 방어 코드: 만약 프레임 딜레이로 인해 연산이 완료되었음에도 경로 끝점 좌표와 목적지 좌표 오차가 크다면 1프레임 더 대기
+        // (NavMeshAgent가 이전 경로를 여전히 들고 있는 순간을 최종 차단)
+        float timeout = 0.5f;
+        while (Nav.path.corners.Length > 0 &&
+               Vector3.Distance(Nav.path.corners[Nav.path.corners.Length - 1], Nav.destination) > 1.0f &&
+               timeout > 0)
+        {
+            timeout -= Time.deltaTime;
+            yield return null;
+        }
+
+        // 경로의 코너 배열 가져오기
+        Vector3[] corners = Nav.path.corners;
+
+        // 코너 ~ 다음 코너 구간마다 RayCastAll 함수로 경로 상의 문 검출 -> DoorsOnPathList에 추가
+        for (int i = 0; i < corners.Length - 1; i++)
+        {
+            Vector3 start = corners[i] + Vector3.up * 1f; // 현재 코너
+            Vector3 end = corners[i + 1] + Vector3.up * 1f; // 다음 코너
+
+            Vector3 dir = (end - start).normalized; // 현재 코너에서 다음 코너로의 정규화된 방향
+            float dist = Vector3.Distance(start, end); // 현재 코너에서 다음 코너까지의 거리
+
+            // RayCastAll로 현재 코너에서 다음 코너로의 방향으로 다음 코너까지의 거리만큼만 문 레이어에 대해서만 검사(최대한 레이캐스트 범위를 한정함)
+            RaycastHit[] hits = Physics.RaycastAll(start, dir, dist, doorLayer);
+            foreach (var hit in hits)
+            {
+                Door door = hit.collider.GetComponent<Door>();
+                if (door != null && !doorsOnPathList.Contains(door)) // 현재 리스트에 저장되지 않은 문들만 -> 리스트에 추가
+                {
+                    // door.gameObject.GetComponent<Renderer>().material.color = Color.red; // 해당 문 빨간색으로 표시
+                    doorsOnPathList.Add(door); // 리스트에 추가
+                }
+            }
+        }
+
+        onComplete?.Invoke();
+    }
+    #endregion
+
+    #region Jumpscare
+    /// <summary>
+    /// 점프스케어 시작
+    /// </summary>
+    public void JumpscareStart()
+    {
+        // 점프스케어 포커스
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // (플레이어 정지)
+
+        ResetAttackCoolDown(); // 공격 쿨타임 리셋
+
+        // 현재 상태가 폭주면 -> 파괴해야할 거 파괴하기
+        if (_currentFsm == _rageFsm)
+        {
+            // Agent가 멈춰있다면 먼저 풀어서 경로 계산을 할 수 있게 함
+            if (!Nav.enabled) Nav.enabled = true;
+            Nav.isStopped = false;
+
+            // 해당 파괴할 목적지로 가는 경로 상의 문 중 열린 문 파괴
+            Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 경보 발생 위치를 이전(원래) 목적지로 함
+            List<Door> doorsOnPathList = new List<Door>();
+            GetDoorsOnPathList(doorsOnPathList, () =>
+            {
+                foreach (var door in doorsOnPathList)
+                {
+                    if (door.isOpened) continue; // 문 열려있으면 파괴 X
+                    door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
+                }
+
+                Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 파괴 위치로 순간이동
+                IsDestroyImmediately = true; // 즉시 파괴 여부 true
+                currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴 종류 -> 장치로 설정
+                ChangeState(new RageChaseState()); // 폭주 추적 상태로 전환 (바로 폭주 파괴 상태로 전환될 것)
+            });
+        }
+        else // 현재 상태가 일반이면 -> 현재 목적지로 가는 경로 상 문 즉시 파괴 후 점프스케어 상태로 전환
+        {
+            DestroyDoorsAndTransitionToJumpscare();
+        }
+    }
+
+    /// <summary>
+    /// 현재 목적지로 가는 경로 상 문 즉시 파괴 후 점프스케어 상태로 전환
+    /// </summary>
+    public void DestroyDoorsAndTransitionToJumpscare()
+    {
+        Debug.Log(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+
+        // Agent가 멈춰있다면 먼저 풀어서 경로 계산을 할 수 있게 함
+        if (!Nav.enabled) Nav.enabled = true;
+        Nav.isStopped = false;
+
+        // 모든 문 NavMeshObstacle 비활성화
+        foreach (Door door in SubmarineInGameManager.instance.Doors)
+        {
+            if (door.gameObject.activeSelf)
+                door.gameObject.GetComponent<NavMeshObstacle>().enabled = false;
+        }
+
+        Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+        // 목적지로 가는 경로 상에 있는 문 얻어오기
+        List<Door> doorsOnPathList = new List<Door>();
+        GetDoorsOnPathList(doorsOnPathList, () =>
+        {
+            // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
+            foreach (var door in doorsOnPathList)
+            {
+                Debug.Log(door);
+                if (door.isOpened) continue; // 문 열려있으면 파괴 X
+                if (door.CompareTag("MachinerySpaceDoor"))
+                    continue;
+                door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
+            }
+            // 파괴된 게 있으면 -> 파괴 소리 재생
+            if (doorsOnPathList.Count > 0)
+                AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
+
+            ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
+        });
+    }
+    #endregion
+
+    #region Extra
+    /// <summary>
+    /// 타겟을 바라보도록 회전
+    /// </summary>
+    /// <param name="targetPos">타겟 위치</param>
+    public void LookAtTarget(Vector3 targetPos)
+    {
+        Vector3 targetDir = targetPos - transform.position;
+        targetDir.y = 0;
+        Debug.DrawRay(transform.position, transform.forward * 5f, Color.yellow);
+        Debug.DrawRay(transform.position, targetDir * 5f, Color.white);
+        // 벡터의 제곱근 거리(sqrMagnitude)가 아주 작은 값보다 클 때만 회전 실행
+        if (targetDir.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(targetDir);
+        }
+        Quaternion lookRotation = Quaternion.LookRotation(targetDir);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+    }
+
+    /// <summary>
+    /// 이동 가능 여부 설정 
+    /// </summary>
+    public void CanMove(bool canMove)
+    {
+        _nav.isStopped = !canMove;
+        if (!canMove)
+            _nav.velocity = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 목적지로 향하는 경로가 유효한지 여부 반환
+    /// </summary>
+    public bool IsPathValid(Vector3 targetPos)
+    {
+        NavMeshPath path = new NavMeshPath();
+        if (_nav.CalculatePath(targetPos, path))
+        {
+            return path.status == NavMeshPathStatus.PathComplete; // 경로가 완전한지 여부 반환
+        }
+        // 경로 계산을 못하면
+        return false; // 목적지가 navMesh 위에 있지 않음
     }
 
     /// <summary>
@@ -779,5 +986,46 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         if (audioSource.isPlaying)
             audioSource.Stop();
+        if (destroyAudioSource.isPlaying)
+            destroyAudioSource.Stop();
     }
+
+    /// <summary>
+    /// 씬에서 시야 레이(좌, 중, 우) 그리기
+    /// </summary>
+    /// <param name="eyePos">눈높이 위치</param>
+    private void DrawVisionRays(Vector3 eyePos)
+    {
+        Debug.DrawRay(eyePos, _fovCenterTransform.forward * _detectDistance, Color.green);
+        // 오른쪽 시야각 끝 레이
+        Vector3 rightDir = Quaternion.Euler(0, _fov / 2f, 0) * _fovCenterTransform.forward;
+        Debug.DrawRay(eyePos, rightDir * _detectDistance, Color.yellow);
+        // 왼쪽 시야각 끝 레이
+        Vector3 leftDir = Quaternion.Euler(0, -_fov / 2f, 0) * _fovCenterTransform.forward;
+        Debug.DrawRay(eyePos, leftDir * _detectDistance, Color.yellow);
+    }
+
+    /// <summary>
+    /// 변경 여부에 따른 몬스터 모델 중심 변경
+    /// <para>- 몬스터의 머리가 애니메이션 때문에 콜라이더 바깥으로 나가기 때문에 필요</para>
+    /// </summary>
+    /// <param name="isChange">변경 여부, false면 기본으로 되돌림</param>
+    /// <param name="zValue">변경할 z 값(기본은 0.5f), false면 기본으로 되돌림</param>
+    public void ChangeMonsterModelCenter(bool isChange, float zValue = 0.5f)
+    {
+        Vector3 centerPos = _collider.center;
+        if (isChange)
+        {
+            centerPos.z = zValue;
+            _monsterModelTransform.DOLocalMoveZ(-zValue, 0.5f);
+        }
+
+        else
+        {
+            centerPos.z = 0f;
+            _monsterModelTransform.DOLocalMoveZ(0f, 0.5f);
+        }
+        _collider.center = centerPos;
+    }
+    #endregion
 }

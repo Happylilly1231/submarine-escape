@@ -2,16 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public enum GameFocusState
 {
     None,           // 포커스 없는 상태
-    GameTimePauseSequence,  // 게임 시간 정지 연출 (Time이 아니라 GameTime 기준 정지)
+    GameTimePauseSequence,  // 게임 시간 정지 연출 (Time이 아니라 GameTime 기준 정지) (사용 목적: 이 연출을 보여주는 중에 플레이어 괴물화 가시 생성 연출, 심해 괴물 엔딩 안 보도록 막음)
     Puzzle,         // 퍼즐 포커스
     InGameMenu,     // 인게임 메뉴 포커스
     ESCMenu,        // ESC 메뉴(실제 정지) 포커스 
+    UIScene,        // UI만 있고, 플레이어 없는 씬 - EndingScene 전용 포커스
 }
 
 public class FocusManager : MonoBehaviour
@@ -41,11 +41,11 @@ public class FocusManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // 게임 시작 시 None 상태의 UI, 커서, 인풋 설정을 실행 - 타이틀 씬에서 커서 안 보이게 설정
-        ResetFocusState(GameFocusState.None);
-    }
+    // private void Start()
+    // {
+    //     // 게임 시작 시 None 상태의 UI, 커서, 인풋 설정을 실행 - 타이틀 씬에서 커서 안 보이게 설정
+    //     ResetFocusState(GameFocusState.None);
+    // }
 
     void OnEnable()
     {
@@ -65,8 +65,11 @@ public class FocusManager : MonoBehaviour
     /// <param name="mode">로드 모드</param>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 씬 전환 시 포커스 상태를 None으로 초기화
-        ResetFocusState(GameFocusState.None);
+        // 씬 전환 시 포커스 상태를 None으로 초기화 (단, EnidngScene만 UIScene으로 초기화)
+        if (scene.name == "EndingScene")
+            ResetFocusState(GameFocusState.UIScene);
+        else
+            ResetFocusState(GameFocusState.None);
         Debug.Log($"{scene.name} 씬 로드됨. 포커스 None으로 초기화.");
     }
 
@@ -180,6 +183,10 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.ESCMenu:
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
+
+            case GameFocusState.UIScene:
+                GameManager.instance.SetCursorVisible(true); // 커서 보이게
+                break;
         }
 
         // 인풋 관리
@@ -230,6 +237,10 @@ public class FocusManager : MonoBehaviour
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
                 PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
                 PlayerManager.Instance.playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요)
+                break;
+
+            case GameFocusState.UIScene:
+                // PlayerInput을 가진 플레이어가 없으므로 인풋 비활성화 필요 X
                 break;
         }
     }
