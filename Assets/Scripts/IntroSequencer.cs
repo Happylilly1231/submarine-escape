@@ -26,18 +26,18 @@ public class IntroSequencer : MonoBehaviour
         // 게임 초기 설정
         SubmarineInGameManager.instance.InitGame();
 
-        SkipIntroSequenceRoutine();
+        // SkipIntroSequenceRoutine();
 
-        // // 세이브 로드 상태라면
-        // if (SaveSystemManager.Instance != null && SaveSystemManager.IsLoadGameMode)
-        // {
-        //     SkipIntroSequenceRoutine();
-        // }
-        // else
-        // {
-        //     // 새 게임인 경우에만 인트로 연출 시작
-        //     StartCoroutine(PlayIntroSequence());
-        // }
+        // 세이브 로드 상태라면
+        if (SaveSystemManager.Instance != null && SaveSystemManager.IsLoadGameMode)
+        {
+            SkipIntroSequenceRoutine();
+        }
+        else
+        {
+            // 새 게임인 경우에만 인트로 연출 시작
+            StartCoroutine(PlayIntroSequence());
+        }
     }
 
     IEnumerator PlayIntroSequence()

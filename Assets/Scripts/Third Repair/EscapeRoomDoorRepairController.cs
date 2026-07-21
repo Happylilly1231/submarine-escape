@@ -46,14 +46,6 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
     #endregion
 
     #region PuzzleController
-    // public override void ActivatePuzzle()
-    // {
-    //     // SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
-    //     // itemEquipController.UnequipItem(); // 아이템 장착 해제
-    //     // SubmarineInGameManager.instance.InteractorUI.SetActive(true); // 상호작용 UI 활성화
-
-    //     base.ActivatePuzzle();
-    // }
 
     public override void StartPuzzle()
     {
