@@ -71,6 +71,10 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     private bool _isPuzzleInputLocked = false;
 
+    public bool IsBrokenWithJumpscare { get; private set; } = false;
+
+    [SerializeField] private Renderer bodyRenderer;
+
     private void Awake()
     {
         telegraphUI.SetActive(false); // 통신 UI 비활성화
@@ -98,6 +102,8 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
+        if (IsBrokenWithJumpscare) return "Broken (Repair not available)";
+
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return "Power Restoration Required";
 
@@ -106,6 +112,8 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public void Interact()
     {
+        if (IsBrokenWithJumpscare) return;
+
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
@@ -768,6 +776,15 @@ public class TelegraphKey : PuzzleController, IInteractable
 
         noiseAudioSource.Stop();
         _currentPlayRecordingCoroutine = null;
+    }
+
+    /// <summary>
+    /// 점프스케어 시 즉시 파괴를 통한 고장
+    /// </summary>
+    public void BrokeWithJumpscare()
+    {
+        IsBrokenWithJumpscare = true;
+        bodyRenderer.material.color = Color.black; // 검정색으로 변경
     }
     #endregion
 }

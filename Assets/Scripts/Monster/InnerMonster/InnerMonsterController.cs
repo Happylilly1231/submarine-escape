@@ -64,6 +64,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public LayerMask destroyEquipmentLayer;
     private Transform _monsterModelTransform;
     private CapsuleCollider _collider;
+    public SeaWaterValve seaWaterValve;
 
 
     // 플레이어 관련
@@ -120,9 +121,11 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool IsRageStartEnd { get => _isRageStartEnd; set => _isRageStartEnd = value; }
     public EDestroyObjType currentDestroyObjType = EDestroyObjType.None;
     public GameObject currentDestroyObj = null; // 현재 파괴해야 할 오브젝트
+    public Door currentDestroyDoor = null; // 현재 파괴해야 할 문
     public Vector3 currentDestroyObjPos;
     public bool IsDestroySequencing { get; set; } = false;
     public DestroySequencer destroySequencer; // 파괴 연출 스크립트
+    public int currentDestroyAttackCount = 0;
 
     // 휘청임
     private bool _isStaggering; // 현재 휘청임 중인지 여부
@@ -138,9 +141,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
 
     // 점프스케어
     [Header("Jumpscare")]
-    public Transform machinarySpaceAlertPlayerPos; // 기계실 경보 발생 시 플레이어를 기계실 문 앞으로 위치 보정시키기 위해 필요
-    public Transform machinarySpaceAlertMonsterPos; // 기계실 경보 발생 시 괴물이 순간이동해서 나타날 위치
-    public Transform machinarySpaceInnerPos; // 기계실 내부 위치
+    public Transform machinerySpaceAlertPlayerPos; // 기계실 경보 발생 시 플레이어를 기계실 문 앞으로 위치 보정시키기 위해 필요
+    public Transform machinerySpaceAlertMonsterPos; // 기계실 경보 발생 시 괴물이 순간이동해서 나타날 위치
+    public Transform machinerySpaceInnerPos; // 기계실 내부 위치
     public Transform jumpscareZoomInPos; // 점프스케어 연출 때 괴물 얼굴 줌인 위치
     public Transform jumpscareZoomOutPos; // 점프스케어 연출 때 줌아웃 위치
     public Transform monsterApproachPos; // 괴물 접근 위치
@@ -149,11 +152,12 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public bool IsJumpscareAttackSuccess { get; set; } = false; // 점프스케어 공격 성공 여부
     public GameObject jumpscareQTEUI; // 점프스케어 QTE UI
     public Image gaugeImage; // QTE 게이지 이미지
-    public Door machinarySpaceDoor; // 기계실 문
+    public Door machinerySpaceDoor; // 기계실 문
     public Volume jumpscareVolume; // 점프스케어 볼륨 
 
     // 이벤트
     public static event Action<InnerMonsterController> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
+    public static event Action<InnerMonsterController> OnAnimationRageDestroyAttackTouched; // 폭주 파괴 공격 애니메이션 닿는 타이밍 이벤트
 
     // 사운드
     [Header("Sound")]
@@ -172,6 +176,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public AudioClip destroyingSound;
     public AudioClip destroyCompleteSound;
     public AudioSource audioSource;
+    public AudioSource destroyAudioSource;
 
     #region Life Cycle
     private void Awake()
@@ -222,7 +227,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         _playerStatus = playerTransform.GetComponent<PlayerStatus>();
         _animator = GetComponent<Animator>();
         _nav = GetComponent<NavMeshAgent>();
-        audioSource = GetComponent<AudioSource>();
 
         // 웨이포인트 배열 가져오기
         _wayPoints = wayPointsParent.GetComponentsInChildren<Transform>().Where(t => t != wayPointsParent).ToArray();
@@ -542,7 +546,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         Debug.Log("폭주 공격!");
         _playerStat.Die(EEndingType.MonsterDeath); // 즉사
     }
+    #endregion
 
+    #region Jumpscare Rage Attack
     /// <summary>
     /// 점프스케어 폭주 공격(성공 - 즉사 / 실패 - 아무것도 X)
     /// </summary>
@@ -609,6 +615,13 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 폭주 공격 실행(회피 불가능)
         if (currentAttackType == EAttackType.RageAttack)
         {
+            // 기계실 경보 시 폭주 공격이면(기계실 안으로 들어가서 플레이어를 감지하고 공격이 된 것) -> 바로 폭주 공격 실행(즉사)
+            if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
+            {
+                RageAttack();
+                return;
+            }
+
             if (CanDetect() && DistToPlayer <= _rageAttackDistance) // 공격 모션이 실제 닿는지 여부(폭주 공격 거리 기준)
                 RageAttack();
             return;
@@ -749,6 +762,16 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         OnRageStartAnimationEnded?.Invoke(this);
     }
 
+    public void OnRageDestroyAttackTouched()
+    {
+        if (_currentFsm == _rageFsm)
+        {
+            currentDestroyAttackCount++;
+            OnAnimationRageDestroyAttackTouched?.Invoke(this);
+            Debug.Log(currentDestroyAttackCount);
+        }
+    }
+
     /// <summary>
     /// 경로 상의 문 리스트 얻기 함수
     /// </summary>
@@ -762,11 +785,25 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// </summary>
     public IEnumerator GetDoorsOnPathListCoroutine(List<Door> doorsOnPathList, Action onComplete)
     {
+        // SetDestination 호출 직후 유니티가 내부적으로 pathPending을 true로 바꿀 수 있게 "1프레임 무조건 대기"
+        yield return null;
+
         // 경로 계산 완료 대기
         while (Nav.pathPending)
         {
             yield return WaitUntilNotBeingExtracted; // 추출 당하는 중일 때는 대기
 
+            yield return null;
+        }
+
+        // 방어 코드: 만약 프레임 딜레이로 인해 연산이 완료되었음에도 경로 끝점 좌표와 목적지 좌표 오차가 크다면 1프레임 더 대기
+        // (NavMeshAgent가 이전 경로를 여전히 들고 있는 순간을 최종 차단)
+        float timeout = 0.5f;
+        while (Nav.path.corners.Length > 0 &&
+               Vector3.Distance(Nav.path.corners[Nav.path.corners.Length - 1], Nav.destination) > 1.0f &&
+               timeout > 0)
+        {
+            timeout -= Time.deltaTime;
             yield return null;
         }
 
@@ -778,6 +815,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         {
             Vector3 start = corners[i] + Vector3.up * 1f; // 현재 코너
             Vector3 end = corners[i + 1] + Vector3.up * 1f; // 다음 코너
+
             Vector3 dir = (end - start).normalized; // 현재 코너에서 다음 코너로의 정규화된 방향
             float dist = Vector3.Distance(start, end); // 현재 코너에서 다음 코너까지의 거리
 
@@ -785,7 +823,6 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
             RaycastHit[] hits = Physics.RaycastAll(start, dir, dist, doorLayer);
             foreach (var hit in hits)
             {
-                // Debug.Log("hit: " + hit.collider.gameObject);
                 Door door = hit.collider.GetComponent<Door>();
                 if (door != null && !doorsOnPathList.Contains(door)) // 현재 리스트에 저장되지 않은 문들만 -> 리스트에 추가
                 {
@@ -813,6 +850,10 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         // 현재 상태가 폭주면 -> 파괴해야할 거 파괴하기
         if (_currentFsm == _rageFsm)
         {
+            // Agent가 멈춰있다면 먼저 풀어서 경로 계산을 할 수 있게 함
+            if (!Nav.enabled) Nav.enabled = true;
+            Nav.isStopped = false;
+
             // 해당 파괴할 목적지로 가는 경로 상의 문 중 열린 문 파괴
             Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 경보 발생 위치를 이전(원래) 목적지로 함
             List<Door> doorsOnPathList = new List<Door>();
@@ -841,21 +882,35 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     /// </summary>
     public void DestroyDoorsAndTransitionToJumpscare()
     {
+        Debug.Log(SubmarineInGameManager.instance.CurrentDestroyPos.position);
+
+        // Agent가 멈춰있다면 먼저 풀어서 경로 계산을 할 수 있게 함
+        if (!Nav.enabled) Nav.enabled = true;
+        Nav.isStopped = false;
+
+        // 모든 문 NavMeshObstacle 비활성화
+        foreach (Door door in SubmarineInGameManager.instance.Doors)
+        {
+            if (door.gameObject.activeSelf)
+                door.gameObject.GetComponent<NavMeshObstacle>().enabled = false;
+        }
+
         Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position);
         // 목적지로 가는 경로 상에 있는 문 얻어오기
-        List<Door> doorsOnPathList2 = new List<Door>();
-        GetDoorsOnPathList(doorsOnPathList2, () =>
+        List<Door> doorsOnPathList = new List<Door>();
+        GetDoorsOnPathList(doorsOnPathList, () =>
         {
             // 현재 폭주 여부와 상관 없이(어차피 곧 폭주하므로) -> 해당 문 전부 파괴 처리 (단, 기계실 문은 제외!)
-            foreach (var door in doorsOnPathList2)
+            foreach (var door in doorsOnPathList)
             {
+                Debug.Log(door);
                 if (door.isOpened) continue; // 문 열려있으면 파괴 X
-                if (door.CompareTag("MachinarySpaceDoor"))
+                if (door.CompareTag("MachinerySpaceDoor"))
                     continue;
                 door.gameObject.SetActive(false); // 파괴 -> 현재는 비활성화    
             }
             // 파괴된 게 있으면 -> 파괴 소리 재생
-            if (doorsOnPathList2.Count > 0)
+            if (doorsOnPathList.Count > 0)
                 AudioManager.Instance.PlayGlobalOneShot(destroyCompleteSound);
 
             ChangeState(new JumpscareState()); // 점프스케어 상태로 전환
@@ -931,6 +986,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     {
         if (audioSource.isPlaying)
             audioSource.Stop();
+        if (destroyAudioSource.isPlaying)
+            destroyAudioSource.Stop();
     }
 
     /// <summary>

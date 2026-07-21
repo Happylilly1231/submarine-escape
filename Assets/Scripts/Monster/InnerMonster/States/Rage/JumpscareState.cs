@@ -15,22 +15,15 @@ namespace InnerMonsterStates
 
             AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound);
             owner.monsterEyeRenderer.material = owner.redEyeMaterial; // 눈 색 빨간색으로 변경
-            // 모든 문 NavMeshObstacle 비활성화
-            foreach (Door door in SubmarineInGameManager.instance.Doors)
-            {
-                if (door.gameObject.activeSelf)
-                    door.gameObject.GetComponent<NavMeshObstacle>().enabled = false;
-            }
-
             owner.Nav.updateRotation = false; // 회전 수동으로 변경
 
             owner.IsShowingJumpscare = true;
 
-            PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinarySpaceAlertPlayerPos.position, owner.machinarySpaceAlertPlayerPos.rotation); // 플레이어를 문 앞으로 위치 보정 (순간이동) (카메라 컨트롤러 켜짐)
+            PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinerySpaceAlertPlayerPos.position, owner.machinerySpaceAlertPlayerPos.rotation); // 플레이어를 문 앞으로 위치 보정 (순간이동) (카메라 컨트롤러 켜짐)
             PlayerManager.Instance.SetCameraControllerEnable(true); // 카메라 컨트롤러 활성화
 
-            owner.Nav.Warp(owner.machinarySpaceAlertMonsterPos.position); // 괴물이 어뢰실 문쪽(기계실 문 앞보다 훨씬 떨어지게)으로 순간이동
-            owner.transform.rotation = owner.machinarySpaceAlertMonsterPos.rotation; // 괴물 회전
+            owner.Nav.Warp(owner.machinerySpaceAlertMonsterPos.position); // 괴물이 어뢰실 문쪽(기계실 문 앞보다 훨씬 떨어지게)으로 순간이동
+            owner.transform.rotation = owner.machinerySpaceAlertMonsterPos.rotation; // 괴물 회전
 
             AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound); // 무서운 소리 재생
 
@@ -56,7 +49,7 @@ namespace InnerMonsterStates
             seq.AppendCallback(() =>
             {
                 // 이때 플레이어 위치를 기계실 안으로 순간이동 (카메라에는 안 나옴)
-                PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinarySpaceInnerPos.position, owner.machinarySpaceInnerPos.rotation);
+                PlayerManager.Instance.playerMove.PlayerTeleport(owner.machinerySpaceInnerPos.position, owner.machinerySpaceInnerPos.rotation);
 
                 owner.StartCoroutine(CameraTrackSequence(owner, owner.jumpscareZoomInPos, 2f)); // 괴물 얼굴 카메라가 따라가도록 하기
             });

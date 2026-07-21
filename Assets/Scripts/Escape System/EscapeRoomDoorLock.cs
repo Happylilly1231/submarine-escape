@@ -12,6 +12,8 @@ public class EscapeRoomDoorLock : InteractableBase
     [SerializeField] private Door escapeRoomDoor;
     [SerializeField] private Transform viewPoint;
 
+    [SerializeField] private AudioClip unlockSound;
+
     /// <summary>
     /// 상호작용 UI에 표시할 텍스트
     /// </summary>
@@ -50,6 +52,11 @@ public class EscapeRoomDoorLock : InteractableBase
         .SetEase(Ease.OutQuad));
 
         // 자물쇠 풀림
+        seq.AppendCallback(() =>
+        {
+            // 잠금 해제 소리 재생
+            AudioManager.Instance.PlayGlobalOneShot(unlockSound);
+        });
         seq.Append(lockPartTransform.DOLocalMoveY(250f, 1.5f).SetRelative()
         .SetEase(Ease.InBounce));
         seq.OnComplete(() =>

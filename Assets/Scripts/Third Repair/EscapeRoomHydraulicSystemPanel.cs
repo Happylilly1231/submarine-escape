@@ -10,7 +10,7 @@ public class EscapeRoomHydraulicSystemPanel : MonoBehaviour, IInteractable
 
     private void Start()
     {
-        Broke();
+        // Broke(); 테스트용
     }
 
     #region IInteractable

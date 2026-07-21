@@ -16,10 +16,12 @@ public class DieselEngine : InteractableBase
     [SerializeField] private ParticleSystem blockedParticle; // 막힌 파티클
     [SerializeField] private ParticleSystem sparkParticle; // 스파크 파티클
 
-    public int currentRepairStep = 0; // 0: 수리 전, 1: 1회 수리, 2: 2회 수리, 3: 완전 수리
+    public int currentRepairStep = 0; // -1: 영구 고장, 0: 수리 전, 1: 1회 수리, 2: 2회 수리, 3: 완전 수리
     public bool IsComplete => currentRepairStep >= 3; // 수리 완료 여부
 
     private EngineController _engineController; // 엔진 컨트롤러 참조
+
+    public bool IsBrokenWithJumpscare { get; private set; } = false;
 
     private void Start()
     {
@@ -29,6 +31,7 @@ public class DieselEngine : InteractableBase
     #region 상호작용 인터페이스 구현
     public override string GetInteractText()
     {
+        if (IsBrokenWithJumpscare) return "Broken (Repair not available)";
         if (IsComplete) return "";
         if (IsRequiredItemSelected()) return "Repair Engine [E]";
         else return "Need Hammer";
@@ -39,7 +42,7 @@ public class DieselEngine : InteractableBase
     /// </summary>
     public override void Interact()
     {
-        if (IsComplete) return;
+        if (IsBrokenWithJumpscare || IsComplete) return;
         if (IsRequiredItemSelected())
         {
             _engineController.SetTargetEngine(this); // 현재 엔진 등록
@@ -119,6 +122,25 @@ public class DieselEngine : InteractableBase
         blockedParticle.gameObject.SetActive(false);
 
         currentRepairStep = 3;
+    }
+
+    /// <summary>
+    /// 점프스케어 시 즉시 파괴를 통한 고장
+    /// </summary>
+    public void BrokeWithJumpscare()
+    {
+        originalParticle.gameObject.SetActive(true);
+        sparkParticle.gameObject.SetActive(true);
+        blockedParticle.gameObject.SetActive(false);
+
+        currentRepairStep = -1;
+        _engineController.currentRepairCount = -1;
+        IsBrokenWithJumpscare = true;
+
+        // 깜빡거림 추가할 수도
+
+        // 파워스위치로 전력 끄기
+        FindAnyObjectByType<PowerSwitch>().TogglePower(false);
     }
 }
 

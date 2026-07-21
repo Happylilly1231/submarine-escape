@@ -109,7 +109,7 @@ public class SubmarineInGameManager : MonoBehaviour
     public GameObject CurrentDestroyEquipmentObj { get; private set; } = null; // 현재 경보 발생 구역에서 괴물이 파괴할 장치 오브젝트
     public Transform CurrentDestroyPos { get; private set; } = null;
     public Transform CurrentSequenceCameraPos { get; private set; } = null;
-    public MachinarySpaceDoorRepairController machinarySpaceDoorRepairController;
+    public MachinerySpaceDoorRepairController machinerySpaceDoorRepairController;
 
 
     // 싱글톤 변수
@@ -285,7 +285,8 @@ public class SubmarineInGameManager : MonoBehaviour
         {
             CurrentDestroyEquipmentObj = alertAreaInfo.destroyEquipments[destroyEquimentIndex];
             CurrentDestroyPos = alertAreaInfo.destroyPosTransforms[destroyEquimentIndex];
-            CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[destroyEquimentIndex];
+            if (alertAreaInfo.sequenceCameraPosList.Count > 0)
+                CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[destroyEquimentIndex];
         }
     }
 

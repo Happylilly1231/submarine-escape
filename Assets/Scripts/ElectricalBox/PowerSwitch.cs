@@ -44,6 +44,7 @@ public class PowerSwitch : InteractableBase
     {
         if (_isPowerOn) return "Turn Off Power [E]";
         else if (IsAllConditionsMet()) return "Restore Power [E]";
+        else if (_engineController != null && _engineController.currentRepairCount == -1) return "엔진 고장으로 인한 전력 고장 (영구)"; // 점프스케어로 인한 고장 시 영구적으로 전력 고장
         else if (_engineController != null && _engineController.currentRepairCount >= 3) return "배전반 전선 연결 필요";
         else if (_powerController != null && _powerController.IsComplete) return "엔진 수리 필요";
         else return "Power Restoration Required";

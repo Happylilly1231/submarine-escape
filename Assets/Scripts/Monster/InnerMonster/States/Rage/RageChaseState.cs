@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace InnerMonsterStates
@@ -27,6 +28,7 @@ namespace InnerMonsterStates
             owner.CanMove(false); // 이동 불가 (경로 상 문을 얻었을 때 true로 바꿔줄 것)
             owner.Nav.speed = _rageSpeed; // 폭주 속도로 변경
             owner.Nav.SetDestination(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 경보 발생 위치를 향해 이동
+            Debug.Log("목적지: " + SubmarineInGameManager.instance.CurrentAlertArea + " / " + SubmarineInGameManager.instance.CurrentDestroyPos.position + " / " + owner.Nav.destination);
             owner.ChangeMonsterModelCenter(true, 0.3f); // 몬스터 모델 중심 변경
 
             // 경로 상의 문 리스트 얻기
@@ -46,7 +48,7 @@ namespace InnerMonsterStates
         public void Update(InnerMonsterController owner)
         {
             // 경로 상 문을 아직 얻지 못했을 때 -> 얻을 때까지 움직이지 않고 기다리기
-            if (!_isCompleteGetDoorsOnPathList)
+            if (!_isCompleteGetDoorsOnPathList || owner.IsDestroySequencing)
                 return;
 
             // Debug.Log(Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) + " / " + SubmarineInGameManager.instance.CurrentDestroyPos);
@@ -57,78 +59,42 @@ namespace InnerMonsterStates
                 // 탈출실 경보 때문에 탈출실에 들어간 경우
                 if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.EscapeRoom)
                 {
-                    FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
-                    // 연출!!!
-                    GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
+                    owner.IsDestroySequencing = true;
+
+                    // 카메라를 현재 연출 카메라 위치로 즉시 이동 및 회전
+                    Camera.main.transform.SetPositionAndRotation(SubmarineInGameManager.instance.CurrentSequenceCameraPos.position, SubmarineInGameManager.instance.CurrentSequenceCameraPos.rotation);
+
+                    Sequence seq = DOTween.Sequence();
+                    seq.AppendCallback(() =>
+                    {
+                        // 포효
+                        owner.Animator.Play("Rage StateMachine.RageStart");
+                        AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound); // 포효 소리 재생
+                    });
+                    seq.AppendInterval(2f);
+                    seq.OnComplete(() =>
+                    {
+                        AudioManager.Instance.StopSFX();
+                        GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
+                    });
                     return;
                 }
                 // 기계실 경보 때문에 기계실에 들어간 경우
                 else if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
                 {
-                    FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
-                    // 연출!!!
-                    GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버
+                    owner.ChangeState(new RageAttackState()); // 폭주 공격 상태로 전환
                     return;
                 }
 
                 // 그 외 -> 현재 파괴해야 할 오브젝트로 설정
                 owner.currentDestroyObj = SubmarineInGameManager.instance.CurrentDestroyEquipmentObj;
+                owner.currentDestroyDoor = null;
                 owner.currentDestroyObjPos = owner.currentDestroyObj.transform.position;
                 owner.Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 파괴할 위치로 순간 이동
                 owner.currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴해야 할 오브젝트 타입 -> 장비로 설정
                 owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환
                 return;
             }
-
-            // // 탈출실이 목적지일 때 - 애니메이션 & 회전 설정
-            // // 도착 -> 이동 정지 & 가만히 있는 애니메이션 & 플레이어 바라보도록 수동 회전
-            // // 멀음 -> 이동 & 추적 애니메이션 & nav 자동 회전
-            // if (_isChasingEscapeRoom) // 탈출실이 목적지일 때
-            // {
-            //     if (_reachedEscapeRoom) // 도착했었는데
-            //     {
-            //         if (owner.Nav.remainingDistance >= 0.5f) // 목적지에서 멀어졌을 때 -> 다시 추적 애니메이션으로 변경
-            //         {
-            //             owner.CanMove(true); // 이동
-            //             _reachedEscapeRoom = false; // 탈출실에 도착하지 않음으로 설정
-            //             owner.Animator.SetBool("isRageIdle", false); // 애니메이션을 RageChase로 변경
-            //             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.rageChaseSound, 5f);
-            //             owner.Nav.updateRotation = true; // 회전 자동으로 변경
-            //         }
-
-            //         // 현재 플레이어 위치를 바라보도록 회전
-            //         owner.LookAtTarget(owner.PlayerTransform.position);
-            //     }
-            //     else // 도착 못했었는데
-            //     {
-            //         // 도착했을 때 -> 가만히 있는 애니메이션으로 변경
-            //         if (owner.Nav.remainingDistance < 0.5f)
-            //         {
-            //             owner.CanMove(false); // 이동 정지
-            //             _reachedEscapeRoom = true; // 탈출실에 도착했음으로 설정
-            //             owner.Animator.SetBool("isRageIdle", true); // 애니메이션을 가만히 있는 걸로 변경
-            //             AudioManager.Instance.PlaySoundSafe(owner.audioSource, owner.idleGrowlSound);
-            //             owner.Nav.updateRotation = false; // 회전 수동으로 변경
-            //         }
-            //     }
-            // }
-            // else // 장비 파괴해야 되는 경우
-            // {
-            //     // 현재 목표 위치(파괴해야 할 장비 파괴 위치)에 도착하면 -> 폭주 파괴 상태로 전환
-            //     if (Vector3.Distance(owner.transform.position, SubmarineInGameManager.instance.CurrentDestroyPos.position) < 0.1f)
-            //     {
-            //         // 현재 파괴해야 할 오브젝트로 설정
-            //         owner.currentDestroyObj = SubmarineInGameManager.instance.CurrentDestroyEquipmentObj;
-            //         owner.currentDestroyObjPos = owner.currentDestroyObj.transform.position;
-            //         owner.Nav.Warp(SubmarineInGameManager.instance.CurrentDestroyPos.position); // 현재 목표 위치로 순간 이동
-            //         owner.currentDestroyObjType = EDestroyObjType.Equipment; // 현재 파괴해야 할 오브젝트 타입 -> 현재 파괴해야 할 장비로 설정
-            //         owner.ChangeState(new RageDestroyState()); // 폭주 파괴 상태로 전환
-            //         return;
-            //     }
-            // }
-
-            // Debug.Log("aaaaa: " + owner.CanAttack());
-            // Debug.Log("bbbb: " + (owner.DistToPlayer < owner.RageAttackDistance));
 
             // 폭주 공격 상태로 전환
             if (owner.CanAttack() && owner.DistToPlayer < owner.RageAttackDistance)
@@ -148,6 +114,7 @@ namespace InnerMonsterStates
                 {
                     // 현재 파괴해야 할 오브젝트로 설정
                     owner.currentDestroyObj = hit.collider.gameObject;
+                    owner.currentDestroyDoor = door;
                     owner.currentDestroyObjPos = door.centerPos;
 
                     // 가까운 정확한 파괴 위치로 순간 이동
@@ -170,7 +137,7 @@ namespace InnerMonsterStates
                     {
                         owner.currentDestroyObjType = EDestroyObjType.EscapeRoomDoor; // 현재 파괴해야 할 오브젝트 타입 -> 탈출실 문으로 설정
                     }
-                    else if (hit.collider.CompareTag("MachinarySpaceDoor")) // 기계실 문
+                    else if (hit.collider.CompareTag("MachinerySpaceDoor")) // 기계실 문
                     {
                         owner.currentDestroyObjType = EDestroyObjType.MachinerySpaceDoor; // 현재 파괴해야 할 오브젝트 타입 -> 기계실 문으로 설정
                     }

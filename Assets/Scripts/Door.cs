@@ -48,6 +48,7 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isMoving) return "";
+        if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return ""; // 기계실 경보 발생돼서 기계실에 갇힌 경우에는 문 열 수 없음
         if (isRepairNeed) return "Broken (Needs Repair)";
         if (isLocked) return "Locked";
         if (isAdditionalLocked) return "Still Locked";
@@ -59,7 +60,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed) return;
+        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed || SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return;
 
         if (!isOpened)
         {
@@ -105,10 +106,10 @@ public class Door : MonoBehaviour, IInteractable
 
         }
         // 기계실 문을 연 경우
-        else if (gameObject.CompareTag("MachinarySpaceDoor"))
+        else if (gameObject.CompareTag("MachinerySpaceDoor"))
         {
             // 비상 폐쇄 중인 상태 & 외부에서 열었을 때만 -> 경보 발생
-            if (SubmarineInGameManager.instance.machinarySpaceDoorRepairController.IsEmergencyLockdown) // 비상 폐쇄 중인지 검사
+            if (SubmarineInGameManager.instance.machinerySpaceDoorRepairController.IsEmergencyLockdown) // 비상 폐쇄 중인지 검사
             {
                 Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
 

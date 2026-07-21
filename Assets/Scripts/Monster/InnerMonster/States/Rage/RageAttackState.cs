@@ -40,6 +40,30 @@ namespace InnerMonsterStates
             {
                 owner.currentAttackType = EAttackType.RageAttack; // 현재 공격 타입 -> 폭주 공격
                 owner.Animator.SetTrigger("RageAttack"); // 폭주 공격 애니메이션 재생
+                if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)
+                {
+                    // 괴물 바라보게 회전
+                    PlayerManager.Instance.SetCameraControllerEnable(true);
+                    PlayerManager.Instance.playerMove.transform.LookAt(owner.transform.position + Vector3.up * 1.7f);
+                    // Vector3 playerPos = PlayerManager.Instance.playerMove.transform.position;
+                    // Vector3 targetPos = owner.transform.position;
+                    // Vector3 dir = (targetPos - playerPos).normalized;
+                    // Quaternion targetRotation = Quaternion.LookRotation(dir);
+                    // PlayerManager.Instance.playerMove.PlayerTeleport(playerPos, targetRotation);
+
+                    // // 1. 플레이어가 해골 쪽을 즉시 바라보도록 좌우 회전 (Y축 기준)
+                    // Vector3 playerDir = (owner.transform.position - PlayerManager.Instance.playerMove.transform.position).normalized;
+                    // playerDir.y = 0; // 평평하게 Y축 회전만 적용
+                    // if (playerDir != Vector3.zero)
+                    //     PlayerManager.Instance.playerMove.transform.rotation = Quaternion.LookRotation(playerDir);
+
+                    // // 3. 카메라가 해골 눈을 즉시 마주치도록 상하/좌우 회전 (즉시 대입)
+                    // Vector3 lookEyeDir = (monster.position - Camera.main.transform.position).normalized;
+                    // Quaternion targetRotation = Quaternion.LookRotation(lookEyeDir);
+
+                    // // X, Y, Z 회전을 즉시 카메라에 대입
+                    // Camera.main.transform.rotation = targetRotation;
+                }
             }
         }
 
@@ -138,7 +162,7 @@ namespace InnerMonsterStates
             Debug.Log("QTE 성공! 문이 쾅 닫힙니다.");
 
             PlayerManager.Instance.SetPlayerGeoActive(true); // 플레이어 활성화
-            monster.machinarySpaceDoor.CloseDoor(); // 기계실 문 자동으로 닫기
+            monster.machinerySpaceDoor.CloseDoor(); // 기계실 문 자동으로 닫기
             // 쾅 소리 재생?
             FocusManager.Instance.PopFocusState(); // 점프스케어 포커스 해제
         }
@@ -159,7 +183,7 @@ namespace InnerMonsterStates
         //     /// <param name="monster"></param>
         //     private void ChangeStateToRageStart(Door door)
         //     {
-        //         if (door == monster.machinarySpaceDoor)
+        //         if (door == monster.machinerySpaceDoor)
         //             monster.ChangeState(new RageStartState()); // 폭주 시작 상태로 전환
         //     }
     }
