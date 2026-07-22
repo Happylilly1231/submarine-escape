@@ -15,11 +15,14 @@ public class MenuUIController : MonoBehaviour
     [SerializeField] private Slider masterVolumeSlider;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
+
     [SerializeField] private Slider mouseSensitivitySlider;
+    [SerializeField] private TMP_Dropdown languageDropdown; // 언어 드롭다운
     [SerializeField] private Button setDifficultyEasyButton;
     private TextMeshProUGUI setDifficultyEasyButtonText;
     [SerializeField] private Button setDifficultyHardButton;
     private TextMeshProUGUI setDifficultyHardButtonText;
+
     [SerializeField] private Button returnToTitleButton;
     [SerializeField] private Button quitButton;
     // [SerializeField] private Button exitButton;
@@ -59,7 +62,6 @@ public class MenuUIController : MonoBehaviour
         {
             tabPanels[i] = tabPanelRoot.transform.GetChild(i).gameObject;
         }
-        Debug.Log("??? : " + tabPanels.Length);
 
         // 디버깅 UI 비활성화
         SetActiveDebuggingUI(false);
@@ -67,6 +69,15 @@ public class MenuUIController : MonoBehaviour
 
     private void Start()
     {
+        // 현재 설정되어있는 언어 인덱스로 드롭다운 UI 값 초기화
+        LanguageManager.Instance.GetCurrentLanguageIndex((index) =>
+        {
+            languageDropdown.SetValueWithoutNotify(index);
+        });
+        // 언어 드롭다운 값 변경 시 실행될 이벤트 연결
+        languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
+
+        // 난이도 버튼 텍스트 가져오기
         setDifficultyEasyButtonText = setDifficultyEasyButton.GetComponentInChildren<TextMeshProUGUI>();
         setDifficultyHardButtonText = setDifficultyHardButton.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -124,6 +135,14 @@ public class MenuUIController : MonoBehaviour
                 PlayerManager.Instance.playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
             }
         }
+    }
+
+    /// <summary>
+    /// 언어 변경 함수(0: 영어 / 1: 한국어)
+    /// </summary>
+    public void OnLanguageChanged(int index)
+    {
+        LanguageManager.Instance.ChangeLanguage(index);
     }
 
     private void OnClickSetDifficultyButton(TextMeshProUGUI buttonText, Difficulty difficulty)

@@ -445,7 +445,7 @@ public class PlayerInteractor : MonoBehaviour
         _canPickUp = true;
         _canInteractable = false;
 
-        interactorText.text = $"{_currentItem.Item.DisplayName} [F]";
+        interactorText.text = $"{_currentItem.Item.LocalizedDisplayName} [F]";
     }
 
     /// <summary>
