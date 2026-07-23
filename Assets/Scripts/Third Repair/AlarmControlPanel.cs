@@ -70,9 +70,9 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     public string GetInteractText()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
-        return "Access Alarm Control Panel [E]";
+        return LocalizationHelper.GetLocalizedInteractText("Interact/AccessAlarmControlPanel", "E");
     }
 
     public void Interact()

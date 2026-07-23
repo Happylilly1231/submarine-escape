@@ -140,13 +140,13 @@ public class PetriDish : LabEquipment, IInteractable
         {
             if (isMonsterBloodMixed) return "";
 
-            if (!_containsResult) return "No Compound Detected";
-            if (isMonsterBloodDropped) return "Mixing Required";
+            if (!_containsResult) return LocalizationHelper.GetLocalizedInteractText("Interact/NoCompoundDetected");
+            if (isMonsterBloodDropped) return LocalizationHelper.GetLocalizedInteractText("Interact/MixingRequired");
 
             if (_itemEquipController.HeldItemObject.GetComponent<BioDataExtractor>().CurrentBloodSegments > 0)
-                return "Drop Monster Blood [E]";
+                return LocalizationHelper.GetLocalizedInteractText("Interact/DropMonsterBlood", "E");
             else
-                return "Extractor Is Empty"; // 추출기가 비어있음 메시지로 알려줌
+                return LocalizationHelper.GetLocalizedInteractText("Interact/ExtractorIsEmpty"); // 추출기가 비어있음 메시지로 알려줌
         }
         else
             return "";

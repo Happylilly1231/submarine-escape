@@ -25,7 +25,10 @@ public class AmmoBox : InteractableBase
     /// <returns></returns>
     public override string GetInteractText()
     {
-        return _isOpen ? "close [E]" : "open [E]";
+        if (_isOpen)
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Close", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
     }
 
     /// <summary>

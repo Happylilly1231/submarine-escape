@@ -30,8 +30,8 @@ public class DatabaseMonitor : InteractableBase
     public override string GetInteractText()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
-        return "Use Database Monitor [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
+        return LocalizationHelper.GetLocalizedInteractText("Interact/UseDatabaseMonitor", "E");
     }
 
     public override void Interact()

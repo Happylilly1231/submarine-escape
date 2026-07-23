@@ -22,9 +22,9 @@ public class EscapeRoomHydraulicSystemPanel : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isBroken)
-            return "Escape Door Hydraulic Panel is broken.";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/EscpaeDoorHydraulicPanelBroken");
         else
-            return "Escape Door Hydraulic Panel";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/EscapeDoorHydraulicPanel");
     }
 
     public void Interact()

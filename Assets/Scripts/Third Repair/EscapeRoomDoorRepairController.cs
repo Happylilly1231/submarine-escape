@@ -29,9 +29,9 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
     public string GetInteractText()
     {
         if (!escapeRoomDoor.isRepairNeed) // 수리 필요 x일 때 -> 열기 불가 메시지
-            return "Unable to Open";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/UnableToOpen");
         if (!_isComplete)
-            return "Open [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
         else
             return "";
     }
