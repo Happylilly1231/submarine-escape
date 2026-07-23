@@ -19,7 +19,7 @@ public class CrewRoom1KeyPadPanel : InteractableBase
         if (IsCompleted) return "";
         else if (IsRequiredItemSelected())
             return LocalizationHelper.GetLocalizedInteractText("Interact/Inspect", "E");
-        else return LocalizationHelper.GetLocalizedInteractTextWithParameter("Interact/ItemRequired", screwdriverItem.LocalizedDisplayName);
+        else return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", screwdriverItem.LocalizedDisplayName);
     }
 
     public override void Interact()

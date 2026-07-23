@@ -15,21 +15,29 @@ MonoBehaviour:
   m_TableCollectionName: AT_UI
   m_TableCollectionNameGuidString: 074bf6b2ad4162e4a951b464942e9373
   m_Entries:
-  - m_Id: 72048107520
+  - m_Id: 78705953529856
     m_Key: Item/Sprite/KeyPadManual
     m_Metadata:
       m_Items: []
-  - m_Id: 258677858304
+  - m_Id: 78860182282240
     m_Key: Item/Sprite/RadarSystemManual
     m_Metadata:
       m_Items: []
-  - m_Id: 420812873728
-    m_Key: Item/Sprite/BackroomEsacpeHintMemo
+  - m_Id: 78957045538816
+    m_Key: Item/Sprite/BackroomHintMemo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 79148624568320
+    m_Key: Item/Sprite/MorseCodeChart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 79314798698496
+    m_Key: Puzzle/SecondRepair/MaintenanceLog
     m_Metadata:
       m_Items: []
   m_Metadata:
     m_Items:
-    - rid: 2335453390410612747
+    - rid: 2335453397711061004
   m_KeyGenerator:
     rid: 2335453390410612744
   references:
@@ -40,21 +48,29 @@ MonoBehaviour:
         asm: Unity.Localization}
       data:
         m_CustomEpoch: 1784822332769
-    - rid: 2335453390410612747
+    - rid: 2335453397711061004
       type: {class: AssetTypeMetadata, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
       data:
         m_Entries:
-        - m_KeyId: 72048107520
+        - m_KeyId: 78705953529856
           m_TableCodes:
           - en
           - ko
-        - m_KeyId: 258677858304
+        - m_KeyId: 78860182282240
           m_TableCodes:
           - en
           - ko
-        - m_KeyId: 420812873728
+        - m_KeyId: 78957045538816
           m_TableCodes:
           - en
           - ko
-        m_TypeString: UnityEngine.Texture2D, UnityEngine.CoreModule, Version=0.0.0.0,
+        - m_KeyId: 79148624568320
+          m_TableCodes:
+          - en
+          - ko
+        - m_KeyId: 79314798698496
+          m_TableCodes:
+          - en
+          - ko
+        m_TypeString: UnityEngine.Sprite, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null

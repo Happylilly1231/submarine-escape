@@ -37,7 +37,7 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
         if (IsDriverSelected())
             return LocalizationHelper.GetLocalizedInteractText("Interact/TightenScrew", "E");
         else
-            return LocalizationHelper.GetLocalizedInteractTextWithParameter("Interact/ItemRequired", driverItem.LocalizedDisplayName);
+            return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", driverItem.LocalizedDisplayName);
     }
 
     public void Interact()

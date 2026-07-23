@@ -4027,7 +4027,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8750973162779085835}
   m_Layer: 0
-  m_Name: Monster Destroy Pos
+  m_Name: Monster Destroy Pos_TelegraphKey
   m_TagString: Untagged
   m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -7170,7 +7170,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4059829555829683476}
   m_Layer: 0
-  m_Name: Monster Destroy Pos
+  m_Name: Monster Destroy Pos_RadarPanel
   m_TagString: Untagged
   m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -19001,7 +19001,11 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5489038423295725458}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5286625532401752641, guid: 4005cd15148b5484e8bdbdbfcd639e37,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8542953370381656607}
   m_SourcePrefab: {fileID: 100100000, guid: 4005cd15148b5484e8bdbdbfcd639e37, type: 3}
 --- !u!4 &38898039572949247 stripped
 Transform:
@@ -19021,6 +19025,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2947371714916504366}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2307991888423496830 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 639661305943752528, guid: 4005cd15148b5484e8bdbdbfcd639e37,
+    type: 3}
+  m_PrefabInstance: {fileID: 2947371714916504366}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7042212667245775215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &3503207944760719832 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1763950790170913526, guid: 4005cd15148b5484e8bdbdbfcd639e37,
@@ -19033,6 +19049,47 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2947371714916504366}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7042212667245775215 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5286625532401752641, guid: 4005cd15148b5484e8bdbdbfcd639e37,
+    type: 3}
+  m_PrefabInstance: {fileID: 2947371714916504366}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8542953370381656607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7042212667245775215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f55fcc3768689a4f9cf863b8c11c618, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_LocalizedAssetReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:074bf6b2ad4162e4a951b464942e9373
+    m_TableEntryReference:
+      m_KeyId: 79148624568320
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+  m_UpdateAsset:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2307991888423496830}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Image, UnityEngine.UI
+        m_MethodName: set_sprite
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
 --- !u!4 &7073583003584883716 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5390035482971946794, guid: 4005cd15148b5484e8bdbdbfcd639e37,
@@ -19277,6 +19334,11 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 3.157
       objectReference: {fileID: 0}
+    - target: {fileID: 1895428589697054002, guid: f27744f13f35a2a49b2da1049fbf4461,
+        type: 3}
+      propertyPath: m_Name
+      value: Monster Destroy Pos_EscapeDoorHydraulic
+      objectReference: {fileID: 0}
     - target: {fileID: 2051465860802900778, guid: f27744f13f35a2a49b2da1049fbf4461,
         type: 3}
       propertyPath: m_Name
@@ -19401,6 +19463,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9113222318390174466, guid: f27744f13f35a2a49b2da1049fbf4461,
+        type: 3}
+      propertyPath: m_Name
+      value: Monster Destroy Pos_TorpedoAutoLoadSwitch
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:

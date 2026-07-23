@@ -34,7 +34,7 @@ public class DieselEngine : InteractableBase
         if (IsBrokenWithJumpscare) return LocalizationHelper.GetLocalizedInteractText("Interact/PermanentFailure");
         if (IsComplete) return "";
         if (IsRequiredItemSelected()) return LocalizationHelper.GetLocalizedInteractText("Interact/RepairEngine", "E");
-        else return LocalizationHelper.GetLocalizedInteractTextWithParameter("Interact/ItemRequired", _engineController.hammerItem.LocalizedDisplayName);
+        else return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", _engineController.hammerItem.LocalizedDisplayName);
     }
 
     /// <summary>

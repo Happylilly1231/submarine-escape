@@ -7,11 +7,14 @@ using UnityEngine.Localization.Settings;
 public class UIItem : MonoBehaviour
 {
     [Header("Localized Sprite Settings")]
-    [SerializeField] private string assetTableKey; // 예: "Item/Sprite/KeyPadManual"
+    private string _assetTableKey; // 예: "Item/Sprite/KeyPadManual"
     private SpriteRenderer _spriteRenderer; // 이미지 갈아끼울 렌더러
 
     private void Awake()
     {
+        string itemName = GetComponent<ItemPickUp>().Item.ItemName;
+        string cleanItemName = itemName.Replace(" ", "");
+        _assetTableKey = $"Item/Sprite/{cleanItemName}";
         _spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
@@ -38,10 +41,10 @@ public class UIItem : MonoBehaviour
     /// </summary>
     private void UpdateLocalizedSprite()
     {
-        if (_spriteRenderer == null || string.IsNullOrEmpty(assetTableKey)) return;
+        if (_spriteRenderer == null || string.IsNullOrEmpty(_assetTableKey)) return;
 
         // Asset Table 'AT_UI'에서 언어별 Sprite 로드
-        Sprite localizedSprite = LocalizationSettings.AssetDatabase.GetLocalizedAsset<Sprite>("AT_UI", assetTableKey);
+        Sprite localizedSprite = LocalizationSettings.AssetDatabase.GetLocalizedAsset<Sprite>("AT_UI", _assetTableKey);
 
         if (localizedSprite != null)
         {
@@ -73,6 +76,8 @@ public class UIItem : MonoBehaviour
                 Debug.Log("키패드 매뉴얼 - 확대");
                 break;
             case "Radar System Manual":
+            case "Morse Code Chart":
+            case "Backroom Escape Hint Memo":
                 Debug.Log(isViewing);
                 if (!isViewing) // 확대
                 {
@@ -84,7 +89,7 @@ public class UIItem : MonoBehaviour
                     transform.localPosition = new Vector3(0, 0, 0.5f);
                     transform.localRotation = Quaternion.Euler(19, 0, 0);
                 }
-                Debug.Log("레이더 시스템 매뉴얼 - 확대");
+                Debug.Log("모스부호표 - 확대");
                 break;
         }
     }
