@@ -36,7 +36,7 @@ public class MachinerySpaceDoorRepairController : PuzzleController, IInteractabl
     public string GetInteractText()
     {
         if (IsEmergencyLockdown)
-            return "Open [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
         else
             return "";
     }

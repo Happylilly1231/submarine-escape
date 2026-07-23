@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be51871efa6c3e4eae1703925c8f5ac, type: 3}
+  m_Name: ST_UI
+  m_EditorClassIdentifier: 
+  m_SharedTableData: {fileID: 11400000, guid: 76c0538c5f930b94291cefe86949d28c, type: 2}
+  m_Tables:
+  - {fileID: 11400000, guid: 997bc8708209ba142b3c749c413c4558, type: 2}
+  - {fileID: 11400000, guid: 18e707686e1264641b4d6baf527ec3ce, type: 2}
+  m_Extensions:
+  - rid: 2335453390410612752
+  m_Group: String Table
+  references:
+    version: 2
+    RefIds:
+    - rid: 2335453390410612752
+      type: {class: GoogleSheetsExtension, ns: UnityEditor.Localization.Plugins.Google,
+        asm: Unity.Localization.Editor}
+      data:
+        m_Collection: {fileID: 11400000}
+        m_SheetsServiceProvider: {fileID: 11400000, guid: c2de5ba9b1065e2489059f133acad135,
+          type: 2}
+        m_SpreadsheetId: 1GEjYVdZSfejAUYHZGqXcBRGx0P3IbpiiKQbjR2-A-KE
+        m_SheetId: 1135064813
+        m_Columns:
+        - rid: 2335453390410612754
+        - rid: 2335453390410612755
+        - rid: 2335453390410612756
+        m_RemoveMissingPulledKeys: 1
+    - rid: 2335453390410612754
+      type: {class: KeyColumn, ns: UnityEditor.Localization.Plugins.Google.Columns,
+        asm: Unity.Localization.Editor}
+      data:
+        m_Column: A
+    - rid: 2335453390410612755
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns,
+        asm: Unity.Localization.Editor}
+      data:
+        m_Column: B
+        m_LocaleIdentifier:
+          m_Code: en
+        m_IncludeComments: 0
+    - rid: 2335453390410612756
+      type: {class: LocaleColumn, ns: UnityEditor.Localization.Plugins.Google.Columns,
+        asm: Unity.Localization.Editor}
+      data:
+        m_Column: C
+        m_LocaleIdentifier:
+          m_Code: ko
+        m_IncludeComments: 0

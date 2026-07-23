@@ -39,9 +39,9 @@ public class InnerMonsterSpinalCord : MonoBehaviour, IInteractable
         {
             BioDataExtractor bioDataExtractor = _itemEquipController.HeldItemObject.GetComponent<BioDataExtractor>();
             if (!bioDataExtractor.CheckIsFull()) // 가득 차있지 않은 경우 -> 추출 가능
-                return "Extract Bio Data [E]";
+                return LocalizationHelper.GetLocalizedInteractText("Interact/ExtractBioData", "E");
             else // 가득 차 있는 경우 -> 추출 불가능
-                return "Already Full";
+                return LocalizationHelper.GetLocalizedInteractText("Interact/AlreadyFull");
         }
         else
             return "";

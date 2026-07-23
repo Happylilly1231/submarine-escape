@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using System.Text;
 using System;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
 /// <summary> 인벤토리 관리자
 /// <para> - 플레이어 인벤토리 전체를 관리 </para> 
@@ -34,11 +36,56 @@ public class InventoryManager : MonoBehaviour
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
 
+    // 각 UI용 LocalizedString 선언 (테이블 미리 지정)
+    private LocalizedString actionLocString = new LocalizedString { TableReference = "ST_UI" };
+    // private LocalizedString interactLocString = new LocalizedString { TableReference = "ST_UI" };
+    // private LocalizedString itemNameLocString = new LocalizedString { TableReference = "ST_UI" };
+    private string currentKeyBinding = "";
+
     void Awake()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerInteractor = FindObjectOfType<PlayerInteractor>();
     }
+
+    private void OnEnable()
+    {
+        // 언어가 바뀌었을 때 자동으로 UpdateActionText()를 다시 렌더링하도록 구독
+        LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(Locale newLocale)
+    {
+        UpdateActionText(); // 언어가 바뀌는 순간 현재 상황에 맞는 텍스트 재조합
+    }
+
+    // /// <summary>
+    // /// 액션 텍스트 변경
+    // /// </summary>
+    // /// <param name="actionKey">Localization 키</param>
+    // /// <param name="keyBinding">실제 조작 키</param>
+    // public void ChangeActionText(string actionKey, string keyBinding = "")
+    // {
+    //     currentKeyBinding = keyBinding;
+
+    //     // Key 지정 시 비동기 번역 시작 -> 완료되면 OnActionTextTranslated 실행
+    //     actionLocString.TableEntryReference = actionKey;
+    // }
+
+    // private void OnActionTextTranslated(string translatedText)
+    // {
+    //     if (actionText == null) return;
+
+    //     if (string.IsNullOrEmpty(currentKeyBinding))
+    //         actionText.text = translatedText;
+    //     else
+    //         actionText.text = $"{translatedText} [{currentKeyBinding}]";
+    // }
 
     /// <summary>
     /// 인벤토리 비활성화
@@ -131,7 +178,8 @@ public class InventoryManager : MonoBehaviour
         if (SampleSlotUIManager.Instance.IsActive)
         {
             // 슬롯 선택
-            if (SampleSlotUIManager.Instance.MaxSlotCnt > 1) sb.AppendLine("슬롯 선택 [Mouse Wheel]");
+            if (SampleSlotUIManager.Instance.MaxSlotCnt > 1)
+                AppendAction(sb, "Action/Lab/SelectSlot", "Wheel");
 
             // 슬롯이 비었다면
             if (SampleSlotUIManager.Instance.IsSelectedSlotEmpty())
@@ -142,19 +190,19 @@ public class InventoryManager : MonoBehaviour
                     _playerInteractor.HeldEquipment is TestTube tube && tube.IsResultTube &&
                     _playerInteractor.CurrentEquipment is PetriDish)
                 {
-                    sb.AppendLine("결과물 붓기 [E]");
+                    AppendAction(sb, "Action/Lab/Pour", "E");
                 }
                 else
                 {
                     // 인벤토리 슬롯에 있는 샘플 넣기
                     if (heldItem != null && heldItem.ItemType == EItemType.Sample)
                     {
-                        sb.AppendLine("샘플 넣기 [E]");
+                        AppendAction(sb, "Action/Lab/InsertSample", "E");
                     }
                     // 실험기구를 손에 들고 있다면 넣기
                     if (_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.CanInsert(_playerInteractor.HeldEquipment))
                     {
-                        sb.AppendLine("장비 사용 [E]");
+                        AppendAction(sb, "Action/Lab/UseLabEquipment", "E");
                     }
                 }
             }
@@ -163,42 +211,42 @@ public class InventoryManager : MonoBehaviour
                 // 현미경 확대 가이드
                 if (_playerInteractor.CurrentEquipment is Microscope microscope)
                 {
-                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) sb.AppendLine("관찰 [E]"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
+                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) AppendAction(sb, "Action/Lab/Inspect", "E"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
                 }
                 // 슬롯에 무언가 들어있다면 꺼내기 가이드
                 if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge1)
                 {
-                    if (!centrifuge1.IsOperating) sb.AppendLine("꺼내기 [R]");
+                    if (!centrifuge1.IsOperating) AppendAction(sb, "Action/Lab/RetrieveSample", "R");
                 }
                 else if (_playerInteractor.CurrentEquipment is TestTube testTube)
                 {
-                    if (!testTube.IsResultTube) sb.AppendLine("꺼내기 [R]");
+                    if (!testTube.IsResultTube) AppendAction(sb, "Action/Lab/RetrieveSample", "R");
                 }
                 else if (_playerInteractor.CurrentEquipment is PetriDish petriDish)
                 {
-                    if (!petriDish.ContainsResult) sb.AppendLine("꺼내기 [R]");
+                    if (!petriDish.ContainsResult) AppendAction(sb, "Action/Lab/RetrieveSample", "R");
                 }
-                else sb.AppendLine("꺼내기 [R]");
+                else AppendAction(sb, "Action/Lab/RetrieveSample", "R");
             }
 
             // 실험기구 들기 가이드
             if (!_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.IsGrabbable)
             {
-                sb.AppendLine("손에 들기 [G]");
+                AppendAction(sb, "Action/Lab/HoldLabEquipment", "G");
             }
 
             if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge)
             {
                 if (centrifuge.CanStartOperation() && !centrifuge.IsOperating && centrifuge.IsPowerOn) // 시험관 3개 꽉 찼을 때, 작동 중이 아닐 때, 전력 켜져 있을 때 원심분리기 작동 가능
                 {
-                    sb.AppendLine("기계 작동 [E]");
+                    AppendAction(sb, "Action/Lab/StartSynthesizer", "E");
                 }
             }
             if (_playerInteractor.CurrentEquipment is PetriDish petriDish1)
             {
                 if (!petriDish1.isMonsterBloodMixed && petriDish1.isMonsterBloodDropped && !petriDish1.isMixing)
                 {
-                    sb.AppendLine("섞기 [E]");
+                    AppendAction(sb, "Action/Lab/Mix", "E");
                 }
             }
         }
@@ -206,64 +254,87 @@ public class InventoryManager : MonoBehaviour
         // 실험기구를 들고 있는 상태라면 놓기 가이드
         if (_playerInteractor.IsHoldingEquipment)
         {
-            sb.AppendLine("내려놓기 [G]");
+            AppendAction(sb, "Action/Lab/DropLabEquipment", "G");
 
             if (_playerInteractor.HeldEquipment is Syringe syringe)
             {
-                if (syringe.HasContent) sb.AppendLine("치료제 사용 [E]");
+                if (syringe.HasContent) AppendAction(sb, "Action/Lab/UseCure", "E");
             }
         }
 
         Item currentItem = _selectedSlotIndex >= 0 ? inventorySlots[_selectedSlotIndex].Item : null;
-        itemNameText.text = (currentItem != null) ? currentItem.DisplayName : "";
+        itemNameText.text = (currentItem != null) ? currentItem.LocalizedDisplayName : "";
         if (currentItem != null)
         {
             switch (currentItem.ItemType)
             {
                 case EItemType.Toggle:
-                    if (FocusManager.Instance.CurrentPuzzleController == null) sb.AppendLine("켜기/끄기 [Mouse LMB]");
+                    if (FocusManager.Instance.CurrentPuzzleController == null) AppendAction(sb, "Action/Item/Toggle", "LMB");
                     break;
                 case EItemType.Consumable:
                     if (FocusManager.Instance.CurrentPuzzleController == null)
-                        sb.AppendLine("사용 [E]");
+                        AppendAction(sb, "Action/Item/Use", "E");
                     break;
                 case EItemType.Puzzle: // 퍼즐 상호작용 중이라면 표시
                     if (FocusManager.Instance.CurrentPuzzleController != null)
                     {
-                        if (currentItem.ItemName == "Hammer") sb.AppendLine("엔진 수리 [Space]");
-                        else if (currentItem.ItemName == "Screwdriver") sb.AppendLine("나사 제거 [E]");
-                        else if (currentItem.ItemName.Contains("Battery")) sb.AppendLine("배터리 바꾸기 [E]");
+                        if (currentItem.ItemName == "Hammer")
+                            AppendAction(sb, "Action/Puzzle/RepairEngine", "Space");
+                        else if (currentItem.ItemName == "Screwdriver")
+                            AppendAction(sb, "Action/Puzzle/Unscrew", "E");
+                        else if (currentItem.ItemName.Contains("Battery"))
+                            AppendAction(sb, "Action/Puzzle/ReplaceBattery", "E");
                     }
                     break;
                 case EItemType.UI:
                     if (FocusManager.Instance.CurrentPuzzleController == null)
                     {
-                        // if (currentItem.ItemName == "Map") sb.AppendLine("Register Map[E]");
-                        if (_isViewingUI) sb.AppendLine("닫기 [E]");
-                        else if (currentItem.ItemName != "LabID CHM" && currentItem.ItemName != "LabID SEC") sb.AppendLine("보기 [E]");
+                        if (_isViewingUI)
+                            AppendAction(sb, "Action/Item/Close", "E");
+                        else if (currentItem.ItemName != "LabID CHM" && currentItem.ItemName != "LabID SEC")
+                            AppendAction(sb, "Action/Item/Read", "E");
                     }
                     break;
                 case EItemType.Wearable:
                     if (FocusManager.Instance.CurrentPuzzleController == null)
-                        sb.AppendLine("입기 [E]");
+                        AppendAction(sb, "Action/Item/Equip", "E");
                     break;
             }
         }
 
-        sb.AppendLine("맵/목표/노트 [Tab]");
+        AppendAction(sb, "Action/General/TabMenu", "Tab");
+
         if (currentItem != null && FocusManager.Instance.CurrentPuzzleController == null) // 퍼즐 상호작용 중이 아니라면 버리기 키 표시
-            sb.AppendLine("아이템 버리기 [Q]");
+            AppendAction(sb, "Action/General/DropItem", "Q");
 
         // SOS 신호 퍼즐 상호작용 메시지
         if (FocusManager.Instance.CurrentPuzzleController is TelegraphKey telegraphKey)
         {
-            sb.AppendLine("모스 부호 입력 [Mouse LMB]");
-            sb.AppendLine("최종 메시지 송신 [Mouse RMB]");
+            AppendAction(sb, "Action/Puzzle/InputMorseCode", "LMB");
+            AppendAction(sb, "Action/Puzzle/TransmitFinalMessage", "RMB");
             if (telegraphKey.IsSubmarineLeft)
-                sb.AppendLine("녹음 재생 [E]");
+                AppendAction(sb, "Action/Puzzle/PlayRecording", "E");
         }
 
         actionText.text = sb.ToString();
+    }
+
+    /// <summary>
+    /// ST_UI 테이블의 key에 해당하는 번역문을 찾아 keyBinding을 붙인 뒤 StringBuilder에 줄바꿈으로 추가합니다.
+    /// </summary>
+    private void AppendAction(StringBuilder sb, string key, string keyBinding = "")
+    {
+        // Preload 덕분에 메모리에서 즉시 텍스트를 읽어옵니다.
+        string translatedText = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", key);
+
+        if (string.IsNullOrEmpty(keyBinding))
+        {
+            sb.AppendLine(translatedText);
+        }
+        else
+        {
+            sb.AppendLine($"{translatedText} [{keyBinding}]");
+        }
     }
 
     /// <summary>

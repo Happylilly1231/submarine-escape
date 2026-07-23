@@ -19,7 +19,10 @@ public class EscapeRoomDoorLock : InteractableBase
     /// </summary>
     public override string GetInteractText()
     {
-        return IsRequiredItemSelected() ? "Unlock [E]" : "Locked (Need Key)";
+        if (IsRequiredItemSelected())
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Unlock", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/LockedKeyRequired");
     }
 
     /// <summary>

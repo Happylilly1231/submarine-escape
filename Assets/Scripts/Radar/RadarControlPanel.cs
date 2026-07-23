@@ -46,13 +46,16 @@ public class RadarControlPanel : InteractableBase
     public override string GetInteractText()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
         if (!_isBroken) // 고장 나지 않았을 때 -> 레이더 보기
-            return "View Radar [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/ViewRadar", "E");
 
         // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
-        return IsRequiredItemSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
+        if (IsRequiredItemSelected())
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Repair", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/BrokenRepairRequired");
     }
 
     /// <summary>

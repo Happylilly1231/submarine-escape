@@ -47,9 +47,9 @@ public class SeaWaterValve : InteractableBase
     public override string GetInteractText()
     {
         if (!escapeRoomDoor.gameObject.activeSelf)
-            return "Door Broken";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/DoorBroken");
         if (!_isActivated)
-            return "Flood Escape Room [E]"; // 탈출실 물 채우기
+            return LocalizationHelper.GetLocalizedInteractText("Interact/FloodEscapeRoom", "E"); // 탈출실 물 채우기
         else
             return "";
     }

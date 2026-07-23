@@ -18,7 +18,7 @@ public class ElectricalBox : InteractableBase
     #region 상호작용 인터페이스 구현
     public override string GetInteractText()
     {
-        if (!_powerController.IsComplete) return "Open [E]";
+        if (!_powerController.IsComplete) return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
         else return "";
     }
 

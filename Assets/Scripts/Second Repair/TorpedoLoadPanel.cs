@@ -143,12 +143,12 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     public string GetInteractText()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
         if (_torpedoAutoLoadSwitch.IsSwitchOn) // 아직 어뢰 자동 탑재 스위치가 켜져 있는 경우 -> 상호작용 불가
-            return "Auto Mode";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/AutoMode");
         else
-            return "Activate Torpedo Load Panel [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/ActivateTorpedoLoadPanel", "E");
     }
 
     /// <summary>

@@ -296,8 +296,16 @@ public class KeyPadController : PuzzleController
 
     private void HandleSuccess(KeyPadBatterySlot targetSlot)
     {
-        objectiveManager.CompleteObjective("EscapeCrewRoom");
-        SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
+        if (objectiveManager == null || SaveSystemManager.Instance == null)
+        {
+            Debug.Log("목표 매니저나 세이브 시스템 매니저가 없습니다.");
+        }
+        else
+        {
+            objectiveManager.CompleteObjective("EscapeCrewRoom");
+            SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
+        }
+
         currentState = EPuzzleState.Success;
         IsActionProcessing = true;
         if (targetSlot) targetSlot.DeSelect();

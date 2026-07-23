@@ -6,13 +6,13 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using DG.Tweening;
 using TMPro;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization;
 
 public class PowerGridManager : MonoBehaviour
 {
     [SerializeField] private GraphicRaycaster raycaster; // UI용 레이캐스터
     [SerializeField] private PowerController powerController;
-    [SerializeField] private Button hintButton; // 힌트 버튼
-    [SerializeField] private GameObject hintText; // 힌트 텍스트
 
     private WireTile _selectedTile; // 드래그 시작 타일
     private WireTile _lastTile; // 드래그 중 직전 타일
@@ -26,13 +26,6 @@ public class PowerGridManager : MonoBehaviour
     private void Awake()
     {
         InitializeGrid();
-        hintText.SetActive(false);
-        hintButton.onClick.AddListener(OnHintClick);
-    }
-
-    public void OnHintClick()
-    {
-        hintText.SetActive(true);
     }
 
     /// <summary>

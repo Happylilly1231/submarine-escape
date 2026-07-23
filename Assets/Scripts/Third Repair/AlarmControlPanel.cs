@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 public class AlarmControlPanel : PuzzleController, IInteractable
@@ -19,6 +21,10 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     [SerializeField] private Button upButton; // 위 버튼
     [SerializeField] private Button downButton; // 아래 버튼
     [SerializeField] private GameObject secondFloorMap; // 2층 맵
+
+    // Localization Table Key
+    private const string UNSELECTED_KEY = "Puzzle/AlarmControlPanel/Unselected";
+    private const string SELECTED_KEY = "Puzzle/AlarmControlPanel/Selected";
 
     private AlertArea _currentSelectedArea = AlertArea.None; // 현재 선택된 구역 (경보 발생 중인 구역 의미 X)
     private Image _currentSelectedAreaImg = null; // 현재 선택된 구역 이미지 (경보 발생 중인 구역 의미 X)
@@ -44,7 +50,7 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
         SetFloor(1);
 
-        infoText.text = "경보 발생 구역 미선택 (선택: 클릭)";
+        infoText.text = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", UNSELECTED_KEY);
 
         activatedScreenUI.SetActive(false); // 활성화 화면 비활성화
     }
@@ -53,13 +59,47 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     {
         SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted += ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded += DeactivateAlarmingUI;
+        // // 언어 변경 이벤트 구독
+        // LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
     }
 
     private void OnDisable()
     {
         SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded -= DeactivateAlarmingUI;
+        // // 언어 변경 이벤트 해제
+        // LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
     }
+
+    #region Localization
+    // /// <summary>
+    // /// 언어 변경 시
+    // /// </summary>
+    // /// <param name="newLocale"></param>
+    // private void OnLanguageChanged(Locale newLocale)
+    // {
+    //     // activatedScreenUI가 열려있는 상태에서 언어가 바뀐 경우
+    //     if (activatedScreenUI != null && activatedScreenUI.activeSelf)
+    //     {
+    //         UpdateCurrentInfoText();
+    //     }
+    // }
+
+    // /// <summary>
+    // /// 현재 정보 텍스트 업데이트
+    // /// </summary>
+    // private void UpdateCurrentInfoText()
+    // {
+    //     if (_currentSelectedArea == AlertArea.None) // 미선택
+    //     {
+    //         infoText.text = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", UNSELECTED_KEY);
+    //     }
+    //     else // 선택
+    //     {
+    //         infoText.text = LocalizationHelper.GetLocalizedTextWithParameter("SELECTED_KEY", _currentSelectedArea.ToString(), "E");
+    //     }
+    // }
+    #endregion
 
     #region IInteractable
     public bool CanInteractwithSelectedItem(Item item)
@@ -70,9 +110,9 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     public string GetInteractText()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
-        return "Access Alarm Control Panel [E]";
+        return LocalizationHelper.GetLocalizedInteractText("Interact/AccessAlarmControlPanel", "E");
     }
 
     public void Interact()
@@ -100,6 +140,7 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
         KeyE.performed += OnKeyEPerformed;
 
+        infoText.text = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", UNSELECTED_KEY);
         activatedScreenUI.SetActive(true); // 활성화 화면 활성화
         _collider.enabled = false; // 콜라이더 비활성화 (UI로 쏘는 레이를 가리지 않도록)
     }
@@ -141,13 +182,14 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     private void ActivateAlarmingUI()
     {
         alarmingUI.SetActive(true);
-
-        UnselectArea(); // 선택 해제
+        ExitPuzzle(); // 자동 종료
     }
 
     private void DeactivateAlarmingUI()
     {
         alarmingUI.SetActive(false);
+        if (IsPuzzleStarted)
+            ExitPuzzle(); // 자동 종료
     }
 
     /// <summary>
@@ -193,7 +235,7 @@ public class AlarmControlPanel : PuzzleController, IInteractable
             _currentSelectedArea = AlertArea.None;
             _currentSelectedAreaImg = null;
 
-            infoText.text = "경보 발생 구역 미선택 (선택: 클릭)";
+            infoText.text = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", UNSELECTED_KEY);
         }
     }
 
@@ -230,7 +272,7 @@ public class AlarmControlPanel : PuzzleController, IInteractable
             c.a = 136f / 255f;
             areaImg.color = c;
 
-            infoText.text = $"[선택됨] 선택 구역: {_currentSelectedArea} - 선택 구역에서 경보 발생 [E]";
+            infoText.text = LocalizationHelper.GetLocalizedTextWithParameter(SELECTED_KEY, _currentSelectedArea.ToString(), "E");
         }
     }
 

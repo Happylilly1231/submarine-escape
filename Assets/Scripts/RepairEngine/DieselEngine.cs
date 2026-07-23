@@ -31,10 +31,10 @@ public class DieselEngine : InteractableBase
     #region 상호작용 인터페이스 구현
     public override string GetInteractText()
     {
-        if (IsBrokenWithJumpscare) return "Broken (Repair not available)";
+        if (IsBrokenWithJumpscare) return LocalizationHelper.GetLocalizedInteractText("Interact/PermanentFailure");
         if (IsComplete) return "";
-        if (IsRequiredItemSelected()) return "Repair Engine [E]";
-        else return "Need Hammer";
+        if (IsRequiredItemSelected()) return LocalizationHelper.GetLocalizedInteractText("Interact/RepairEngine", "E");
+        else return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", _engineController.hammerItem.LocalizedDisplayName);
     }
 
     /// <summary>

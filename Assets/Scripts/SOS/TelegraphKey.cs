@@ -102,12 +102,12 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
-        if (IsBrokenWithJumpscare) return "Broken (Repair not available)";
+        if (IsBrokenWithJumpscare) return LocalizationHelper.GetLocalizedInteractText("Interact/PermanentFailure");
 
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
-        return "통신하기 [E]";
+        return LocalizationHelper.GetLocalizedInteractText("Interact/UseMorseRadio", "E");
     }
 
     public void Interact()
