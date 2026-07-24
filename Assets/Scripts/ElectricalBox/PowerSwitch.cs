@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 public class PowerSwitch : InteractableBase
 {
+    [Header("인스펙터 제어용")]
+    [SerializeField] private bool debugPowerToggle = false;
+
     [SerializeField] private Transform switchHandle;
     [SerializeField] private MeshRenderer lightRenderer;
     [SerializeField] private Material greenMaterial;
@@ -26,11 +29,24 @@ public class PowerSwitch : InteractableBase
         _engineController = FindAnyObjectByType<EngineController>();
         _powerController = FindAnyObjectByType<PowerController>();
         objectiveManager = FindObjectOfType<ObjectiveManager>();
+
+        debugPowerToggle = _isPowerOn;
     }
 
     private void Update()
     {
         UpdateIndicatorLight();
+    }
+
+    /// <summary>
+    /// 인스펙터에서 debugPowerToggle 값을 변경했을 때 실행 - 전력 켜기/끄기
+    /// </summary>
+    private void OnValidate()
+    {
+        if (Application.isPlaying && debugPowerToggle != _isPowerOn)
+        {
+            TogglePower(debugPowerToggle);
+        }
     }
 
     #region 상호작용 인터페이스 구현

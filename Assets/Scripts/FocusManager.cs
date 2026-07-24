@@ -12,6 +12,7 @@ public enum GameFocusState
     Puzzle,         // 퍼즐 포커스
     InGameMenu,     // 인게임 메뉴 포커스
     ESCMenu,        // ESC 메뉴(실제 정지) 포커스 
+    Diary           // 다이어리 포커스
 }
 
 public class FocusManager : MonoBehaviour
@@ -172,6 +173,7 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.InGameMenu:
+            case GameFocusState.Diary:
                 PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
@@ -230,6 +232,11 @@ public class FocusManager : MonoBehaviour
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
                 PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
                 PlayerManager.Instance.playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요)
+                break;
+
+            case GameFocusState.Diary:
+                InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
+                PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 키만 활성화하여 다이어리 닫기에 사용
                 break;
         }
     }

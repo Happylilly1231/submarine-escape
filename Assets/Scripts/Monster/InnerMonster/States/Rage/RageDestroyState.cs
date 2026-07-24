@@ -58,6 +58,9 @@ namespace InnerMonsterStates
                 _timer += Time.deltaTime;
                 if (_timer > _destroyTime)
                 {
+                    // 탈출 연출 중 괴물이 탈출실 문을 부수는 것을 방지하기 위해
+                    // 탈출 연출 재생 중에는 괴물이 탈출실 문을 파괴할 수 없게 막음
+                    if (SubmarineInGameManager.instance.IsEscaped) return;
                     RageDestroy(owner); // 폭주 파괴
                 }
             }

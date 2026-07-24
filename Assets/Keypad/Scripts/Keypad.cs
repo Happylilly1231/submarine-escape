@@ -73,9 +73,11 @@ namespace NavKeypad
         }
         public void CheckCombo()
         {
-            if (int.TryParse(currentInput, out var currentKombo))
+            if (!string.IsNullOrEmpty(currentInput))
             {
-                bool granted = currentKombo == keypadCombo;
+                // 입력 문자열과 목표 비밀번호가 완전히 같은지 비교
+                bool granted = currentInput.Equals(keypadCombo.ToString("D4"));
+
                 if (!displayingResult)
                 {
                     StartCoroutine(DisplayResultRoutine(granted));

@@ -68,6 +68,9 @@ public class SubmarineInGameManager : MonoBehaviour
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
 
+    // 탈출 성공 플래그
+    public bool IsEscaped { get; private set; } = false;
+
     // 사운드
     [Header("Sound")]
     [SerializeField] private AudioClip alertSound;
@@ -138,6 +141,11 @@ public class SubmarineInGameManager : MonoBehaviour
 
             MenuUIController.instance.ToggleDebuggingUI(); // 디버깅 UI 활성화/비활성화
         }
+    }
+
+    public void SetEscaped()
+    {
+        IsEscaped = true;
     }
 
     // /// <summary>

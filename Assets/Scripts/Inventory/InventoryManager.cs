@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using System.Text;
 using System;
+using UnityEngine.Analytics;
 
 /// <summary> 인벤토리 관리자
 /// <para> - 플레이어 인벤토리 전체를 관리 </para> 
@@ -404,6 +405,14 @@ public class InventoryManager : MonoBehaviour
                 // }
                 break;
             case EItemType.UI:
+                if (currentEquippedItem.TryGetComponent<ItemPickUp>(out var item))
+                {
+                    if (item.Item.ItemName == "Diary")
+                    {
+                        Diary diary = FindObjectOfType<Diary>();
+                        diary?.ViewDiary();
+                    }
+                }
                 if (currentEquippedItem.TryGetComponent<UIItem>(out var uiItem))
                 {
                     uiItem.Use(selectedSlot.Item, _isViewingUI);
