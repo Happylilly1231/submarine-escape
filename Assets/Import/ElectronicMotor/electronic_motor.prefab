@@ -597,6 +597,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7941828942527430982}
+  - component: {fileID: 6981440038320870372}
   m_Layer: 0
   m_Name: electronic_motor
   m_TagString: Untagged
@@ -620,6 +621,27 @@ Transform:
   - {fileID: 2933882770270245684}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &6981440038320870372
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8055972277161850095}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.3596586, y: 1.5591793, z: 1.6964717}
+  m_Center: {x: -0.14459181, y: 0.0038967133, z: 0.052912414}
 --- !u!1 &8158736243393837890
 GameObject:
   m_ObjectHideFlags: 0

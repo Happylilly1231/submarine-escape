@@ -20,7 +20,7 @@ public class CrewRoom1KeyPad : InteractableBase
     public override string GetInteractText()
     {
         if (IsCompleted) return "";
-        else return "Inspect [E]";
+        else return LocalizationHelper.GetLocalizedInteractText("Interact/Inspect", "E");
     }
 
     public override void Interact()

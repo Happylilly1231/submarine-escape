@@ -10,7 +10,6 @@ public class RadarDisplay : MonoBehaviour
 {
     [SerializeField] private GameObject lockedUI; // 잠금 UI
     [SerializeField] private GameObject radarUI; // 레이더 UI
-    [SerializeField] private GameObject statUI; // 스탯 UI
     [SerializeField] private TextMeshProUGUI lockedUIHeaderText; // 잠금 UI 헤더 텍스트
     [SerializeField] private TextMeshProUGUI codeInputText; // 코드 입력 텍스트
     [SerializeField] private Image enterImg; // 엔터 이미지
@@ -62,7 +61,6 @@ public class RadarDisplay : MonoBehaviour
     public void SetRadarUIActive(bool isActive)
     {
         radarUI.SetActive(isActive);
-        statUI.SetActive(!isActive);
 
         if (isActive)
         {

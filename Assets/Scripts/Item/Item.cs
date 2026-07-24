@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 
 public enum EItemType
 {
@@ -38,4 +39,24 @@ public class Item : ScriptableObject
     public bool IsConsumable => isConsumable;
     public Vector3 GripPositionOffset => gripPositionOffset;
     public Vector3 GripRotationOffset => gripRotationOffset;
+
+    /// <summary>
+    /// 아이템 이름 번역 가져오기
+    /// </summary>
+    public string LocalizedDisplayName
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(itemName)) return displayName;
+
+            // 공백 제거
+            string cleanItemName = itemName.Replace(" ", "");
+
+            string tableKey = $"Item/Name/{cleanItemName}";
+            string localizedName = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", tableKey);
+
+            // 테이블에 키가 없거나 할 경우 -> 기존 displayName 반환
+            return string.IsNullOrEmpty(localizedName) ? displayName : localizedName;
+        }
+    }
 }

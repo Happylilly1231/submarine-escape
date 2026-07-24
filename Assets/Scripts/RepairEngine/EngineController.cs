@@ -20,7 +20,7 @@ public class EngineController : PuzzleController
     [SerializeField] private GameObject inventoryUI; // 인벤토리 UI
     [SerializeField] private GameObject inateractorUI; // 상호작용 UI
 
-    public int currentRepairCount = 0; // 현재 수리 횟수
+    public int currentRepairCount = 0; // 현재 수리 횟수 (-1: 영구 고장)
 
     private RepairEngineQTE _repairEngineQTE; // 수리 QTE 참조
     private bool _isActionProcessing = false;

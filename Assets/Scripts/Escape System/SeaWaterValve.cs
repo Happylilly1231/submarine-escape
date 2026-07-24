@@ -22,6 +22,7 @@ public class SeaWaterValve : InteractableBase
     [SerializeField] private GameObject statUI;
 
     private bool _isActivated = false; // 작동되었는지 여부
+    public bool IsActivated => _isActivated;
     private float _targetHeight = 4.4f; // 물이 차오를 최종 높이
     private float _duration = 10f;    // 차오르는 데 걸리는 시간
     private float _underwaterCutoff = 600f; // 물속 소리 주파수
@@ -53,9 +54,9 @@ public class SeaWaterValve : InteractableBase
     public override string GetInteractText()
     {
         if (!escapeRoomDoor.gameObject.activeSelf)
-            return "Door Broken";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/DoorBroken");
         if (!_isActivated)
-            return "Flood Escape Room [E]"; // 탈출실 물 채우기
+            return LocalizationHelper.GetLocalizedInteractText("Interact/FloodEscapeRoom", "E"); // 탈출실 물 채우기
         else
             return "";
     }

@@ -6,6 +6,30 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
+/// 경보 구역
+/// </summary>
+public enum AlertArea
+{
+    None,
+    Galley, // 1
+    Storage01, // 2
+    EngineRoom, // 3
+    ControlRoom, // 4
+    TorpedoRoom, // 5
+    EscapeRoom,
+    MachinerySpace
+}
+
+[Serializable]
+public class AlertAreaInfo
+{
+    public AlertArea alertArea; // 경보 구역
+    public GameObject[] destroyEquipments; // 파괴 장치 배열
+    public List<Transform> destroyPosTransforms = new List<Transform>(); // 파괴 위치 배열 (탈출실, 기계실 - 파괴할 장치는 없지만, 임의로 탈출실 안, 기계실 안을 파괴 위치로 설정)
+    public List<Transform> sequenceCameraPosList = new List<Transform>();
+}
+
+/// <summary>
 /// 잠수함 씬의 인게임 매니저
 /// <para>- 경보 발생/해제</para>
 /// <para>- 파괴될 장비 배열 저장</para>
@@ -14,24 +38,20 @@ using UnityEngine.UI;
 /// </summary>
 public class SubmarineInGameManager : MonoBehaviour
 {
-    // // 정지
-    // private bool _isPausing = false; // 정지 중 여부
-    // public bool IsPausing { get => _isPausing; set => _isPausing = value; }
-
     // 경보
-    [SerializeField] private Button alertButton; // 임시 - 경보 버튼
+    // [SerializeField] private Button alertButton; // 임시 - 경보 버튼
     private bool _isAlerting = false; // 경보 발생 중 여부
     public bool IsAlerting => _isAlerting;
-    [SerializeField] private Transform escapeRoomPos; // 탈출실 위치
-    public bool hasEverOpenedEscapeDoor = false; // 탈출실 문이 한 번이라도 열렸는지 여부
+    // [SerializeField] private Transform escapeRoomPos; // 탈출실 위치
+    // public bool hasEverOpenedEscapeDoor = false; // 탈출실 문이 한 번이라도 열렸는지 여부
 
-    // 파괴될 장비
-    [SerializeField] private GameObject[] destroyEquipments; // 파괴되는 장비 배열
-    public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
-    private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
-    public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
-    private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
-    public Transform CurrentTargetPos => _currentTargetPos;
+    // // 파괴될 장비
+    // [SerializeField] private GameObject[] destroyEquipments; // 파괴되는 장비 배열
+    // public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
+    // private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
+    // public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
+    // private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
+    // public Transform CurrentTargetPos => _currentTargetPos;
 
     // 문
     private Door[] _doors;
@@ -40,7 +60,6 @@ public class SubmarineInGameManager : MonoBehaviour
     // 플레이어
     public GameObject player;
     public PlayerInput playerInput;
-    private GameObject playerGeo;
     public PlayerInteractor playerInteractor { get; private set; }
     public PlayerCameraController playerCameraController { get; private set; }
     public PlayerMove playerMove { get; private set; }
@@ -58,15 +77,11 @@ public class SubmarineInGameManager : MonoBehaviour
     private bool _isFireSuccess = false;
     public bool IsFireSuccess { get => _isFireSuccess; set => _isFireSuccess = value; }
 
-    // // 현재 퍼즐
-    // public PuzzleController CurrentPuzzleController { get; private set; } = null;
-
-    // 포커스
-    private int _focusRequestCount = 0; // 포커스 요청 횟수 카운트
-    private bool _isCurrentlyFocused = false; // 현재 포커스 상태
-
     // 이벤트
     public event Action OnAlertStarted; // 경보 발생 시작 이벤트
+    public event Action OnAlertEnded; // 경보 발생 종료 이벤트
+    public event Action OnMachinerySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
+    public event Action OnNonMachinerySpaceAlertStarted; // 기계실 경보 제외 경보 발생 시작 이벤트
 
     // 탈출 성공 플래그
     public bool IsEscaped { get; private set; } = false;
@@ -89,6 +104,17 @@ public class SubmarineInGameManager : MonoBehaviour
     public GameObject InteractorUI => interactorUI;
     public bool isInGameMenuActive = false; // 플레이어가 인게임 메뉴를 보고 있는 상태
 
+    // 경보
+    [SerializeField] private List<AlertAreaInfo> alertAreaInfoList = new List<AlertAreaInfo>();
+    public Dictionary<AlertArea, AlertAreaInfo> AlertAreaInfoDict { get; private set; } = new Dictionary<AlertArea, AlertAreaInfo>();
+    public AlertArea CurrentAlertArea { get; private set; } = AlertArea.None; // 현재 경보 발생 구역
+    public int CurrentDestroyEquipmentIndex { get; private set; } = -1; // 현재 경보 발생 구역에서 괴물이 파괴할 장치 인덱스 (-1: 없음)
+    public GameObject CurrentDestroyEquipmentObj { get; private set; } = null; // 현재 경보 발생 구역에서 괴물이 파괴할 장치 오브젝트
+    public Transform CurrentDestroyPos { get; private set; } = null;
+    public Transform CurrentSequenceCameraPos { get; private set; } = null;
+    public MachinerySpaceDoorRepairController machinerySpaceDoorRepairController;
+
+
     // 싱글톤 변수
     public static SubmarineInGameManager instance;
 
@@ -102,6 +128,25 @@ public class SubmarineInGameManager : MonoBehaviour
             instance = this;
 
             _audioSource = GetComponent<AudioSource>();
+
+            foreach (var info in alertAreaInfoList)
+            {
+                if (info.alertArea == AlertArea.None) continue;
+
+                for (int i = 0; i < info.destroyEquipments.Length; i++)
+                {
+                    info.destroyPosTransforms.Add(info.destroyEquipments[i].transform.GetChild(0));
+                }
+
+                if (!AlertAreaInfoDict.ContainsKey(info.alertArea))
+                {
+                    AlertAreaInfoDict.Add(info.alertArea, info);
+                }
+                else
+                {
+                    Debug.LogWarning($"[AlertManager] 중복된 구역 설정이 있습니다: {info.alertArea}");
+                }
+            }
         }
         else
         {
@@ -118,7 +163,6 @@ public class SubmarineInGameManager : MonoBehaviour
         monsterLayer = LayerMask.GetMask("Monster");
 
         // 플레이어 관련 필요한 것 가져오기
-        playerGeo = player.transform.GetChild(0).gameObject; // 플레이어 Geo(외형) 가져오기 (Player의 첫번째 자식)
         playerInput = player.GetComponent<PlayerInput>(); // 플레이어 입력 컴포넌트 가져오기
         playerInteractor = player.GetComponent<PlayerInteractor>(); // 플레이어 인터랙터 컴포넌트 가져오기
         playerCameraController = Camera.main.GetComponent<PlayerCameraController>(); // 플레이어 카메라 컨트롤러 컴포넌트 가져오기
@@ -172,122 +216,105 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void InitGame()
     {
-        //FocusManager.Instance.TransitionToState(GameFocusState.None);
-        // GameManager.instance.SetHaveToShowCursor(false); // 커서 보여야 하지 않음으로 설정
-
-        // // AudioManager.Instance.PlayBGM(AudioManager.Instance.fanSound);
-
-        // // 기본인 플레이어 액션 맵으로 변경
-        // InputManager.instance.SwitchActionMapWithPermanent("Player");
-
-        // Resume(); // 재시작
+        // 게임 시작 시 None 상태의 UI, 커서, 인풋 설정을 실행 - 타이틀 씬에서 커서 안 보이게 설정
+        FocusManager.Instance.ResetFocusState(GameFocusState.None);
     }
 
-    // /// <summary>
-    // /// 게임 정지
-    // /// </summary>
-    // public void Pause()
+    // public void IntroPause()
     // {
-    //     Debug.Log("정지");
-    //     _isPausing = true; // 정지 중으로 설정
-
-    //     Time.timeScale = 0f; // 시간 정지
-    //     AudioListener.pause = true; // 오디오 듣기 정지
-
-    //     FocusManager.Instance.PushFocusState(GameFocusState.ESCMenu); // 퍼즐 포커스 상태로 변경
-
+    //     // 인트로 중에는 시간 정지는 아니고 플레이어의 상호작용만 막는 상태
+    //     Debug.Log("인트로 시퀀스 시작");
+    //     // InputManager.instance.DisableAllInputs(); // 모든 입력 비활성화
+    //     // _isPausing = false;
     //     // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
-    //     // playerInput.actions["ToggleMenu"].Enable(); // 메뉴 토글 액션 활성화
-    //     // playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화
-
-    //     // GameManager.instance.SetCursorVisible(true); // 커서 보이기
+    //     // GameManager.instance.SetCursorVisible(false); // 커서 보이지 않게 하기
+    //     // AudioListener.pause = false; // 오디오 듣기 정지 해제
     // }
 
-    public void IntroPause()
+    public AlertAreaInfo GetAlertAreaInfo(AlertArea alertArea)
     {
-        // 인트로 중에는 시간 정지는 아니고 플레이어의 상호작용만 막는 상태
-        Debug.Log("인트로 시퀀스 시작");
-        InputManager.instance.DisableAllInputs(); // 모든 입력 비활성화
-        // FocusManager.Instance.TransitionToState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 연출 포커스 상태로 변경
-        // _isPausing = false;
-        // playerInput.currentActionMap.Disable(); // 플레이어 상호작용 아예 막기
-        // GameManager.instance.SetCursorVisible(false); // 커서 보이지 않게 하기
-        // AudioListener.pause = false; // 오디오 듣기 정지 해제
+        if (AlertAreaInfoDict.TryGetValue(alertArea, out AlertAreaInfo info))
+        {
+            return info;
+        }
+
+        Debug.LogError($"[AlertManager] {alertArea} 구역 정보를 찾을 수 없습니다!");
+        return null;
     }
-
-    // /// <summary>
-    // /// 게임 정지 해제
-    // /// </summary>
-    // public void Resume()
-    // {
-    //     Debug.Log("재시작");
-    //     _isPausing = false; // 정지 중 아님으로 설정
-
-    //     Time.timeScale = 1.0f; // 시간 정지 해제
-    //     AudioListener.pause = false; // 오디오 듣기 정지 해제
-
-    //     FocusManager.Instance.PopFocusState();
-
-    //     // // 액션 맵 복구 로직
-    //     // // 퍼즐 중이라면 Puzzle 맵 활성화
-    //     // if (CurrentPuzzleController != null)
-    //     //     InputManager.instance.SwitchActionMapWithPermanent("Puzzle");
-    //     // // 일반 상태라면 Player 맵 활성화
-    //     // else
-    //     //     InputManager.instance.SwitchActionMapWithPermanent("Player");
-    //     // playerInput.actions["ToggleDebug"].Disable();
-
-
-    //     // // 액션 맵 복구 로직
-    //     // // 퍼즐 중이라면 Puzzle 맵 활성화
-    //     // if (CurrentPuzzleController != null)
-    //     //     playerInput.SwitchCurrentActionMap("Puzzle");
-    //     // // 일반 상태라면 Player 맵 활성화
-    //     // else
-    //     //     playerInput.SwitchCurrentActionMap("Player");
-
-    //     // // 어떤 상황이든 Permanent 맵은 항상 켜져 있어야 함
-    //     // playerInput.actions.FindActionMap("Permanent")?.Enable();
-
-    //     // // 인게임 메뉴 비활성화 상태에서만 -> 커서 숨기기 (인게임 메뉴는 퍼즐에서도 켤 수 있어서 HaveToCursor를 true로 하지 않기 때문)
-    //     // if (!isInGameMenuActive)
-    //     //     GameManager.instance.SetCursorVisible(false); // (커서 보여야 하면 안 숨김)
-    // }
 
     /// <summary>
     /// 경보 발생
     /// </summary>
-    public void AlertOn()
+    /// <param name="alertArea">구역</param>
+    /// <param name="destroyEquimentIndex">파괴될 장치 인덱스(따로 없으면 -1)</param>
+    public void AlertOn(AlertArea alertArea, int destroyEquimentIndex = -1)
     {
-        if (hasEverOpenedEscapeDoor) // 탈출실 문이 한 번이라도 열린 경우(이후 어뢰실 장비에서 경보 발생해도 경보 발생 위치는 탈출실 위치로 설정됨(우선순위 더 높음))
-        {
-            _currentTargetPos = escapeRoomPos; // 현재 목표 위치 -> 탈출실 위치로 설정
-        }
-        else // 어뢰실 장비에서 경보 발생하는 경우
-        {
-            // 인덱스 범위 넘는 경우 예외 처리
-            if (currentDestroyEquipmentIndex >= destroyEquipments.Length)
-            {
-                // AlertOff();
-                return;
-            }
+        // 탈출실 경보가 발생 중이라면 -> 다른 경보는 전부 무효 처리 (어차피 괴물이 탈출실 안으로 들어갈 때 게임 오버됨)
+        if (CurrentAlertArea == AlertArea.EscapeRoom)
+            return;
 
-            // 현재 파괴 정보 설정
-            _currentDestroyEquipment = destroyEquipments[currentDestroyEquipmentIndex]; // 현재 파괴될 장비 설정
-            _currentTargetPos = _currentDestroyEquipment.transform.GetChild(0); // 현재 목표 위치 -> 현재 파괴될 장비 위치의 파괴 위치(첫번째 자식)로 변경
-        }
+        // AlertArea prevAlertArea = CurrentAlertArea;
+        // int prevDestroyEquipmentIndex = CurrentDestroyEquipmentIndex;
+        // GameObject prevDestroyEquipmentObj = CurrentDestroyEquipmentObj;
+        // Transform prevDestroyPos = CurrentDestroyPos;
+        // Transform prevSequenceCameraPos = CurrentSequenceCameraPos;
 
-        // 임시 - 경보 버튼 빨간색으로 변경(후에 지워야 함)
-        ColorBlock colorBlock = alertButton.colors;
-        colorBlock.normalColor = Color.red;
-        alertButton.colors = colorBlock;
+        // 경보 발생 중이었을 때 (탈출실 제외)
+        if (_isAlerting)
+        {
+            // 경보 발생 끝 이벤트 알림
+            OnAlertEnded?.Invoke();
+        }
 
         _isAlerting = true; // 경보 발생 중으로 설정
-        AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound);
-        Debug.Log("경보 발생!");
+
+        // 다른 경보 발생 중에 기계실 경보가 울리는 게 아니라면 -> 현재 경보 발생 위치 변경 (기계실로 바꿔주는 건 괴물 쪽에서 처리)
+        if (!(alertArea == AlertArea.MachinerySpace && CurrentAlertArea != AlertArea.None))
+            ChangeCurrentAlertPos(alertArea, destroyEquimentIndex);
+
+        AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound); // 경보 소리 재생
 
         // 경보 발생 시작 이벤트 알림
         OnAlertStarted?.Invoke();
+
+        // 기계실 경보 발생해야 하는 경우 -> 괴물에 이벤트 알려주고 바로 종료 (아직 기계실 경보로 바꾸지 않음)
+        if (alertArea == AlertArea.MachinerySpace)
+        {
+            OnMachinerySpaceAlertStarted?.Invoke();
+        }
+        else
+        {
+            OnNonMachinerySpaceAlertStarted?.Invoke();
+        }
+
+        Debug.Log("경보 발생!");
+    }
+
+    /// <summary>
+    /// 현재 경보 발생 위치 변경
+    /// </summary>
+    /// <param name="alertArea"></param>
+    /// <param name="destroyEquimentIndex"></param>
+    public void ChangeCurrentAlertPos(AlertArea alertArea, int destroyEquimentIndex = -1)
+    {
+        CurrentAlertArea = alertArea;
+        CurrentDestroyEquipmentIndex = destroyEquimentIndex;
+
+        AlertAreaInfo alertAreaInfo = GetAlertAreaInfo(alertArea);
+        if (destroyEquimentIndex == -1)
+        {
+            CurrentDestroyEquipmentObj = null;
+            CurrentDestroyPos = alertAreaInfo.destroyPosTransforms[0];
+            if (alertAreaInfo.sequenceCameraPosList.Count > 0)
+                CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[0];
+        }
+        else
+        {
+            CurrentDestroyEquipmentObj = alertAreaInfo.destroyEquipments[destroyEquimentIndex];
+            CurrentDestroyPos = alertAreaInfo.destroyPosTransforms[destroyEquimentIndex];
+            if (alertAreaInfo.sequenceCameraPosList.Count > 0)
+                CurrentSequenceCameraPos = alertAreaInfo.sequenceCameraPosList[destroyEquimentIndex];
+        }
     }
 
     /// <summary>
@@ -295,20 +322,81 @@ public class SubmarineInGameManager : MonoBehaviour
     /// </summary>
     public void AlertOff()
     {
-        _currentDestroyEquipment = null; // 현재 파괴될 장비 없으므로 null로 초기화
-        _currentTargetPos = null; // 현재 목표 위치 null로 초기화
         _isAlerting = false; // 경보 발생 중 아님으로 설정
-        Debug.Log("경보 해제");
-        _audioSource.Stop();
 
-        // 임시 - 경보 버튼 하얀색으로 변경(후에 지워야 함)
-        ColorBlock colorBlock = alertButton.colors;
-        colorBlock.normalColor = Color.white;
-        alertButton.colors = colorBlock;
+        CurrentAlertArea = AlertArea.None;
+        CurrentDestroyEquipmentIndex = -1;
+        CurrentDestroyEquipmentObj = null;
+        CurrentDestroyPos = null;
+        CurrentSequenceCameraPos = null;
+
+        _audioSource.Stop();
+        Debug.Log("경보 해제");
+
+        // 경보 발생 끝 이벤트 알림
+        OnAlertEnded?.Invoke();
+
+        // // 임시 - 경보 버튼 하얀색으로 변경(후에 지워야 함)
+        // ColorBlock colorBlock = alertButton.colors;
+        // colorBlock.normalColor = Color.white;
+        // alertButton.colors = colorBlock;
     }
 
+    // /// <summary>
+    // /// 경보 발생
+    // /// </summary>
+    // public void AlertOn()
+    // {
+    //     if (hasEverOpenedEscapeDoor) // 탈출실 문이 한 번이라도 열린 경우(이후 어뢰실 장비에서 경보 발생해도 경보 발생 위치는 탈출실 위치로 설정됨(우선순위 더 높음))
+    //     {
+    //         _currentTargetPos = escapeRoomPos; // 현재 목표 위치 -> 탈출실 위치로 설정
+    //     }
+    //     else // 어뢰실 장비에서 경보 발생하는 경우
+    //     {
+    //         // 인덱스 범위 넘는 경우 예외 처리
+    //         if (currentDestroyEquipmentIndex >= destroyEquipments.Length)
+    //         {
+    //             // AlertOff();
+    //             return;
+    //         }
+
+    //         // 현재 파괴 정보 설정
+    //         _currentDestroyEquipment = destroyEquipments[currentDestroyEquipmentIndex]; // 현재 파괴될 장비 설정
+    //         _currentTargetPos = _currentDestroyEquipment.transform.GetChild(0); // 현재 목표 위치 -> 현재 파괴될 장비 위치의 파괴 위치(첫번째 자식)로 변경
+    //     }
+
+    //     // 임시 - 경보 버튼 빨간색으로 변경(후에 지워야 함)
+    //     ColorBlock colorBlock = alertButton.colors;
+    //     colorBlock.normalColor = Color.red;
+    //     alertButton.colors = colorBlock;
+
+    //     _isAlerting = true; // 경보 발생 중으로 설정
+    //     AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound);
+    //     Debug.Log("경보 발생!");
+
+    //     // 경보 발생 시작 이벤트 알림
+    //     OnAlertStarted?.Invoke();
+    // }
+
+    // /// <summary>
+    // /// 경보 해제
+    // /// </summary>
+    // public void AlertOff()
+    // {
+    //     _currentDestroyEquipment = null; // 현재 파괴될 장비 없으므로 null로 초기화
+    //     _currentTargetPos = null; // 현재 목표 위치 null로 초기화
+    //     _isAlerting = false; // 경보 발생 중 아님으로 설정
+    //     Debug.Log("경보 해제");
+    //     _audioSource.Stop();
+
+    //     // 임시 - 경보 버튼 하얀색으로 변경(후에 지워야 함)
+    //     ColorBlock colorBlock = alertButton.colors;
+    //     colorBlock.normalColor = Color.white;
+    //     alertButton.colors = colorBlock;
+    // }
+
     /// <summary>
-    /// 인게임 UI 활성화 여부 설정
+    /// 인게임 UI(인벤토리, 스탯, 상호작용) 활성화 여부 설정
     /// </summary>
     /// <param name="isActive">활성화 여부</param>
     public void SetActiveInGameUI(bool isActive)
@@ -318,120 +406,4 @@ public class SubmarineInGameManager : MonoBehaviour
         statUI.SetActive(isActive); // 스탯 UI
         interactorUI.SetActive(isActive); // 상호작용 UI
     }
-
-    // /// <summary>
-    // /// 포커스 여부 설정
-    // /// <para>포커스</para>
-    // /// <para>- 게임 시간 정지</para>
-    // /// <para>- 카메라 조작 불가</para>
-    // /// <para>- 플레이어 이동 불가능</para>
-    // /// <para>- 퍼즐 진행 중이었다면 종료</para>
-    // /// </summary>
-    // /// <param name="isFocus">포커스 여부</param>
-    // public void SetFocus(bool isFocus)
-    // {
-    //     // 카운트 업데이트
-    //     if (isFocus) // 포커스 요청
-    //         _focusRequestCount++; // 포커스 요청 카운트 1 증가
-    //     else // 포커스 해제 요청
-    //         _focusRequestCount = Mathf.Max(0, _focusRequestCount - 1); // 포커스 요청 카운트 1 감소
-
-    //     // 목표 포커스 상태: 포커스 요청 카운트가 1 이상이면 포커스 / 0이면 포커스 해제
-    //     bool targetFocusState = _focusRequestCount > 0;
-
-    //     // 현재 포커스 상태와 목표 포커스 상태가 다를 때만 실제 수행
-    //     if (targetFocusState != _isCurrentlyFocused)
-    //     {
-    //         _isCurrentlyFocused = targetFocusState; // 현재 상태 업데이트
-
-    //         GameTime.Instance.SetPause(isFocus); // 포커스 -> 게임 시간 정지
-
-    //         // 현재 퍼즐 진행 중이었다면 그 퍼즐 종료
-    //         if (CurrentPuzzleController != null)
-    //         {
-    //             CurrentPuzzleController.ExitPuzzle();
-    //             CurrentPuzzleController = null;
-    //         }
-
-    //         // 해제는 포커스와 반대로 작동
-    //         playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
-    //         playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-    //         playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
-
-    //         if (isFocus) // 포커스
-    //         {
-    //             // 상호작용 감지 텍스트 클리어
-    //             playerInteractor.ClearDetectionText();
-
-    //             playerInput.DeactivateInput(); // 모든 액션 비활성화
-    //         }
-    //         else
-    //         {
-    //             playerInput.ActivateInput(); // 모든 액션 활성화
-    //         }
-    //     }
-    // }
-
-    // /// <summary>
-    // /// 퍼즐 포커스 여부 설정
-    // /// </summary>
-    // /// <param name="isFocus">포커스 여부</param>
-    // /// <param name="puzzleController">퍼즐 컨트롤러</param>
-    // public void SetPuzzleFocus(bool isFocus, PuzzleController puzzleController = null)
-    // {
-    //     if (isFocus)
-    //         CurrentPuzzleController = puzzleController;
-    //     else
-    //         CurrentPuzzleController = null;
-
-    //     // 해제는 포커스와 반대로 작동
-    //     playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
-    //     playerInteractor.IsPuzzleActive = isFocus; // interactor의 퍼즐 상호작용 여부는 포커스 여부와 동일하게 설정
-    //     playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-    //     playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
-
-    //     if (isFocus) // 포커스
-    //     {
-    //         // 상호작용 감지 텍스트 클리어
-    //         playerInteractor.ClearDetectionText();
-    //     }
-    //     else // 포커스 해제
-    //     {
-    //         // 커서 보여야 한다고 되어 있었으면 -> 커서 보이지 않아도 됨으로 설정(퍼즐에서 플레이로 돌아가니까), 커서 숨기기
-    //         if (GameManager.instance.HaveToShowCursor)
-    //         {
-    //             GameManager.instance.SetHaveToShowCursor(false);
-    //             GameManager.instance.SetCursorVisible(false);
-    //         }
-    //     }
-    // }
-
-    // public void SetFocusInGameMenu(bool isFocus)
-    // {
-    //     // 해제는 포커스와 반대로 작동
-    //     playerInteractor.SetActiveAimUI(!isFocus); // 포커스 -> 조준점 UI 끄기
-    //     isInGameMenuActive = isFocus;
-
-    //     playerCameraController.enabled = !isFocus; // 포커스 -> 카메라 조작 불가
-    //     playerMove.SetMoveable(!isFocus); // 포커스 -> 플레이어 이동 불가능
-
-    //     if (isFocus) // 포커스
-    //     {
-    //         // 상호작용 감지 텍스트 클리어
-    //         playerInteractor.ClearDetectionText();
-
-    //         GameManager.instance.SetCursorVisible(true);
-
-    //         bool isToggleMenuEnabled = playerInput.actions["ToggleMenu"].enabled;
-    //         InputManager.instance.SaveAndDisableAllInputs(); // 인풋 비활성화(현재 여부들 저장)
-    //         playerInput.actions["ToggleInGameMenu"].Enable();
-    //         if (isToggleMenuEnabled)
-    //             playerInput.actions["ToggleMenu"].Enable();
-    //     }
-    //     else // 포커스 해제
-    //     {
-    //         GameManager.instance.SetCursorVisible(false);
-    //         InputManager.instance.RestoreInputsFromSnapshot(); // 인풋 활성화 여부 복구
-    //     }
-    // }
 }

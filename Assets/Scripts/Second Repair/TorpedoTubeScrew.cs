@@ -34,7 +34,10 @@ public class TorpedoTubeScrew : MonoBehaviour, IInteractable
             return "";
 
         // 조이지 않았으면 - 드라이버가 선택되어있을 때 -> 나사 조이기 / 선택 안됨 -> 드라이버 필요 메시지
-        return IsDriverSelected() ? "Tighten Screw [E]" : "Driver Required";
+        if (IsDriverSelected())
+            return LocalizationHelper.GetLocalizedInteractText("Interact/TightenScrew", "E");
+        else
+            return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", driverItem.LocalizedDisplayName);
     }
 
     public void Interact()

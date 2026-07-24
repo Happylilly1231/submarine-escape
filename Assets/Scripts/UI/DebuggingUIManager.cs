@@ -50,7 +50,7 @@ public class DebuggingUIManager : MonoBehaviour
         {
             // 버튼 함수 연결
             lightToggleButton.onClick.AddListener(() => powerSwitch.TogglePower(!LightingManager.instance.IsPowerOn));
-            alertButton.onClick.AddListener(SubmarineInGameManager.instance.AlertOn);
+            alertButton.onClick.AddListener(() => SubmarineInGameManager.instance.AlertOn(AlertArea.EscapeRoom));
             unlockCrewRoomDoorButton.onClick.AddListener(UnlockCrewRoomDoor);
             escapeBackroomButton.onClick.AddListener(EscapeBackroom);
             enterBackroomButton.onClick.AddListener(EnterBackroom);

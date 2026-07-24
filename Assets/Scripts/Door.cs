@@ -19,6 +19,7 @@ public class Door : MonoBehaviour, IInteractable
     private bool _isMoving = false;
     public bool isLocked;
     public bool isAdditionalLocked = false; // 추가적으로 잠금됨
+    public bool isRepairNeed = false; // 수리 필요 여부
 
     public static event Action OnDoorOpenStateChanged; // 문이 열리고 닫힐 때 이벤트
     public static event Action<Door> OnDoorClosed; // 문이 닫힐 때 이벤트(문을 인자로 넘겨줌)
@@ -47,9 +48,14 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isMoving) return "";
-        if (isLocked) return "Locked";
-        if (isAdditionalLocked) return "Still Locked";
-        return isOpened ? "close [E]" : "open [E]";
+        if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return ""; // 기계실 경보 발생돼서 기계실에 갇힌 경우에는 문 열 수 없음
+        if (isRepairNeed) return LocalizationHelper.GetLocalizedInteractText("Interact/BrokenRepairRequired");
+        if (isLocked) return LocalizationHelper.GetLocalizedInteractText("Interact/Locked");
+        if (isAdditionalLocked) return LocalizationHelper.GetLocalizedInteractText("Interact/StillLocked");
+        if (isOpened)
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Close", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
     }
 
     /// <summary>
@@ -57,7 +63,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked || isAdditionalLocked) return;
+        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed || SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return;
 
         if (!isOpened)
         {
@@ -98,8 +104,29 @@ public class Door : MonoBehaviour, IInteractable
         // 탈출실 문을 연 경우
         if (gameObject.CompareTag("EscapeRoomDoor"))
         {
-            SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
-            SubmarineInGameManager.instance.AlertOn(); // 경보 발생
+            // SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
+            SubmarineInGameManager.instance.AlertOn(AlertArea.EscapeRoom); // 경보 발생
+
+        }
+        // 기계실 문을 연 경우
+        else if (gameObject.CompareTag("MachinerySpaceDoor"))
+        {
+            // 비상 폐쇄 중인 상태 & 외부에서 열었을 때만 -> 경보 발생
+            if (SubmarineInGameManager.instance.machinerySpaceDoorRepairController.IsEmergencyLockdown) // 비상 폐쇄 중인지 검사
+            {
+                Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
+
+                Vector2 playerXZ = new Vector2(playerPos.x, playerPos.z);
+                Vector2 frontXZ = new Vector2(frontPos.x, frontPos.z);
+                Vector2 backXZ = new Vector2(backPos.x, backPos.z);
+
+                // 평면 거리 계산 (제곱 거리 사용)
+                float frontSqrDist = (frontXZ - playerXZ).sqrMagnitude;
+                float backSqrDist = (backXZ - playerXZ).sqrMagnitude;
+
+                if (frontSqrDist < backSqrDist) // 외부에서 열었을 때만
+                    SubmarineInGameManager.instance.AlertOn(AlertArea.MachinerySpace); // 기계실 문 경보 발생
+            }
         }
 
         _occlusionPortal.open = true;

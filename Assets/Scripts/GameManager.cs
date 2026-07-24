@@ -134,8 +134,6 @@ public class GameManager : MonoBehaviour
     public string PlayerName { get => playerName; private set => playerName = value; } // 플레이어 이름
     public EPanelType CurrentPanelType = EPanelType.NameSetting;
 
-    private int _cursorRequestCount = 0;
-
     // 싱글톤 변수
     public static GameManager instance;
 
@@ -180,22 +178,8 @@ public class GameManager : MonoBehaviour
         {
             Cursor.visible = false; // 마우스 커서 숨김
             Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
-            // if (!_haveToShowCursor)
-            // {
-            //     Cursor.visible = false; // 마우스 커서 숨김
-            //     Cursor.lockState = CursorLockMode.Locked; // 마우스 고정
-            // }
         }
     }
-
-    // /// <summary>
-    // /// 커서 보여줘야하는지 여부 설정
-    // /// </summary>
-    // /// <param name="isShow"></param>
-    // public void SetHaveToShowCursor(bool isShow)
-    // {
-    //     _haveToShowCursor = isShow;
-    // }
 
     /// <summary>
     /// 게임 정지

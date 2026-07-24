@@ -79,12 +79,12 @@ public class RadarLauncher : MonoBehaviour
         // 현재 실행 중이던 발사 코루틴 중지
         StopFireAnimationLoop();
 
+        // 경보 발생
+        SubmarineInGameManager.instance.AlertOn(AlertArea.ControlRoom, _radarController.CurrentTorpedoIndex); // 0, 1, 2
+
         // 실제 어뢰 발사
         StartCoroutine(FireCoroutine(FireMode.Real));
         _radarDisplay.UpdateFireButtonActive(); // 발사 버튼 활성화 여부 갱신
-
-        // 경보 발생
-        SubmarineInGameManager.instance.AlertOn();
     }
 
     /// <summary>

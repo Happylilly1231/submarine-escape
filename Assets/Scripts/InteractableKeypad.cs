@@ -30,7 +30,7 @@ public class InteractableKeypad : PuzzleController, IInteractable
     public string GetInteractText()
     {
         if (!_isUnlocked)
-            return "Enter Password [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/EnterPassword", "E");
 
         return "";
     }

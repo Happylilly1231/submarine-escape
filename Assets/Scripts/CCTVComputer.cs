@@ -8,7 +8,7 @@ public class CCTVComputer : MonoBehaviour, IInteractable
 
     public string GetInteractText()
     {
-        return "CCTV 보기 [E]";
+        return LocalizationHelper.GetLocalizedInteractText("Interact/ViewCCTV", "E");
     }
 
     public void Interact()

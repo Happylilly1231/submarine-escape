@@ -34,12 +34,12 @@ public class TorpedoAutoLoadSwitch : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerResotrationRequired");
 
         if (IsSwitchOn) // 스위치 켜져 있으면 -> 현재 어뢰 탑재 모드 자동임을 알려주기
-            return "Current Torpedo Load Mode: AUTO";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/CurrentTorpedoLoadModeAuto");
         else // 스위치 꺼지면 -> 현재 어뢰 탑재 모드 수동임을 알려주기
-            return "Current Torpedo Load Mode: MANUAL (Torpedo Room)"; // 어뢰 탑재 모드: 수동 (어뢰실)
+            return LocalizationHelper.GetLocalizedInteractText("Interact/CurrentTorpedoLoadModeManual"); // 어뢰 탑재 모드: 수동 (어뢰실)
     }
 
     public void Interact()

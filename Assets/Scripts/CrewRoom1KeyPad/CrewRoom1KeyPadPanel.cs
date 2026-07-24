@@ -18,8 +18,8 @@ public class CrewRoom1KeyPadPanel : InteractableBase
     {
         if (IsCompleted) return "";
         else if (IsRequiredItemSelected())
-            return "관찰 [E]";
-        else return "드라이버 필요";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Inspect", "E");
+        else return LocalizationHelper.GetLocalizedTextWithParameter("Interact/ItemRequired", screwdriverItem.LocalizedDisplayName);
     }
 
     public override void Interact()

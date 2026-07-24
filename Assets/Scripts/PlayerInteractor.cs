@@ -445,7 +445,7 @@ public class PlayerInteractor : MonoBehaviour
         _canPickUp = true;
         _canInteractable = false;
 
-        interactorText.text = $"{_currentItem.Item.DisplayName} [F]";
+        interactorText.text = $"{_currentItem.Item.LocalizedDisplayName} [F]";
     }
 
     /// <summary>
@@ -477,7 +477,13 @@ public class PlayerInteractor : MonoBehaviour
         _canInteractable = true;
         _canPickUp = false;
 
-        interactorText.text = furniture.GetInteractText();
+        // 기존 텍스트에서 변경이 됐을 때만 UI 갱신
+        string newText = furniture.GetInteractText();
+        if (interactorText.text != newText)
+        {
+            interactorText.text = newText;
+        }
+        // interactorText.text = furniture.GetInteractText();
     }
 
     /// <summary>

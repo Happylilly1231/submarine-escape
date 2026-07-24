@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 레이더 조작 패널
@@ -10,6 +12,8 @@ public class RadarControlPanel : InteractableBase
 {
     [SerializeField] private RadarController radarController; // 레이더 컨트롤러
     [SerializeField] private Item toolKitItem; // 공구 상자 아이템 (파괴되어 고장났을 때 필요)
+    [SerializeField] private GameObject firstRepairUI; // 1차 수리 UI
+    [SerializeField] private Image repairGaugeImg; // 수리 게이지 이미지
 
     private bool _isPowerOn = false; // 전력 켜져 있는지 여부
     private bool _isBroken = false; // 고장 여부
@@ -20,6 +24,9 @@ public class RadarControlPanel : InteractableBase
     {
         inventoryManager = FindObjectOfType<InventoryManager>();
         radarController.RadarControlPanelAudioSource = GetComponent<AudioSource>();
+
+        firstRepairUI.SetActive(false);
+        repairGaugeImg.fillAmount = 0f;
     }
 
     private void OnEnable()
@@ -39,13 +46,16 @@ public class RadarControlPanel : InteractableBase
     public override string GetInteractText()
     {
         if (!_isPowerOn) // 전력 없을 때 -> 전력 필요
-            return "Power Restoration Required";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
         if (!_isBroken) // 고장 나지 않았을 때 -> 레이더 보기
-            return "View Radar [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/ViewRadar", "E");
 
         // 고장 났을 때 - 공구 상자가 선택되어있을 때 -> 수리 / 선택 안됨 -> 수리 필요(공구 상자 필요) 메시지
-        return IsRequiredItemSelected() ? "Repair [E]" : "Repair Required (Tool Kit Required)";
+        if (IsRequiredItemSelected())
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Repair", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/BrokenRepairRequired");
     }
 
     /// <summary>
@@ -103,22 +113,28 @@ public class RadarControlPanel : InteractableBase
         float timer = repairTime;
 
         FocusManager.Instance.PushFocusState(GameFocusState.Puzzle); // 퍼즐 포커스 상태로 변경
-        // SubmarineInGameManager.instance.SetPuzzleFocus(true);
+        SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
 
-        inventoryManager.UpdateActionText();
+        // inventoryManager.UpdateActionText();
+
+        firstRepairUI.SetActive(true);
 
         while (timer > 0)
         {
-            MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
+            repairGaugeImg.fillAmount = Mathf.Clamp01((repairTime - timer) / repairTime);
+            // MessageUIController.Instance.ShowMessage($"수리 중...({timer:F0}초)");
             timer -= Time.deltaTime;
             yield return null;
         }
-        MessageUIController.Instance.ShowMessage("수리 완료");
-        yield return new WaitForSeconds(1f);
-        MessageUIController.Instance.HideMessage();
+
+        firstRepairUI.SetActive(false);
+
+        // MessageUIController.Instance.ShowMessage("수리 완료");
+        // yield return new WaitForSeconds(1f);
+        // MessageUIController.Instance.HideMessage();
 
         FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
-        // SubmarineInGameManager.instance.SetPuzzleFocus(false);
+        SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
         _isBroken = false;
     }
 }

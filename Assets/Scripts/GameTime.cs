@@ -14,6 +14,7 @@ public class TimerReservation
 /// <summary>
 /// 게임 시간 관리
 /// <para>- 게임 시작 이후로 흐른 시간 변수</para>
+/// <para>- 실제 시간이 아니라 이 게임 시간에 제어받는 것: 심해 괴물, 플레이어 괴물화</para>
 /// </summary>
 public class GameTime : MonoBehaviour
 {

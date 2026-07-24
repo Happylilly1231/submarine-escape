@@ -35,14 +35,17 @@ public class Cabinet : InteractableBase
     /// </summary>
     public override string GetInteractText()
     {
-        if (_isOpen) return "close [E]";
+        if (_isOpen) return LocalizationHelper.GetLocalizedInteractText("Interact/Close", "E");
 
         switch (lockType)
         {
             case CabinetLockType.None:
-                return "open [E]";
+                return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
             case CabinetLockType.KeyRequired:
-                return IsRequiredItemSelected() ? "open [E]" : "Locked (Need Key)";
+                if (IsRequiredItemSelected())
+                    return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
+                else
+                    return LocalizationHelper.GetLocalizedInteractText("Interact/LockedKeyRequired");
         }
 
         return "";

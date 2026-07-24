@@ -27,7 +27,10 @@ public class Drawer : MonoBehaviour, IInteractable
     /// </summary>
     public string GetInteractText()
     {
-        return _isOpen ? "closed [E]" : "open [E]";
+        if (_isOpen)
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Close", "E");
+        else
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
     }
 
     /// <summary>

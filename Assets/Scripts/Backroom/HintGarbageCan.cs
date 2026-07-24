@@ -16,7 +16,7 @@ public class HintGarbageCan : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (!isFound)
-            return "Search [E]";
+            return LocalizationHelper.GetLocalizedInteractText("Interact/Search", "E");
         else
             return "";
     }
