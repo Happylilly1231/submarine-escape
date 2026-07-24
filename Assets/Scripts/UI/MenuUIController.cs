@@ -111,6 +111,8 @@ public class MenuUIController : MonoBehaviour
         // 정지 버튼(ESC) 눌렀을 때
         if (context.performed)
         {
+            // 현재 포커스가 다이어리라면 메뉴 열기 막음
+            if (FocusManager.Instance.CurrentFocusState == GameFocusState.Diary) return;
             ToggleMenu();
         }
     }

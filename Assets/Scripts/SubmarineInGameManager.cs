@@ -83,6 +83,9 @@ public class SubmarineInGameManager : MonoBehaviour
     public event Action OnMachinerySpaceAlertStarted; // 기계실 경보 발생 시작 이벤트
     public event Action OnNonMachinerySpaceAlertStarted; // 기계실 경보 제외 경보 발생 시작 이벤트
 
+    // 탈출 성공 플래그
+    public bool IsEscaped { get; private set; } = false;
+
     // 사운드
     [Header("Sound")]
     [SerializeField] private AudioClip alertSound;
@@ -183,6 +186,30 @@ public class SubmarineInGameManager : MonoBehaviour
             MenuUIController.instance.ToggleDebuggingUI(); // 디버깅 UI 활성화/비활성화
         }
     }
+
+    public void SetEscaped()
+    {
+        IsEscaped = true;
+    }
+
+    // /// <summary>
+    // /// 메뉴 켜기/끄기 & 정지 여부 함께 설정
+    // /// </summary>
+    // public void ToggleMenuAndSetPause()
+    // {
+    //     GameManager.instance.ToggleMenu(); // 메뉴 켜기/끄기
+
+    //     if (GameManager.instance.MenuUI.activeSelf) // 메뉴를 켰을 때
+    //     {
+    //         playerInteractor.SetActiveInteractorUI(false); // 상호작용 UI 끄기
+    //         Pause(); // 정지
+    //     }
+    //     else // 메뉴를 껐을 때
+    //     {
+    //         playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 켜기
+    //         Resume(); // 정지 해제(플레이)
+    //     }
+    // }
 
     /// <summary>
     /// 게임 초기 설정

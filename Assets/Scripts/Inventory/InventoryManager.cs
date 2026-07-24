@@ -475,6 +475,14 @@ public class InventoryManager : MonoBehaviour
                 // }
                 break;
             case EItemType.UI:
+                if (currentEquippedItem.TryGetComponent<ItemPickUp>(out var item))
+                {
+                    if (item.Item.ItemName == "Diary")
+                    {
+                        Diary diary = FindObjectOfType<Diary>();
+                        diary?.ViewDiary();
+                    }
+                }
                 if (currentEquippedItem.TryGetComponent<UIItem>(out var uiItem))
                 {
                     uiItem.Use(selectedSlot.Item, _isViewingUI);
