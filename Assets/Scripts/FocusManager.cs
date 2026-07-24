@@ -244,7 +244,8 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.Diary:
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
                 PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 키만 활성화하여 다이어리 닫기에 사용
-            
+                break;
+
             case GameFocusState.UIScene:
                 // PlayerInput을 가진 플레이어가 없으므로 인풋 비활성화 필요 X
                 break;

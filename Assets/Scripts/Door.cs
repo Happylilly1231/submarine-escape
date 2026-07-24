@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using DG.Tweening;
+using UnityEditor.Localization.Plugins.XLIFF.V12;
 
 public class Door : MonoBehaviour, IInteractable
 {
@@ -48,7 +49,7 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isMoving) return "";
-        if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return ""; // 기계실 경보 발생돼서 기계실에 갇힌 경우에는 문 열 수 없음
+        if (SubmarineInGameManager.instance && SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return ""; // 기계실 경보 발생돼서 기계실에 갇힌 경우에는 문 열 수 없음
         if (isRepairNeed) return LocalizationHelper.GetLocalizedInteractText("Interact/BrokenRepairRequired");
         if (isLocked) return LocalizationHelper.GetLocalizedInteractText("Interact/Locked");
         if (isAdditionalLocked) return LocalizationHelper.GetLocalizedInteractText("Interact/StillLocked");
@@ -63,7 +64,7 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed || SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return;
+        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed || (SubmarineInGameManager.instance && SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)) return;
 
         if (!isOpened)
         {

@@ -10,6 +10,7 @@ public class InteractableKeypad : PuzzleController, IInteractable
     protected override bool IsMouseRequiredAtFirst => true;
 
     [SerializeField] private GameObject target; // 목표 (이 비밀번호를 풀음으로써 잠금 해제되는 것 (문, 상자 등))
+    [SerializeField] private GameObject whiteLight; // 불
 
     private bool _isUnlocked = false;
     private Collider _collider;
@@ -47,6 +48,8 @@ public class InteractableKeypad : PuzzleController, IInteractable
     {
         base.StartPuzzle();
 
+        if (!LightingManager.instance.IsPowerOn) whiteLight.SetActive(true);
+
         _collider.enabled = false; // 키패드 콜라이더가 버튼 콜라이더를 가리지 않도록
 
         Click.performed += OnClickPerformed; // 클릭 performed 사용
@@ -55,6 +58,8 @@ public class InteractableKeypad : PuzzleController, IInteractable
     public override void ExitPuzzle()
     {
         base.ExitPuzzle();
+
+        if (!LightingManager.instance.IsPowerOn) whiteLight.SetActive(false);
 
         _collider.enabled = true;
 
