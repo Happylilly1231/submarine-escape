@@ -57,7 +57,8 @@ public class TelegraphKey : PuzzleController, IInteractable
     private float _holdThreshold = 0.2f;
     private float _maxHoldDuration = 0.3f;
     private StringBuilder _currentWord = new StringBuilder();
-    public bool IsSubmarineLeft { get; private set; } = false; // 본부 잠수함이 떠났는지 여부
+    public bool IsSubmarineLeft { get; set; } = false; // 본부 잠수함이 떠났는지 여부
+    public bool IsSuccessed { get; private set; } = false;
     private bool _isHoldForceOver = false;
     private bool _isResponding = false; // 본부가 응답 중 여부
     public bool IsCommunicating { get; private set; } = false; // 통신 중 여부(심해 괴물 자극 판단에 씀)
@@ -139,7 +140,7 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public override void StartPuzzle()
     {
-        if (IsSubmarineLeft)
+        if (IsSuccessed)
             KeyE.performed += OnKeyEPerformed;
         else
         {
@@ -156,7 +157,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         Click.started -= OnClickStarted;
         Click.canceled -= OnClickCanceled;
         RightClick.performed -= OnRightClickPerformed;
-        if (IsSubmarineLeft)
+        if (IsSuccessed)
             KeyE.performed -= OnKeyEPerformed;
 
         // 데이터와 화면 UI를 깨끗하게 비워줌
@@ -633,7 +634,8 @@ public class TelegraphKey : PuzzleController, IInteractable
 
         // 본부 잠수함 떠남
         radarController.LeaveSubmarine();
-        IsSubmarineLeft = true; // 이제 더 이상 신호를 주고받을 수 없도록 플래그 차단
+        IsSuccessed = true;
+        // IsSubmarineLeft = true; // 이제 더 이상 신호를 주고받을 수 없도록 플래그 차단
 
         KeyE.performed += OnKeyEPerformed; // E키 사용 가능
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트

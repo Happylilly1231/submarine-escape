@@ -44,25 +44,7 @@ namespace InnerMonsterStates
                 {
                     // 괴물 바라보게 회전
                     PlayerManager.Instance.SetCameraControllerEnable(true);
-                    PlayerManager.Instance.playerMove.transform.LookAt(owner.transform.position + Vector3.up * 1.7f);
-                    // Vector3 playerPos = PlayerManager.Instance.playerMove.transform.position;
-                    // Vector3 targetPos = owner.transform.position;
-                    // Vector3 dir = (targetPos - playerPos).normalized;
-                    // Quaternion targetRotation = Quaternion.LookRotation(dir);
-                    // PlayerManager.Instance.playerMove.PlayerTeleport(playerPos, targetRotation);
-
-                    // // 1. 플레이어가 해골 쪽을 즉시 바라보도록 좌우 회전 (Y축 기준)
-                    // Vector3 playerDir = (owner.transform.position - PlayerManager.Instance.playerMove.transform.position).normalized;
-                    // playerDir.y = 0; // 평평하게 Y축 회전만 적용
-                    // if (playerDir != Vector3.zero)
-                    //     PlayerManager.Instance.playerMove.transform.rotation = Quaternion.LookRotation(playerDir);
-
-                    // // 3. 카메라가 해골 눈을 즉시 마주치도록 상하/좌우 회전 (즉시 대입)
-                    // Vector3 lookEyeDir = (monster.position - Camera.main.transform.position).normalized;
-                    // Quaternion targetRotation = Quaternion.LookRotation(lookEyeDir);
-
-                    // // X, Y, Z 회전을 즉시 카메라에 대입
-                    // Camera.main.transform.rotation = targetRotation;
+                    PlayerManager.Instance.playerCameraController.SetRotationToTargetPosInstant(owner.transform.position + Vector3.up * 1.7f);
                 }
             }
         }

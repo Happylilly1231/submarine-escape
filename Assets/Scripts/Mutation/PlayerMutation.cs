@@ -379,5 +379,11 @@ public class PlayerMutation : MonoBehaviour
         mutationAudioSource.Stop();
         vignetteImg.gameObject.SetActive(false);
     }
+
+    private void OnDestroy()
+    {
+        //  모든 DOTween 연출 끄기
+        transform.DOKill();
+    }
 }
 

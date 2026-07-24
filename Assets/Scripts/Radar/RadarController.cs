@@ -95,6 +95,8 @@ public class RadarController : PuzzleController
         // 선택 여부 초기화
         SelectPlanarPos(false);
         SelectHeight(true); // 높이는 선택됨으로 설정
+
+        GameTime.Instance.ReserveEvent(3600f, LeaveSubmarine, false);
     }
 
     private void OnEnable()
@@ -604,6 +606,9 @@ public class RadarController : PuzzleController
 
         // 후퇴
         StartCoroutine(_radarDisplay.FadeInOut(false, submarine2, 3f)); // 본부 잠수함 페이드 아웃되면서 물러남
+        Debug.Log("본부 잠수함이 떠났습니다.");
+
+        telegraphKey.IsSubmarineLeft = true; // 이제 더 이상 통신 신호를 주고받을 수 없도록 플래그 차단
     }
     #endregion
 }
