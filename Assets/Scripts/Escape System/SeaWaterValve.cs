@@ -16,6 +16,11 @@ public class SeaWaterValve : InteractableBase
     public AudioLowPassFilter lowPassFilter;
     public Volume underwaterVolume; // 물속 효과가 담긴 볼륨
 
+    [Header("UI")]
+    [SerializeField] private GameObject interactorUI;
+    [SerializeField] private GameObject inventoryUI;
+    [SerializeField] private GameObject statUI;
+
     private bool _isActivated = false; // 작동되었는지 여부
     public bool IsActivated => _isActivated;
     private float _targetHeight = 4.4f; // 물이 차오를 최종 높이
@@ -25,6 +30,7 @@ public class SeaWaterValve : InteractableBase
     private bool _isUnderwater = false;
 
     private ObjectiveManager objectiveManager;
+    private EqualizingQTE equalizingQTE;
 
     [Header("Sound")]
     private AudioSource _audioSource;
@@ -35,6 +41,7 @@ public class SeaWaterValve : InteractableBase
     {
         _audioSource = GetComponent<AudioSource>();
         objectiveManager = FindObjectOfType<ObjectiveManager>();
+        equalizingQTE = GetComponent<EqualizingQTE>();
 
         hatchLightObj.SetActive(false);
     }
@@ -71,6 +78,10 @@ public class SeaWaterValve : InteractableBase
             escapeRoomDoor.CloseDoor(); // 탈출실 문 자동으로 닫기
         escapeRoomDoor.isLocked = true; // 탈출실 문 잠그기 (이제 열 수 없음)
 
+        interactorUI.SetActive(false);
+        inventoryUI.SetActive(false);
+        statUI.SetActive(false);
+
         objectiveManager.CompleteObjective("GoToEscapeRoom");
         Debug.Log("물 채우기를 시작합니다.");
         StartWaterSequence();
@@ -102,8 +113,9 @@ public class SeaWaterValve : InteractableBase
                 PlayerMutation playerMutation = SubmarineInGameManager.instance.player.GetComponent<PlayerMutation>();
                 if (playerMutation.IsCured)
                 {
-                    // 탈출 연출 재생
-                    Escape();
+                    // 탈출 QTE 성공 후 탈출 연출 재생
+                    //Escape();
+                    equalizingQTE?.StartQTE();
                 }
                 else
                 {
@@ -152,7 +164,7 @@ public class SeaWaterValve : InteractableBase
     /// <summary>
     /// 탈출
     /// </summary>
-    private void Escape()
+    public void Escape()
     {
         FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
         // SubmarineInGameManager.instance.SetFocus(true); // 포커스
