@@ -130,6 +130,11 @@ public class FocusManager : MonoBehaviour
 
         Debug.Log($"갱신된 현재 포커스 상태:{CurrentFocusState} (이전 포커스 상태: {oldState})");
 
+        // 이전 상태가 게임 시간 정지 연출이었다면 -> 인게임 UI 활성화
+        if (oldState == GameFocusState.GameTimePauseSequence)
+            if (SubmarineInGameManager.instance != null)
+                SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 활성화
+
         switch (CurrentFocusState)
         {
             case GameFocusState.None:
@@ -144,6 +149,8 @@ public class FocusManager : MonoBehaviour
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
 
                 if (GameTime.Instance != null) GameTime.Instance.SetPause(true); // 게임 시간 정지
+                if (SubmarineInGameManager.instance != null)
+                    SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
 
                 // 연출이 보이도록 모든 창 다 끄고 나가기
                 if (oldState == GameFocusState.Puzzle)

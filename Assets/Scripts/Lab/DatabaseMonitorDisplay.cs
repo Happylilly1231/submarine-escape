@@ -269,20 +269,20 @@ public class DatabaseMonitorDisplay : MonoBehaviour
     private void UpdateCreatureInfoUI(CreatureData creatureData)
     {
         creatureImg.sprite = creatureData.CreatureImage;
-        creatureNameText.text = creatureData.CreatureName;
-        biogicalInfoText.text = creatureData.BiologicalInfo;
+        creatureNameText.text = creatureData.LocalizedCreatureName;
+        biogicalInfoText.text = creatureData.LocalizedBiologicalInfo;
 
         if (creatureData.Samples != null)
         {
             for (int i = 0; i < sampleBtns.Length; i++)
             {
                 TextMeshProUGUI nameText = sampleBtns[i].transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-                nameText.text = creatureData.Samples[i].sampleName;
+                nameText.text = creatureData.Samples[i].LocalizedSampleName;
 
                 int currnetStock = WarehouseManager.instance.GetStockCount(creatureData.CreatureName, creatureData.Samples[i].sampleName);
 
                 sampleQtys[i].GetComponentInChildren<TextMeshProUGUI>().text = currnetStock.ToString();
-                sampleInfos[i].GetComponentInChildren<TextMeshProUGUI>().text = creatureData.Samples[i].sampleDetail;
+                sampleInfos[i].GetComponentInChildren<TextMeshProUGUI>().text = creatureData.Samples[i].GetLocalizedSampleDetail;
             }
 
             // 창고 위치 UI 업데이트
@@ -371,6 +371,12 @@ public class DatabaseMonitorDisplay : MonoBehaviour
     /// </summary>
     private void UpdateExperimentRecordUI()
     {
+        if (experimentRecordPanel.activeSelf)
+        {
+            experimentRecordPanel.SetActive(false);
+            return;
+        }
+
         Debug.Log("실험 기록 UI 업데이트 - 사용자 인덱스: " + _loggedInUserIndex);
         creatureInfoPanel.SetActive(false);
         experimentRecordPanel.SetActive(true);
@@ -390,8 +396,8 @@ public class DatabaseMonitorDisplay : MonoBehaviour
         if (selectedBtn == null || selectedBtn.reportData == null) return;
 
         // 실험 기록 보고서 텍스트 업데이트
-        reportTitleText.text = selectedBtn.reportData.title;
-        reportContentText.text = selectedBtn.reportData.content;
+        reportTitleText.text = selectedBtn.reportData.LocalizedTitle;
+        reportContentText.text = selectedBtn.reportData.LocalizedContent;
 
         // 현재 활성화된 계정 패널 내의 모든 버튼 이미지 초기화
         GameObject currentPanel = userRecordPanels[_loggedInUserIndex];

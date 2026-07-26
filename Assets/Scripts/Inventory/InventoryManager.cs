@@ -285,6 +285,8 @@ public class InventoryManager : MonoBehaviour
                         else if (currentItem.ItemName.Contains("Battery"))
                             AppendAction(sb, "Action/Puzzle/ReplaceBattery", "E");
                     }
+                    if (currentItem.ItemName == "Bio Data Extractor")
+                        AppendAction(sb, "Action/Puzzle/ExtractBiodata");
                     break;
                 case EItemType.UI:
                     if (FocusManager.Instance.CurrentPuzzleController == null)
@@ -310,10 +312,13 @@ public class InventoryManager : MonoBehaviour
         // SOS 신호 퍼즐 상호작용 메시지
         if (FocusManager.Instance.CurrentPuzzleController is TelegraphKey telegraphKey)
         {
-            AppendAction(sb, "Action/Puzzle/InputMorseCode", "LMB");
-            AppendAction(sb, "Action/Puzzle/TransmitFinalMessage", "RMB");
-            if (telegraphKey.IsSubmarineLeft)
+            if (telegraphKey.IsSuccessed)
                 AppendAction(sb, "Action/Puzzle/PlayRecording", "E");
+            else
+            {
+                AppendAction(sb, "Action/Puzzle/InputMorseCode", "LMB");
+                AppendAction(sb, "Action/Puzzle/TransmitFinalMessage", "RMB");
+            }
         }
 
         actionText.text = sb.ToString();

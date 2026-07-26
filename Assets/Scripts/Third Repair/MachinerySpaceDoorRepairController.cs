@@ -77,6 +77,8 @@ public class MachinerySpaceDoorRepairController : PuzzleController, IInteractabl
 
         base.ExitPuzzle();
 
+        SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
+
         Click.performed -= OnClickPerformed;
 
         CloseDoor(); // 함 문 닫기

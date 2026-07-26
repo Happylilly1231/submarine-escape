@@ -94,22 +94,34 @@ public class BigSkull : BackroomEntity
 
         Sequence seq = DOTween.Sequence();
 
-        // 1. 플레이어가 해골 쪽 바라보도록 좌우 회전
-        seq.Append(_playerTransform.DOLookAt(startViewPos, 1f));
+        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        PlayerManager.Instance.SetCameraControllerEnable(true);
 
-        // 2. 카메라가 해골 눈 제대로 마주치도록 상하 회전
         seq.AppendCallback(() =>
         {
-            FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
-            // SubmarineInGameManager.instance.SetFocus(true); // 포커스
-            Vector3 lookEyeDir = (eyePosTransform.position - Camera.main.transform.position).normalized; // 카메라가 해골 눈높이 바라보는 방향 계산
-            Quaternion targetRotation = Quaternion.LookRotation(lookEyeDir); // 해당 방향을 바라보기 위한 쿼터니언을 오일러 각으로 변환
-            float targetY = targetRotation.eulerAngles.y; // y만 목표 회전값으로 설정
-            Camera.main.transform.DORotate(new Vector3(Camera.main.transform.eulerAngles.x, targetY, Camera.main.transform.eulerAngles.z), 0.5f).SetEase(Ease.OutQuad); // DOTween으로 Y축만 회전 (현재 X, Z는 유지)
+            PlayerManager.Instance.playerCameraController.RotateToTargetPos(eyePosTransform.position, 1f, Ease.OutQuart);
         });
+        seq.AppendInterval(1f);
 
-        // 카메라 회전하는 시간만큼 대기 (위에 회전 명령어는 AppendCallback에서 실행되었으므로 기다려주지 않기 때문)
-        seq.AppendInterval(0.5f);
+        // // 1. 플레이어가 해골 쪽 바라보도록 좌우 회전
+        // seq.Append(_playerTransform.DOLookAt(startViewPos, 1f));
+
+        // // 2. 카메라가 해골 눈 제대로 마주치도록 상하 회전
+        // seq.AppendCallback(() =>
+        // {
+        //     FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
+        //     // 괴물 바라보게 회전
+        //     PlayerManager.Instance.SetCameraControllerEnable(true);
+        //     PlayerManager.Instance.playerMove.transform.LookAt(eyePosTransform.position);
+        //     // SubmarineInGameManager.instance.SetFocus(true); // 포커스
+        //     Vector3 lookEyeDir = (eyePosTransform.position - Camera.main.transform.position).normalized; // 카메라가 해골 눈높이 바라보는 방향 계산
+        //     Quaternion targetRotation = Quaternion.LookRotation(lookEyeDir); // 해당 방향을 바라보기 위한 쿼터니언을 오일러 각으로 변환
+        //     float targetY = targetRotation.eulerAngles.y; // y만 목표 회전값으로 설정
+        //     Camera.main.transform.DORotate(new Vector3(Camera.main.transform.eulerAngles.x, targetY, Camera.main.transform.eulerAngles.z), 0.5f).SetEase(Ease.OutQuad); // DOTween으로 Y축만 회전 (현재 X, Z는 유지)
+        // });
+
+        // // 카메라 회전하는 시간만큼 대기 (위에 회전 명령어는 AppendCallback에서 실행되었으므로 기다려주지 않기 때문)
+        // seq.AppendInterval(0.5f);
 
         // 완료 시 -> 포커스 해제
         seq.OnComplete(() =>

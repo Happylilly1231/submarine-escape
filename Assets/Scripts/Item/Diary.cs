@@ -14,6 +14,7 @@ public class Diary : MonoBehaviour
 
     private InputAction _toggleMenuAction;
     private MenuUIController _menuUIController;
+    private DiaryController _diaryController;
 
     private bool isOpen = false;
 
@@ -22,6 +23,7 @@ public class Diary : MonoBehaviour
         _toggleMenuAction = PlayerManager.Instance.playerInput.actions["ToggleMenu"];
 
         _menuUIController = FindObjectOfType<MenuUIController>();
+        _diaryController = GetComponent<DiaryController>();
     }
 
     /// <summary>
@@ -36,6 +38,7 @@ public class Diary : MonoBehaviour
         inventoryUI.SetActive(false);
         interactorUI.SetActive(false);
         diaryUI.SetActive(true);
+        _diaryController.UpdatePageUI();
 
         // 손에 들고 있는 일기장 비활성화
         heldItemObj.SetActive(false);

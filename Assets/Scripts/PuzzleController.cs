@@ -131,6 +131,7 @@ public abstract class PuzzleController : MonoBehaviour
         IsPuzzleStarted = true;
         InputManager.instance.SwitchActionMapWithPermanent("Puzzle"); // 퍼즐 액션 맵과 Permanent 액션 맵 활성화
 
+        Debug.Log("_exit: " + _exit);
         _exit.performed += OnExit;
         if (IsHoverRequired) _point.performed += OnPoint; // 호버 필요할 때만 미리 구독
 
