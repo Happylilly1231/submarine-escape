@@ -11,6 +11,7 @@ public class InteractableKeypad : PuzzleController, IInteractable
 
     [SerializeField] private GameObject target; // 목표 (이 비밀번호를 풀음으로써 잠금 해제되는 것 (문, 상자 등))
     [SerializeField] private GameObject whiteLight; // 불
+    [SerializeField] private bool isBroken = false; // 고장 여부
 
     private bool _isUnlocked = false;
     private Collider _collider;
@@ -22,6 +23,15 @@ public class InteractableKeypad : PuzzleController, IInteractable
         _keypad = GetComponent<Keypad>();
     }
 
+    public override void Start()
+    {
+        base.Start();
+
+        // 고장 -> 빨간 화면
+        if (isBroken)
+            _keypad.Broke();
+    }
+
     #region IInteractable
     public bool CanInteractwithSelectedItem(Item item)
     {
@@ -30,6 +40,9 @@ public class InteractableKeypad : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
+        if (isBroken)
+            return LocalizationHelper.GetLocalizedInteractText("Interact/PermanentFailure");
+
         if (!_isUnlocked)
             return LocalizationHelper.GetLocalizedInteractText("Interact/EnterPassword", "E");
 

@@ -138,5 +138,13 @@ namespace NavKeypad
             ClearInput();
             panelMesh.material.SetVector("_EmissionColor", screenNormalColor * screenIntensity);
         }
+
+        /// <summary>
+        /// 고장
+        /// </summary>
+        public void Broke()
+        {
+            panelMesh.material.SetVector("_EmissionColor", screenDeniedColor * screenIntensity);
+        }
     }
 }

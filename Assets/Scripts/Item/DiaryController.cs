@@ -3,12 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Localization.Settings;
+using UnityEngine.Localization;
 
 [System.Serializable]
 public class DiaryEntry
 {
     public string date; // 날짜
     [TextArea(3, 10)] public string content; // 내용
+
+    /// <summary>
+    /// 번역된 내용
+    /// </summary>
+    /// <param name="pageIndex">페이지 번호(1부터 시작 주의!)</param>
+    /// <returns></returns>
+    public string GetLocalizedContent(int pageIndex)
+    {
+        string tableKey = $"Diary/Page{pageIndex}";
+        string localized = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", tableKey);
+
+        return string.IsNullOrEmpty(localized) ? content : localized;
+    }
 }
 
 public class DiaryController : MonoBehaviour
@@ -47,6 +62,14 @@ public class DiaryController : MonoBehaviour
 
     private void Start()
     {
+        StartCoroutine(InitDiaryContentCoroutine());
+    }
+
+    private IEnumerator InitDiaryContentCoroutine()
+    {
+        // Localization 초기화 완료 대기
+        yield return LocalizationSettings.InitializationOperation;
+
         InitDiaryContent();
     }
 
@@ -56,10 +79,10 @@ public class DiaryController : MonoBehaviour
     private void InitDiaryContent()
     {
         _leftDateText.text = diaryEntries[0].date;
-        _leftContentText.text = diaryEntries[0].content;
+        _leftContentText.text = diaryEntries[0].GetLocalizedContent(1);
 
         _rightDateText.text = diaryEntries[1].date;
-        _rightContentText.text = diaryEntries[1].content;
+        _rightContentText.text = diaryEntries[1].GetLocalizedContent(2);
 
         prevButton.interactable = false;
     }
@@ -84,16 +107,16 @@ public class DiaryController : MonoBehaviour
     /// <summary>
     /// 페이지 UI 업데이트
     /// </summary>
-    private void UpdatePageUI()
+    public void UpdatePageUI()
     {
         int leftIdx = _currentPageIdx * 2;
         int rightIdx = leftIdx + 1;
 
         _leftDateText.text = diaryEntries[leftIdx].date;
-        _leftContentText.text = diaryEntries[leftIdx].content;
+        _leftContentText.text = diaryEntries[leftIdx].GetLocalizedContent(leftIdx + 1);
 
         _rightDateText.text = diaryEntries[rightIdx].date;
-        _rightContentText.text = diaryEntries[rightIdx].content;
+        _rightContentText.text = diaryEntries[rightIdx].GetLocalizedContent(rightIdx + 1);
 
         prevButton.interactable = (_currentPageIdx > 0);
         nextButton.interactable = (_currentPageIdx < diaryEntries.Count / 2 - 1);
