@@ -59,6 +59,7 @@ namespace InnerMonsterStates
                 // 탈출실 경보 때문에 탈출실에 들어간 경우
                 if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.EscapeRoom)
                 {
+                    FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 포커스 (그냥 문 열려있어서 Destroy 안 거치고 왔을 수도 있기 때문)
                     owner.IsDestroySequencing = true;
 
                     // 카메라를 현재 연출 카메라 위치로 즉시 이동 및 회전
@@ -71,10 +72,11 @@ namespace InnerMonsterStates
                         owner.Animator.Play("Rage StateMachine.RageStart");
                         AudioManager.Instance.PlayGlobalOneShot(owner.rageStartSound); // 포효 소리 재생
                     });
-                    seq.AppendInterval(2f);
+                    seq.AppendInterval(1f);
+                    seq.Append(FXManager.instance.fadeImage.DOFade(1f, 1f)); // 화면이 완전히 검게 변함
+                    seq.AppendCallback(() => AudioManager.Instance.FadeOutSFX(1f)); // 경보 소리 페이드아웃되면서 꺼짐
                     seq.OnComplete(() =>
                     {
-                        AudioManager.Instance.StopSFX();
                         GameManager.instance.GameOver(EEndingType.MonsterDeath); // 게임 오버 (탈출실 문이 파괴되었으므로 탈출 불가, 일단 괴물에게 죽은 엔딩으로 설정)
                     });
                     return;

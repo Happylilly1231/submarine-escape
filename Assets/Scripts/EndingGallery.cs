@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public enum EEndingType
@@ -33,6 +36,42 @@ public class EndingFrameData
     [HideInInspector] public float currentPlayerTime; // 현재 플레이어의 클리어 시간
     [HideInInspector] public float bestClearTime;  // 최단 기록
     [HideInInspector] public string beatPlayerName; // 최단 기록을 달성한 플레이어 이름
+
+    /// <summary>
+    /// 번역된 엔딩 타이틀
+    /// </summary>
+    public string LocalizedEndingTitle
+    {
+        get
+        {
+            // 공백 제거
+            string cleanEndingType = type.ToString().Replace(" ", "");
+
+            string tableKey = $"Ending/{cleanEndingType}/Title";
+            string localizedEndingTitle = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", tableKey);
+
+            // 테이블에 키가 없거나 할 경우 -> 기존 displayName 반환
+            return string.IsNullOrEmpty(localizedEndingTitle) ? endingTitle : localizedEndingTitle;
+        }
+    }
+
+    /// <summary>
+    /// 번역된 엔딩 타이틀
+    /// </summary>
+    public string LocalizedEndingDescription
+    {
+        get
+        {
+            // 공백 제거
+            string cleanEndingType = type.ToString().Replace(" ", "");
+
+            string tableKey = $"Ending/{cleanEndingType}/Description";
+            string localizedEndingDescription = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", tableKey);
+
+            // 테이블에 키가 없거나 할 경우 -> 기존 displayName 반환
+            return string.IsNullOrEmpty(localizedEndingDescription) ? endingDescription : localizedEndingDescription;
+        }
+    }
 }
 
 public class EndingGallery : MonoBehaviour
@@ -40,12 +79,7 @@ public class EndingGallery : MonoBehaviour
     [SerializeField] private List<EndingFrameData> endingFrames;
     [SerializeField] private Button ReturnToTitleBtn;
     [SerializeField] private EndingDetailView detailView;
-
-    void OnEnable()
-    {
-        UpdateGallery();
-    }
-
+    [SerializeField] private AudioClip bgmSound;
 
     void Awake()
     {
@@ -57,6 +91,29 @@ public class EndingGallery : MonoBehaviour
         GameManager.instance.SetCursorVisible(true); // 커서 보이게
         UpdateGallery();
         SetupClickEvents();
+        AudioManager.Instance.PlayBGM(bgmSound); // 브금 재생
+    }
+
+    private void OnEnable()
+    {
+        // 언어 변경 이벤트 구독
+        LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
+    }
+
+    /// <summary>
+    /// 언어가 바뀌면 자동으로 호출되는 콜백
+    /// </summary>
+    private void OnLanguageChanged(Locale newLocale)
+    {
+        UpdateGallery();
+    }
+
+    private void OnDisable()
+    {
+        // 이벤트 해제 (메모리 누수 방지)
+        LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
+
+        AudioManager.Instance.StopBGM(); // 브금 종료
     }
 
     // 한 명의 플레이어가 단독으로 플레이할 때 '엔딩별 최초/최단 기록'을 관리
@@ -124,7 +181,7 @@ public class EndingGallery : MonoBehaviour
             // UI 업데이트
             frame.displayImage.sprite = frame.isUnlocked ? frame.unlockedSprite : frame.lockedSprite;
             frame.clickButton.gameObject.SetActive(frame.isUnlocked);
-            frame.endingFrame.SetTitle(frame.endingTitle);
+            frame.endingFrame.SetTitle(frame.LocalizedEndingTitle);
         }
     }
 
@@ -145,7 +202,7 @@ public class EndingGallery : MonoBehaviour
         if (frame.isUnlocked)
         {
             // 해금된 경우 상세 설명창 띄우기
-            detailView.ShowDetail(frame.unlockedSprite, frame.endingDescription, frame.currentPlayerTime, frame.bestClearTime, frame.beatPlayerName);
+            detailView.ShowDetail(frame.unlockedSprite, frame.LocalizedEndingDescription, frame.currentPlayerTime, frame.bestClearTime, frame.beatPlayerName);
         }
     }
 }

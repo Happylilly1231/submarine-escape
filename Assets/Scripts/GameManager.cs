@@ -348,6 +348,25 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 방금 달성한 최근 엔딩 정보 불러오기
+    /// </summary>
+    public PlayerRecord GetLatestEndingRecord()
+    {
+        string jsonString = PlayerPrefs.GetString("RankingsData", "");
+        if (string.IsNullOrEmpty(jsonString)) return null;
+
+        RankingsData rankingsData = JsonUtility.FromJson<RankingsData>(jsonString);
+
+        if (rankingsData != null && rankingsData.playerRecords != null && rankingsData.playerRecords.Count > 0)
+        {
+            // 맨 마지막에 추가된 기록(방금 달성한 엔딩)을 가져옴
+            return rankingsData.playerRecords[rankingsData.playerRecords.Count - 1];
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// 엔딩 보여주기
     /// </summary>
     private void ShowEnding()
