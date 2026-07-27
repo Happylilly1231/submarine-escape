@@ -134,8 +134,14 @@ public class FocusManager : MonoBehaviour
 
         // 이전 상태가 게임 시간 정지 연출이었다면 -> 인게임 UI 활성화
         if (oldState == GameFocusState.GameTimePauseSequence)
+        {
             if (SubmarineInGameManager.instance != null)
                 SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 활성화
+            if (GameTime.Instance != null)
+                GameTime.Instance.SetPause(false); // 게임 시간 정지 해제
+        }
+
+
 
         switch (CurrentFocusState)
         {

@@ -44,7 +44,6 @@ public class GameTime : MonoBehaviour
 
     private void Update()
     {
-        // Debug.Log(_isPausing + " / " + TimeSinceStart);
         if (GameManager.instance.IsPausing || _isPausing)
             return;
 
