@@ -14,7 +14,6 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private GameObject interactorUI; // 상호작용 UI
     [SerializeField] private GameObject aimUI; // 조준점 UI
 
-    private ObjectiveManager objectiveManager;
     private InventoryManager _inventoryManager; // 인벤토리 매니저
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerMutation _playerMutation; // 플레이어 괴물화
@@ -36,7 +35,6 @@ public class PlayerInteractor : MonoBehaviour
 
     void Awake()
     {
-        objectiveManager = FindObjectOfType<ObjectiveManager>();
         _inventoryManager = FindObjectOfType<InventoryManager>();
         _itemEquipController = FindObjectOfType<ItemEquipController>();
         _playerMutation = FindObjectOfType<PlayerMutation>();
@@ -129,7 +127,7 @@ public class PlayerInteractor : MonoBehaviour
                 {
                     syringe.Remove(i);
                 }
-                if (syringe.IsSuccess) objectiveManager.CompleteObjective("AdministerCure");
+                if (syringe.IsSuccess) ObjectiveManager.Instance.CompleteObjective("AdministerCure");
                 _playerMutation.InjectSerum(syringe.IsSuccess); // 플레이어에게 주입
                 if (_currentEquipment)
                     if (_isHoldingEquipment)
@@ -175,7 +173,7 @@ public class PlayerInteractor : MonoBehaviour
                 {
                     if (centrifuge.CanStartOperation())
                     {
-                        objectiveManager.CompleteObjective("CraftCure");
+                        ObjectiveManager.Instance.CompleteObjective("CraftCure");
                         centrifuge.StartCentrifuge();
                         _inventoryManager.UpdateActionText();
                         return;
@@ -518,7 +516,8 @@ public class PlayerInteractor : MonoBehaviour
         string targetUniqueId = _currentItem.uniqueID;
         if (_inventoryManager.AddItemToInventory(_currentItem.Item, 1, statableItem, targetUniqueId))
         {
-            if (_currentItem.Item.ItemType == EItemType.Sample) objectiveManager.CompleteObjective("GetSample");
+            if (_currentItem.Item.ItemType == EItemType.Sample) ObjectiveManager.Instance.CompleteObjective("GetSample");
+            if (_currentItem.Item.ItemName == "Diary") ObjectiveManager.Instance.CompleteObjective("GetVictorDiary");
             WarehouseManager.instance.ReportDestroyed(_currentItem.gameObject);
             Debug.Log(_currentItem.Item.ItemName + " 획득");
             Destroy(_currentItem.gameObject);

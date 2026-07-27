@@ -93,7 +93,7 @@ public class DiaryController : MonoBehaviour
     /// <param name="direction"></param>
     private void TurnPage(int direction)
     {
-        if (direction > 0 && _currentPageIdx < diaryEntries.Count / 2 - 1) // 다음 페이지 이동
+        if (direction > 0 && _currentPageIdx < diaryEntries.Count / 2) // 다음 페이지 이동
         {
             _currentPageIdx++;
         }
@@ -112,13 +112,31 @@ public class DiaryController : MonoBehaviour
         int leftIdx = _currentPageIdx * 2;
         int rightIdx = leftIdx + 1;
 
-        _leftDateText.text = diaryEntries[leftIdx].date;
-        _leftContentText.text = diaryEntries[leftIdx].GetLocalizedContent(leftIdx + 1);
+        // 왼쪽 페이지 업데이트
+        if (leftIdx < diaryEntries.Count)
+        {
+            _leftDateText.text = diaryEntries[leftIdx].date;
+            _leftContentText.text = diaryEntries[leftIdx].GetLocalizedContent(leftIdx + 1);
+        }
+        else
+        {
+            _leftDateText.text = "";
+            _leftContentText.text = "";
+        }
 
-        _rightDateText.text = diaryEntries[rightIdx].date;
-        _rightContentText.text = diaryEntries[rightIdx].GetLocalizedContent(rightIdx + 1);
+        // 오른쪽 페이지 업데이트 
+        if (rightIdx < diaryEntries.Count)
+        {
+            _rightDateText.text = diaryEntries[rightIdx].date;
+            _rightContentText.text = diaryEntries[rightIdx].GetLocalizedContent(rightIdx + 1);
+        }
+        else
+        {
+            _rightDateText.text = "";
+            _rightContentText.text = "";
+        }
 
         prevButton.interactable = (_currentPageIdx > 0);
-        nextButton.interactable = (_currentPageIdx < diaryEntries.Count / 2 - 1);
+        nextButton.interactable = (_currentPageIdx < diaryEntries.Count / 2);
     }
 }

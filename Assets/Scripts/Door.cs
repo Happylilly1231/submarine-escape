@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using UnityEditor.Localization.Plugins.XLIFF.V12;
+using System.Runtime.Serialization;
 
 public class Door : MonoBehaviour, IInteractable
 {
@@ -108,6 +109,11 @@ public class Door : MonoBehaviour, IInteractable
             // SubmarineInGameManager.instance.hasEverOpenedEscapeDoor = true; // 탈출실 문 한번이라도 열었음으로 설정(이후에 조종실에서 경보가 울려도 탈출실에 계속 있음)
             SubmarineInGameManager.instance.AlertOn(AlertArea.EscapeRoom); // 경보 발생
 
+        }
+        // 선원실 1-4 문을 연 경우
+        else if (gameObject.CompareTag("CrewRoom4Door"))
+        {
+            ObjectiveManager.Instance.CompleteObjective("UnlockCrewRoom");
         }
         // 기계실 문을 연 경우
         else if (gameObject.CompareTag("MachinerySpaceDoor"))

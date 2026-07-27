@@ -35,15 +35,9 @@ public class KeyPadController : PuzzleController
 
     private KeyPadScrew _selectedScrew;
     private KeyPadBatterySlot _selectedBatterySlot;
-    private ObjectiveManager objectiveManager;
 
     private int _removedScrewCount = 0;
     public bool IsActionProcessing { get; private set; } = false; // 애니메이션 중 입력 방지
-
-    private void Awake()
-    {
-        objectiveManager = FindObjectOfType<ObjectiveManager>();
-    }
 
     #region 퍼즐 시작/종료
     public override void ActivatePuzzle()
@@ -296,14 +290,14 @@ public class KeyPadController : PuzzleController
 
     private void HandleSuccess(KeyPadBatterySlot targetSlot)
     {
-        if (objectiveManager == null || SaveSystemManager.Instance == null)
+        if (ObjectiveManager.Instance == null)
         {
             Debug.Log("목표 매니저나 세이브 시스템 매니저가 없습니다.");
         }
         else
         {
-            objectiveManager.CompleteObjective("EscapeCrewRoom");
-            SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
+            ObjectiveManager.Instance.CompleteObjective("EscapeCrewRoom");
+            //SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
         }
 
         currentState = EPuzzleState.Success;

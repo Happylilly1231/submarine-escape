@@ -220,17 +220,26 @@ namespace InnerMonsterStates
                             {
                                 case 0: // 레이더 조작 패널
                                     // 파괴 효과 연출 필요
+                                    ObjectiveManager.Instance.UnlockObjective("FixTorpedoRadar"); // 1차 수리 해금
+                                    ObjectiveManager.Instance.CompleteObjective("FireTorpedo"); // 어뢰 발사 클리어
+
                                     monster.currentDestroyObj.GetComponent<RadarControlPanel>().Broke(); // 고장
                                     AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound); // 파괴 완료 소리 재생
                                     CompleteDestroyEquipmentNotGameOver(monster);
                                     break;
                                 case 1: // 어뢰 자동 탑재 스위치
                                     // 스위치 off
+                                    ObjectiveManager.Instance.UnlockObjective("LoadTorpedoTube"); // 2차 수리 해금
+                                    ObjectiveManager.Instance.UpdateObjectiveUI();
+
                                     monster.currentDestroyObj.GetComponent<TorpedoAutoLoadSwitch>().SwitchOff();
                                     AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound); // 파괴 완료 소리 재생
                                     CompleteDestroyEquipmentNotGameOver(monster);
                                     break;
                                 case 2: // 탈출실 유압 패널
+                                    ObjectiveManager.Instance.UnlockObjective("OperateHydraulicValve"); // 3차 수리 해금
+                                    ObjectiveManager.Instance.UpdateObjectiveUI();
+
                                     monster.currentDestroyObj.GetComponent<EscapeRoomHydraulicSystemPanel>().Broke(); // 고장
                                     AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound); // 파괴 완료 소리 재생
                                     CompleteDestroyEquipmentNotGameOver(monster);
