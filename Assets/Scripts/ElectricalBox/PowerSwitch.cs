@@ -22,13 +22,11 @@ public class PowerSwitch : InteractableBase
 
     private EngineController _engineController;
     private PowerController _powerController;
-    private ObjectiveManager objectiveManager;
 
     private void Start()
     {
         _engineController = FindAnyObjectByType<EngineController>();
         _powerController = FindAnyObjectByType<PowerController>();
-        objectiveManager = FindObjectOfType<ObjectiveManager>();
 
         debugPowerToggle = _isPowerOn;
     }
@@ -88,11 +86,11 @@ public class PowerSwitch : InteractableBase
     {
         if (!_isFirst)
         {
-            if (SaveSystemManager.Instance != null)
-            {
-                SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
-            }
-            objectiveManager.CompleteObjective("RestorePower");
+            // if (SaveSystemManager.Instance != null)
+            // {
+            //     SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
+            // }
+            ObjectiveManager.Instance.CompleteObjective("RestorePower");
             _isFirst = true;
         }
         _isPowerOn = turnOn;

@@ -644,6 +644,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
             case 2: // 2번 발사관
                 if (torpedoTubeScrew.IsTightened) // 나사 조인 경우 -> 정상
                 {
+                    ObjectiveManager.Instance.CompleteObjective("LoadTorpedoTube");
+
                     SetInputLock(false);
                     _isLoadCompleted = true;
                     _isLoading = false;

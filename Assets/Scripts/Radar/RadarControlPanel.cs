@@ -72,6 +72,7 @@ public class RadarControlPanel : InteractableBase
         }
         else if (_isBroken && IsRequiredItemSelected()) // 고장 났을 때는 공구 상자가 선택되어있을 때 -> 수리
         {
+            ObjectiveManager.Instance.CompleteObjective("FixTorpedoRadar");
             StartCoroutine(Repair());
         }
         // 이외는 상호작용 X
