@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
 public class EndingDetailView : MonoBehaviour
 {
@@ -18,6 +20,28 @@ public class EndingDetailView : MonoBehaviour
     {
         CloseDetail();
         closeBtn.onClick.AddListener(CloseDetail);
+    }
+
+    private void OnEnable()
+    {
+        // 언어 변경 이벤트 구독
+        LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
+    }
+
+    /// <summary>
+    /// 언어가 바뀌면 자동으로 호출되는 콜백
+    /// </summary>
+    private void OnLanguageChanged(Locale newLocale)
+    {
+        CloseDetail();
+    }
+
+    private void OnDisable()
+    {
+        // 이벤트 해제 (메모리 누수 방지)
+        LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
+
+        AudioManager.Instance.StopBGM(); // 브금 종료
     }
 
     public void ShowDetail(Sprite image, string info, float firstTime, float bestTime, string beatPlayerName)

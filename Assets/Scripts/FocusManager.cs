@@ -69,9 +69,11 @@ public class FocusManager : MonoBehaviour
         // 씬 전환 시 포커스 상태를 None으로 초기화 (단, EnidngScene만 UIScene으로 초기화)
         if (scene.name == "EndingScene")
             ResetFocusState(GameFocusState.UIScene);
+        else if (scene.name == "EndingFrameScene") // 임시!!!
+            ResetFocusState(GameFocusState.ESCMenu);
         else
             ResetFocusState(GameFocusState.None);
-        Debug.Log($"{scene.name} 씬 로드됨. 포커스 None으로 초기화.");
+        Debug.Log($"{scene.name} 씬 로드됨. 포커스 초기화.");
     }
 
     /// <summary>

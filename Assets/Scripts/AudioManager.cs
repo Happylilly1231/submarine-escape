@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.EventSystems;
@@ -90,6 +91,19 @@ public class AudioManager : MonoBehaviour
     public void StopSFX()
     {
         sfxSource.Stop();
+    }
+
+    public void FadeOutSFX(float fadeDuration = 0.5f)
+    {
+        if (sfxSource == null) return;
+
+        // 기존 진행 중인 트윈 중단 후, 지정된 시간 동안 볼륨을 0으로 줄이고 정지
+        sfxSource.DOKill();
+        sfxSource.DOFade(0f, fadeDuration).OnComplete(() =>
+        {
+            sfxSource.Stop();
+            sfxSource.volume = 1f; // 다음 사운드 재생을 위해 볼륨 원복
+        });
     }
 
     /// <summary>
