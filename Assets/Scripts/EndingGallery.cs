@@ -30,12 +30,9 @@ public class EndingFrameData
     [TextArea]
     public string endingDescription; // 엔딩 설명
     // 해당 엔딩을 클리어하는 데 걸린 시간
-    // [HideInInspector] public float firstClearTime; // 최초 기록
-    // [HideInInspector] public float bestClearTime;  // 최단 기록
-    public bool isUnlocked; // 해금 여부
-    [HideInInspector] public float currentPlayerTime; // 현재 플레이어의 클리어 시간
+    [HideInInspector] public float firstClearTime; // 최초 기록
     [HideInInspector] public float bestClearTime;  // 최단 기록
-    [HideInInspector] public string beatPlayerName; // 최단 기록을 달성한 플레이어 이름
+    public bool isUnlocked; // 해금 여부
 
     /// <summary>
     /// 번역된 엔딩 타이틀
@@ -116,74 +113,30 @@ public class EndingGallery : MonoBehaviour
         AudioManager.Instance.StopBGM(); // 브금 종료
     }
 
-    // 한 명의 플레이어가 단독으로 플레이할 때 '엔딩별 최초/최단 기록'을 관리
-    // public void UpdateGallery()
-    // {
-    //     foreach (var frame in endingFrames)
-    //     {
-    //         string key = "Ending_" + frame.type.ToString();
-
-    //         // 해금 여부 확인 (PlayerPrefs)
-    //         bool isUnlocked = PlayerPrefs.GetInt(key, 0) == 1;
-
-    //         if (isUnlocked)
-    //         {
-    //             frame.firstClearTime = PlayerPrefs.GetFloat(key + "_FirstTime");
-    //             frame.bestClearTime = PlayerPrefs.GetFloat(key + "_BestTime");
-    //         }
-
-    //         frame.displayImage.sprite = isUnlocked ? frame.unlockedSprite : frame.lockedSprite;
-    //         frame.clickButton.gameObject.SetActive(isUnlocked);
-    //         frame.endingFrame.SetTitle(frame.endingTitle);
-    //     }
-    // }
-
     /// <summary>
-    /// 엔딩 갤러리 업데이트 - PlayerPrefs에서 전체 기록을 불러와서 각 프레임의 해금 여부와 기록을 갱신
+    /// 엔딩 갤러리 관리
+    /// <para> - 엔딩별 최초/최단 기록 및 UI 상태 업데이트 </para>
     /// </summary>
     public void UpdateGallery()
     {
-        // PlayerPrefs에서 전체 기록 JSON 데이터 불러오기
-        string jsonData = PlayerPrefs.GetString("RankingsData", "");
-        RankingsData rankingsData = JsonUtility.FromJson<RankingsData>(jsonData);
-
         foreach (var frame in endingFrames)
         {
-            // 전체 기록 중 현재 엔딩에 해당하는 기록만 필터링
-            List<PlayerRecord> records = new List<PlayerRecord>();
-            if (rankingsData != null && rankingsData.playerRecords != null)
-            {
-                records = rankingsData.playerRecords.Where(r => r.endingType == frame.type).ToList();
-            }
+            EndingRecord record = EndingSaveManager.Instance.GetEndingRecord(frame.type);
 
-            // 오직 현재 플레이어 이름과 일치하는 기록만 필터링하여 해금 여부 판단
-            var myRecords = records.Where(r => r.playerName == GameManager.instance.PlayerName).OrderByDescending(r => r.playDate).ToList();
-            frame.isUnlocked = myRecords.Count > 0;
+            frame.isUnlocked = record != null && record.isUnlocked;
 
             if (frame.isUnlocked)
             {
-                // 가장 최근 기록을 현재 플레이어의 기록으로 사용
-                frame.currentPlayerTime = myRecords[0].clearTime;
-
-                // 전체 기록 중 최단 기록을 찾아서 프레임에 저장
-                var sortedBest = records.OrderBy(r => r.clearTime).First();
-                frame.bestClearTime = sortedBest.clearTime;
-                frame.beatPlayerName = sortedBest.playerName;
-            }
-            else
-            {
-                // 해금되지 않은 경우 초기값 설정
-                frame.currentPlayerTime = 0f;
-                frame.bestClearTime = 0f;
-                frame.beatPlayerName = "";
+                frame.firstClearTime = record.firstTime;
+                frame.bestClearTime = record.bestTime;
             }
 
-            // UI 업데이트
             frame.displayImage.sprite = frame.isUnlocked ? frame.unlockedSprite : frame.lockedSprite;
             frame.clickButton.gameObject.SetActive(frame.isUnlocked);
-            frame.endingFrame.SetTitle(frame.LocalizedEndingTitle);
+            frame.endingFrame.SetTitle(frame.endingTitle);
         }
     }
+
 
     private void SetupClickEvents()
     {
@@ -202,7 +155,7 @@ public class EndingGallery : MonoBehaviour
         if (frame.isUnlocked)
         {
             // 해금된 경우 상세 설명창 띄우기
-            detailView.ShowDetail(frame.unlockedSprite, frame.LocalizedEndingDescription, frame.currentPlayerTime, frame.bestClearTime, frame.beatPlayerName);
+            detailView.ShowDetail(frame.unlockedSprite, frame.LocalizedEndingDescription, frame.firstClearTime, frame.bestClearTime);
         }
     }
 }
