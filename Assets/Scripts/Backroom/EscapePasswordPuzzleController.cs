@@ -15,7 +15,7 @@ public class EscapePasswordPuzzleController : MonoBehaviour
     private int _currentGarbageCanCount = 0;
     private int _currentSelectedBigObjectCount = 0;
 
-    private int _currentPassword = 0;
+    private string _currentPassword = "";
 
     private void Awake()
     {
@@ -85,7 +85,7 @@ public class EscapePasswordPuzzleController : MonoBehaviour
     /// </summary>
     public void CalculatePassword()
     {
-        _currentPassword = _currentGarbageCanCount * 100 + _currentSelectedBigObjectCount;
+        _currentPassword = (_currentGarbageCanCount * 100 + _currentSelectedBigObjectCount).ToString();
         _keypad.keypadCombo = _currentPassword;
         Debug.Log("현재 비밀번호: " + _currentPassword);
     }

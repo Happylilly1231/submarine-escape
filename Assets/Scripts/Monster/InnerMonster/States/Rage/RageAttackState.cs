@@ -13,8 +13,6 @@ namespace InnerMonsterStates
     /// </summary>
     public class RageAttackState : IState<InnerMonsterController>
     {
-        private bool isSuccess = false;
-
         InnerMonsterController monster;
 
         public void Enter(InnerMonsterController owner)
@@ -157,16 +155,5 @@ namespace InnerMonsterStates
             Debug.Log("QTE 실패... 플레이어가 습격당합니다.");
             // 그대로 폭주 공격이 진행되므로 (OnAttack) 죽게 됨
         }
-
-        //     /// <summary>
-        //     /// 폭주 시작 상태로 전환
-        //     /// </summary>
-        //     /// <param name="door"></param>
-        //     /// <param name="monster"></param>
-        //     private void ChangeStateToRageStart(Door door)
-        //     {
-        //         if (door == monster.machinerySpaceDoor)
-        //             monster.ChangeState(new RageStartState()); // 폭주 시작 상태로 전환
-        //     }
     }
 }
