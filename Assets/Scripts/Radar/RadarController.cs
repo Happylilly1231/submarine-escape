@@ -65,7 +65,7 @@ public class RadarController : PuzzleController
     public TorpedoState CurrentTorpedoState { get; private set; } // 현재 어뢰 상태
 
     // 위험 거리 경보
-    private float _dangerDistance = 90f; // 위험 거리
+    private float _dangerDistance = 50f; // 위험 거리
     private float _maxSpeedMultiplier = 2f; // 통신 시 괴물이 빨라질 최대 배속
     private float _accelerationSpeed = 1f; // 속도가 변하는 부드러운 정도 (Lerp용)
     private float _currentSpeedMultiplier = 1f; // 현재 괴물의 속도 배율
@@ -149,7 +149,7 @@ public class RadarController : PuzzleController
                 if (!_isDangerAlertActive)
                 {
                     _isDangerAlertActive = true;
-                    _radarDisplay.SetDangerBackround(true);
+                    _radarDisplay.SetDangerUI(true);
                     // 깜빡거림 추가 예정
                     Debug.Log($"<color=red>[경보]</color> 괴물 접근 감지! 현재 거리: {currentDistance}m (경보 발령)");
                 }
@@ -159,7 +159,7 @@ public class RadarController : PuzzleController
                 if (_isDangerAlertActive)
                 {
                     _isDangerAlertActive = false;
-                    _radarDisplay.SetDangerBackround(false);
+                    _radarDisplay.SetDangerUI(false);
                     Debug.Log($"<color=green>[안정]</color> 괴물이 멀어졌습니다. 현재 거리: {currentDistance}m (경보 해제)");
                 }
             }
