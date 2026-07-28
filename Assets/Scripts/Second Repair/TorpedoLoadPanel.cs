@@ -389,11 +389,15 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         if (isOnCenterRail)
         {
             nextZ = 0f;
-            bool atLeftCorner = IsCloseTo(x, -3f, 0.01f);
-            bool atRightCorner = IsCloseTo(x, 3f, 0.01f);
+            // 오차 범위를 0.01f에서 0.1f 정도로 살짝 넓혀 조작감을 부드럽게 개선
+            bool atLeftCorner = IsCloseTo(x, -3f, 0.1f);
+            bool atRightCorner = IsCloseTo(x, 3f, 0.1f);
 
             if ((atLeftCorner || atRightCorner) && _joystickMove.y > _inputThreshold)
             {
+                // 위로 올라가는 순간, X 좌표를 정확한 레일 위치(-3f 또는 3f)로 딱 고정(Snap)시킴
+                nextX = atLeftCorner ? -3f : 3f;
+
                 nextZ = Mathf.Clamp(z + _joystickMove.y * _realMoveSpeed * Time.deltaTime, 0f, 6f);
             }
             else if (hasXInput)
@@ -440,7 +444,7 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     /// </summary>
     private void CheckCanSetUp()
     {
-        if (IsCloseTo(stretcherGroup.transform.localPosition.x, -3f) && IsCloseTo(stretcher.transform.localPosition.y, 0.5f) && IsCloseTo(stretcherGroup.transform.localPosition.z, 6f))
+        if (IsCloseTo(stretcherGroup.transform.localPosition.x, -3f, 0.2f) && IsCloseTo(stretcher.transform.localPosition.y, 0.5f, 0.2f) && IsCloseTo(stretcherGroup.transform.localPosition.z, 6f, 0.2f))
         {
             // 가능
             if (!_canSetUp)
@@ -477,7 +481,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         stretcherGroup.transform.localPosition = new Vector3(-3f, 0f, 6f);
         stretcher.transform.localPosition = new Vector3(0f, 0.5f, 0f);
 
-        while (!IsCloseTo(torpedo.transform.localPosition.x, -3f, 0.2f))
+        // -3f 미만일 때만 (+X 방향 이동) 반복 실행되도록 단방향 조건으로 변경
+        while (torpedo.transform.localPosition.x < -3f)
         {
             torpedoPos = torpedo.transform.localPosition;
             torpedoPos.x = torpedoPos.x + 1f * _realMoveSpeed * Time.deltaTime;
@@ -485,6 +490,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
 
             yield return null;
         }
+
+        // 정확한 목표 위치로 최종 보정
         torpedoPos = torpedo.transform.localPosition;
         torpedoPos.x = -3f;
         torpedo.transform.localPosition = torpedoPos;
@@ -544,35 +551,44 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     {
         for (int i = 0; i < 4; i++)
         {
-            // 앞에 어뢰 발사관이 있으면 -> 문이 열려있을 때는 가능 / 문이 닫혀있을 때는 불가능
-            if (IsCloseTo(stretcherGroup.transform.localPosition.x, _loadPosXArray[i]) && IsCloseTo(stretcher.transform.localPosition.y, _loadPosYArray[i]))
+            // 발사관 앞 위치 검사 (판정이 빡빡하지 않게 threshold 0.2f 지정)
+            bool isXMatching = IsCloseTo(stretcherGroup.transform.localPosition.x, _loadPosXArray[i], 0.2f);
+            bool isYMatching = IsCloseTo(stretcher.transform.localPosition.y, _loadPosYArray[i], 0.2f);
+
+            if (isXMatching && isYMatching)
             {
+                // 발사관이 바뀌었을 경우 이전 발사관 아웃라인 끄기
+                if (_currentTorpedoTubeIndex != -1 && _currentTorpedoTubeIndex != i)
+                {
+                    _torpedoTubeOutlines[_currentTorpedoTubeIndex].enabled = false;
+                }
+
+                _currentTorpedoTubeIndex = i;
+
                 if (torpedoTubes[i].IsOpened) // 문이 열려있는 경우 -> 가능
                 {
-                    // 불가능 상태였다면 -> 가능으로 변경
                     if (!_canLoad)
                     {
                         _canLoad = true;
                         _torpedoTubeOutlines[i].OutlineColor = Color.green;
                         _torpedoTubeOutlines[i].enabled = true;
-                        _currentTorpedoTubeIndex = i;
                         OnLoadButtonStateChanged?.Invoke(true);
                     }
                 }
                 else // 문이 닫혀있는 경우 -> 불가능
                 {
-                    // 현재 앞에 있는 어뢰 발사관이 없는 상태였다면 -> 불가능으로 변경, 대신 현재 앞에 있는 어뢰 발사관은 현재 발사관으로 설정
-                    if (_currentTorpedoTubeIndex == -1)
+                    // 가능 상태였거나 아웃라인 색상이 갱신 안 된 경우 처리
+                    if (_canLoad || _torpedoTubeOutlines[i].OutlineColor != Color.red)
                     {
                         _canLoad = false;
                         _torpedoTubeOutlines[i].OutlineColor = Color.red;
                         _torpedoTubeOutlines[i].enabled = true;
-                        _currentTorpedoTubeIndex = i;
                         OnLoadButtonStateChanged?.Invoke(false);
                     }
                 }
-                return;
+                return; // 발사관 하나를 찾았으므로 더 이상 루프를 돌지 않음
             }
+
         }
 
         // 앞에 어떤 발사관도 없는 경우인데 이전에 앞에 있던 발사관이 있었다면 -> 불가능으로 변경 후 현재 앞에 있는 어뢰 발사관이 없음으로 설정
@@ -607,7 +623,8 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
             SwitchCamera();
 
         bool isSoundPlayed = false;
-        while (!IsCloseTo(torpedo.transform.localPosition.z, 6f))
+        // IsCloseTo 대신 z < 6f로 직접 판정
+        while (torpedo.transform.localPosition.z < 6f)
         {
             torpedoPos = torpedo.transform.localPosition;
             torpedoPos.z = torpedoPos.z + 1f * _realMoveSpeed * Time.deltaTime;
