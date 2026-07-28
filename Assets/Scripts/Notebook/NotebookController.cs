@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -76,10 +77,6 @@ public class NotebookController : PuzzleController
 
         inventoryManager.OpenInventory();
 
-        // 이벤트 리스너 해제
-        passwordInputField.onValueChanged.RemoveAllListeners();
-        passwordInputField.onEndEdit.RemoveAllListeners();
-
         if (checkPasswordCoroutine != null)
         {
             StopCoroutine(checkPasswordCoroutine);
@@ -90,6 +87,15 @@ public class NotebookController : PuzzleController
 
         notebookDisplay.SetActive(false);
         ResetInput();
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        // 이벤트 리스너 해제
+        passwordInputField.onValueChanged.RemoveAllListeners();
+        passwordInputField.onEndEdit.RemoveAllListeners();
     }
     #endregion
 
@@ -156,6 +162,7 @@ public class NotebookController : PuzzleController
             failText.SetActive(false);
             loginPanel.SetActive(false);
             mainPanel.SetActive(true);
+            PlayerNoteManager.instance.RegisterClue("Project_Abyss");
         }
         else
         {

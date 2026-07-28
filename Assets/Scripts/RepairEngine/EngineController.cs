@@ -83,10 +83,17 @@ public class EngineController : PuzzleController
         _repairEngineQTE.HideQTE(); // QTE 숨김
 
         base.ExitPuzzle();
-        Space.performed -= OnSpace; // 스페이스 사용 해제
+
 
         inventoryUI.SetActive(true);
         inateractorUI.SetActive(true);
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        Space.performed -= OnSpace; // 스페이스 사용 해제
     }
     #endregion
 

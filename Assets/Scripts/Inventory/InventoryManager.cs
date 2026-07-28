@@ -36,12 +36,6 @@ public class InventoryManager : MonoBehaviour
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
     private PlayerInteractor _playerInteractor;
 
-    // 각 UI용 LocalizedString 선언 (테이블 미리 지정)
-    private LocalizedString actionLocString = new LocalizedString { TableReference = "ST_UI" };
-    // private LocalizedString interactLocString = new LocalizedString { TableReference = "ST_UI" };
-    // private LocalizedString itemNameLocString = new LocalizedString { TableReference = "ST_UI" };
-    private string currentKeyBinding = "";
-
     void Awake()
     {
         _itemEquipController = FindObjectOfType<ItemEquipController>();
@@ -63,29 +57,6 @@ public class InventoryManager : MonoBehaviour
     {
         UpdateActionText(); // 언어가 바뀌는 순간 현재 상황에 맞는 텍스트 재조합
     }
-
-    // /// <summary>
-    // /// 액션 텍스트 변경
-    // /// </summary>
-    // /// <param name="actionKey">Localization 키</param>
-    // /// <param name="keyBinding">실제 조작 키</param>
-    // public void ChangeActionText(string actionKey, string keyBinding = "")
-    // {
-    //     currentKeyBinding = keyBinding;
-
-    //     // Key 지정 시 비동기 번역 시작 -> 완료되면 OnActionTextTranslated 실행
-    //     actionLocString.TableEntryReference = actionKey;
-    // }
-
-    // private void OnActionTextTranslated(string translatedText)
-    // {
-    //     if (actionText == null) return;
-
-    //     if (string.IsNullOrEmpty(currentKeyBinding))
-    //         actionText.text = translatedText;
-    //     else
-    //         actionText.text = $"{translatedText} [{currentKeyBinding}]";
-    // }
 
     /// <summary>
     /// 인벤토리 비활성화
@@ -289,7 +260,10 @@ public class InventoryManager : MonoBehaviour
                         AppendAction(sb, "Action/Puzzle/ExtractBiodata");
                     break;
                 case EItemType.UI:
-                    if (FocusManager.Instance.CurrentPuzzleController == null)
+                    if (currentItem.ItemName == "SubjectFolder"
+                                || currentItem.ItemName == "Project_Participant")
+                        AppendAction(sb, "Action/Item/RegisterClue", "E"); // 단서 등록
+                    else if (FocusManager.Instance.CurrentPuzzleController == null)
                     {
                         if (_isViewingUI)
                             AppendAction(sb, "Action/Item/Close", "E");

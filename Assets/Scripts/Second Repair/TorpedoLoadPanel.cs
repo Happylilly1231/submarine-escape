@@ -202,10 +202,6 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        Click.started -= OnClickStarted;
-        Click.performed -= OnClickPerformed;
-        Click.canceled -= OnClickCanceled;
-
         inventoryManager.OpenInventory(); // 인벤토리 숨기기
 
         statUI.SetActive(true);
@@ -220,6 +216,21 @@ public class TorpedoLoadPanel : PuzzleController, IInteractable
         monitorScreenMeshRenderer.material = blackMaterial;
 
         infoText.gameObject.SetActive(false);
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        Click.started -= OnClickStarted;
+        Click.performed -= OnClickPerformed;
+        Click.canceled -= OnClickCanceled;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        TorpedoTube.OnClosed -= ExitAfterSuccess;
     }
     #endregion
 

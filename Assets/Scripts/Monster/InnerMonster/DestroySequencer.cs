@@ -55,14 +55,6 @@ public class DestroySequencer : MonoBehaviour
         // 파괴 모션과 함께 실행됨 (파괴 모션 실행 후 아님)
         switch (monster.currentDestroyObjType)
         {
-            // case EDestroyObjType.EscapeRoomDoor: // 탈출실 문을 파괴한 경우
-            //     seq = DestroySequence_EscapeRoomDoor();
-            //     break;
-
-            // case EDestroyObjType.MachinerySpaceDoor: // 기계실 문을 파괴한 경우
-            //     seq = DestroySequence_MachinerySpaceDoor();
-            //     break;
-
             case EDestroyObjType.Equipment: // 현재 파괴될 장비를 파괴한 경우
                 AudioManager.Instance.PlayGlobalOneShot(monster.destroyCompleteSound); // 파괴 완료 소리 재생
                 switch (SubmarineInGameManager.instance.CurrentAlertArea)
@@ -99,56 +91,6 @@ public class DestroySequencer : MonoBehaviour
             });
         }
     }
-
-    // /// <summary>
-    // /// 파괴 연출 - 탈출실 문(EscapeRoomDoor)
-    // /// </summary>
-    // /// <returns></returns>
-    // private Sequence DestroySequence_EscapeRoomDoor()
-    // {
-    //     // 탈출실 문 파괴하고 괴물이 들어가서 포효하고 끝나는 연출
-
-    //     Sequence seq = DOTween.Sequence();
-
-    //     // seq.AppendCallback(() =>
-    //     // {
-    //     //     monster.Nav.enabled = false;
-    //     //     monster.transform.DOMove(SubmarineInGameManager.instance.CurrentDestroyPos.position, 1f); // 탈출실 안으로 이동
-    //     //     monster.Nav.enabled = true;
-    //     // });
-
-    //     // seq.AppendInterval(1f);
-
-    //     // 1.5초 동안 탈출실 문 앞에서 포효
-    //     seq.AppendCallback(() =>
-    //     {
-    //         // RageStart 애니메이션 즉시 실행 
-    //         monster.Animator.Play("Rage StateMachine.RageStart");
-    //     });
-    //     seq.AppendInterval(1.5f); // 1초 보여주고 게임 오버 엔딩
-
-    //     return seq;
-    // }
-
-    // /// <summary>
-    // /// 파괴 연출 - 기계실 문(MachinerySpaceDoor)
-    // /// </summary>
-    // /// <returns></returns>
-    // private Sequence DestroySequence_MachinerySpaceDoor()
-    // {
-    //     // 괴물을 바라보고 괴물에게 공격당해 죽는 연출
-
-    //     Sequence seq = DOTween.Sequence();
-
-    //     seq.AppendCallback(() =>
-    //     {
-    //         monster.ChangeState(new RageChaseState());
-    //         // 괴물에 카메라 줌
-    //     });
-    //     seq.AppendInterval(3f);
-
-    //     return seq;
-    // }
 
     /// <summary>
     /// 파괴 연출 - 식당(Galley)

@@ -208,6 +208,8 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         PlayerMutation.OnMutationCompleted -= OnMutationCompleted;
         SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= RageStart;
         SubmarineInGameManager.instance.OnMachinerySpaceAlertStarted -= JumpscareStart;
+
+        _currentFsm.ExitState(); // 비활성화(파괴 직전)될 때 -> 무조건 상태 종료
     }
 
     private void Start()
