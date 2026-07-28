@@ -186,7 +186,8 @@ public class GameManager : MonoBehaviour
             MenuUIController.instance.ToggleMenu();
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
-        SceneManager.LoadScene("Title3DScene"); // 추후 씬 이름 수정 예정
+
+        SceneManager.LoadScene("Title3DScene");
     }
 
     public void EndingGallery()

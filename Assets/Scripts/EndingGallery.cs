@@ -133,7 +133,7 @@ public class EndingGallery : MonoBehaviour
 
             frame.displayImage.sprite = frame.isUnlocked ? frame.unlockedSprite : frame.lockedSprite;
             frame.clickButton.gameObject.SetActive(frame.isUnlocked);
-            frame.endingFrame.SetTitle(frame.endingTitle);
+            frame.endingFrame.SetTitle(frame.LocalizedEndingTitle);
         }
     }
 

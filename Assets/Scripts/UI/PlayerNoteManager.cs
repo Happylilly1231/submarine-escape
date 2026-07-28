@@ -2,10 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
@@ -119,8 +117,15 @@ public class PlayerNoteManager : MonoBehaviour
         _leftPageNumText.text = $"{_currentSpreadIdx * 2 + 1} / {_totalPageCount}";
         _rightPageNumText.text = $"{_currentSpreadIdx * 2 + 2} / {_totalPageCount}";
 
-        // 새 노트로 초기화
-        InitNewNote();
+        // 토글 값이 변경될 때 실행될 메서드 등록
+        for (int i = 0; i < checkboxes.Length; i++)
+        {
+            int idx = i;
+            checkboxes[i].onValueChanged.AddListener((isOn) =>
+            {
+                OnToggleValueChanged(idx, isOn);
+            });
+        }
 
         // 단서 누르면 줌인 함수 연결
         foreach (var clue in clueList)
@@ -132,15 +137,8 @@ public class PlayerNoteManager : MonoBehaviour
         // 단서 줌아웃 함수 연결
         zoomOutButton.onClick.AddListener(ZoomOutClue);
 
-        // 토글 값이 변경될 때 실행될 메서드 등록
-        for (int i = 0; i < checkboxes.Length; i++)
-        {
-            int idx = i;
-            checkboxes[i].onValueChanged.AddListener((isOn) =>
-            {
-                OnToggleValueChanged(idx, isOn);
-            });
-        }
+        // 새 노트로 초기화
+        InitNewNote();
     }
 
     /// <summary>
@@ -336,7 +334,7 @@ public class PlayerNoteManager : MonoBehaviour
 
         // 펼쳐야 하는 페이지들 내용 로드 필요
 
-        if (spreadIdx == 1) // 샘플 페이지면
+        if (spreadIdx == 2) // 샘플 페이지면
         {
             // 데이터베이스 모니터를 한번이라도 로그인했으면 -> 샘플 페이지 보여줌 
             foreach (var memo in creatureSampleMemoGroups)
