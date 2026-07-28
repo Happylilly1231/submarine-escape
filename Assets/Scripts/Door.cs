@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using DG.Tweening;
-using UnityEditor.Localization.Plugins.XLIFF.V12;
 using System.Runtime.Serialization;
 
 public class Door : MonoBehaviour, IInteractable
