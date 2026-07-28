@@ -3,34 +3,43 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-
-public enum ObjectiveType
-{
-    Main,   // 메인 목표 (탈출에 필수. ex| 선원실 탈출, 전력 복구, 치료제 투여, 탈출실 가기)
-    Optional   // 서브 목표 (탈출에 필수는 아님. ex| 어뢰 발사, 어뢰관 장전) / 서브 목표는 후에 구현
-}
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 
 [System.Serializable]
 public class ObjectiveProgress
 {
     public string objectiveName;
-    public string descriptionText;
+    public string localizationKey;    // Localization 테이블 키
+    public bool isUnlocked = false;
     public bool isCompleted = false;
 }
 
 public class ObjectiveManager : MonoBehaviour
 {
     [Header("Objective UI")]
-    public List<GameObject> objectiveSlots = new List<GameObject>();
+    public List<GameObject> mainSlots = new List<GameObject>();
+    public List<GameObject> subSlots = new List<GameObject>();
 
     [Header("Objective Data")]
     public List<ObjectiveProgress> mainObjectives = new List<ObjectiveProgress>();
+    public List<ObjectiveProgress> subObjectives = new List<ObjectiveProgress>();
+
+    public static ObjectiveManager Instance { get; private set; }
 
     private int currentStep = 0;       // 현재 진행 중인 대단계 (0: 선원실, 1: 전력, 2: 연구실, 3: 탈출)
     private int labSubClearCount = 0;  // 연구실 세부 목표 깨진 개수 카운트
 
-    private Color completedColor = new Color32(152, 152, 152, 255);
-    private bool isProcessingLabQueue = false; // 코루틴 중복 실행 방지용 플래그
+    private Color completedColor = new Color32(152, 152, 152, 255); // 회색
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else Destroy(gameObject);
+    }
 
     void Start()
     {
@@ -44,91 +53,86 @@ public class ObjectiveManager : MonoBehaviour
     void InitObjectivesData()
     {
         mainObjectives.Clear();
-        // 선원실 탈출하기
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "EscapeCrewRoom", descriptionText = "선원실 탈출하기" });
-        // 전력 복구하기
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "RestorePower", descriptionText = "엔진실에서 전력 복구하기" });
-        // 연구실 동시 목표 3개
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "CheckDB", descriptionText = "연구실에서 심해생물 DB 확인하기" });
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "GetSample", descriptionText = "창고에서 샘플 가져오기" });
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "CraftCure", descriptionText = "연구실에서 치료제 제조하기" });
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "AdministerCure", descriptionText = "올바른 치료제 투여하기" });
-        // 탈출실로 가기
-        mainObjectives.Add(new ObjectiveProgress { objectiveName = "GoToEscapeRoom", descriptionText = "탈출실 해치 열기" });
+        subObjectives.Clear();
+
+        // [메인 목표] ----------------------------------------------------
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "EscapeCrewRoom", localizationKey = "Objective/Main/EscapeCrewRoom", isUnlocked = true });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "RestorePower", localizationKey = "Objective/Main/RestorePower" });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "CheckDB", localizationKey = "Objective/Main/CheckDB" });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "GetSample", localizationKey = "Objective/Main/GetSample" });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "CraftCure", localizationKey = "Objective/Main/CraftCure" });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "AdministerCure", localizationKey = "Objective/Main/AdministerCure" });
+        mainObjectives.Add(new ObjectiveProgress { objectiveName = "GoToEscapeRoom", localizationKey = "Objective/Main/GoToEscapeRoom" });
+
+        // [서브 목표] ----------------------------------------------------
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "GetVictorDiary", localizationKey = "Objective/Sub/GetVictorDiary", isUnlocked = true });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "UnlockCrewRoom", localizationKey = "Objective/Sub/UnlockCrewRoom" });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "OperateRemoteAlarm", localizationKey = "Objective/Sub/OperateRemoteAlarm" });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "FireTorpedo", localizationKey = "Objective/Sub/FireTorpedo" });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "FixTorpedoRadar", localizationKey = "Objective/Sub/FixTorpedoRadar" });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "LoadTorpedoTube", localizationKey = "Objective/Sub/LoadTorpedoTube" });
+        subObjectives.Add(new ObjectiveProgress { objectiveName = "OperateHydraulicValve", localizationKey = "Objective/Sub/OperateHydraulicValve" });
     }
 
     /// <summary>
-    /// 현재 단계에 맞게 UI 업데이트
+    /// 메인 목표와 서브 목표를 각각 해당 슬롯 영역에 업데이트
     /// </summary>
-    void UpdateObjectiveUI()
+    public void UpdateObjectiveUI()
     {
-        // 모든 슬롯 비활성화
-        foreach (var slot in objectiveSlots)
+        // 메인 목표 슬롯 전체 비활성화
+        foreach (var slot in mainSlots)
         {
             slot.SetActive(false);
         }
 
-        if (currentStep == 0) // [단계 0] 선원실 탈출하기
+        int mainSlotIndex = 0;
+        foreach (var mainObj in mainObjectives)
         {
-            SetupSlot(0, mainObjectives[0]);
+            if (!mainObj.isUnlocked) continue;
+
+            SetupSlotVisual(mainSlots[mainSlotIndex], mainObj);
+            mainSlotIndex++;
         }
-        else if (currentStep == 1) // [단계 1] 전력 복구하기
+
+        // 서브 목표 슬롯 전체 비활성화
+        foreach (var slot in subSlots)
         {
-            SetupSlot(0, mainObjectives[1]);
+            slot.SetActive(false);
         }
-        else if (currentStep == 2) // [단계 2] 연구실 누적 단계
+
+        int subSlotIndex = 0;
+        foreach (var subObj in subObjectives)
         {
-            // 0번(DB 확인), 1번(샘플 확보), 2번(제조), 3번(투여)
-            for (int i = 0; i <= labSubClearCount; i++)
-            {
-                if (i >= 4) break;
-                // 화면에서는 오직 현재 순서(i < labSubClearCount)보다 낮을 때만 선을 긋는다.
-                bool shouldShowCompleted = (i < labSubClearCount);
-                SetupSlotVisual(i, mainObjectives[2 + i], shouldShowCompleted);
-            }
-        }
-        else if (currentStep == 3) // [단계 3] 탈출실로 가기
-        {
-            SetupSlot(0, mainObjectives[6]);
+            if (!subObj.isUnlocked) continue;
+
+            SetupSlotVisual(subSlots[subSlotIndex], subObj);
+            subSlotIndex++;
         }
     }
 
     /// <summary>
-    /// 자식 오브젝트들을 찾아 값을 세팅
+    /// 해금된 목표 UI 업데이트
     /// </summary>
-    /// <param name="slotIndex"></param>
+    /// <param name="slot"></param>
     /// <param name="data"></param>
-    void SetupSlot(int slotIndex, ObjectiveProgress data)
+    private void SetupSlotVisual(GameObject slot, ObjectiveProgress data)
     {
-        SetupSlotVisual(slotIndex, data, data.isCompleted);
-    }
-
-    /// <summary>
-    /// ui 제어
-    /// </summary>
-    /// <param name="slotIndex"></param>
-    /// <param name="data"></param>
-    /// <param name="forceComplete"></param>
-    void SetupSlotVisual(int slotIndex, ObjectiveProgress data, bool forceComplete)
-    {
-        if (slotIndex >= objectiveSlots.Count) return;
-
-        GameObject slot = objectiveSlots[slotIndex];
         slot.SetActive(true);
 
         GameObject completeImageObj = slot.transform.GetChild(1).gameObject;
         TextMeshProUGUI textMesh = slot.transform.GetChild(2).GetComponent<TextMeshProUGUI>();
 
-        // 목표 텍스트 업데이트
-        textMesh.text = data.descriptionText;
+        LocalizeStringEvent localizeEvent = textMesh.GetComponent<LocalizeStringEvent>();
+        localizeEvent.StringReference.SetReference("ST_UI", data.localizationKey);
+        localizeEvent.RefreshString();
 
-        if (forceComplete)  // 목표 완료
+        if (data.isCompleted)
         {
             completeImageObj.SetActive(true);
-            textMesh.color = completedColor; // 회색
+            textMesh.color = completedColor;
             textMesh.fontStyle = FontStyles.Strikethrough; // 선 긋기
         }
-        else  // 목표 완료 못함
+        else
         {
             completeImageObj.SetActive(false);
             textMesh.color = Color.white;
@@ -143,74 +147,83 @@ public class ObjectiveManager : MonoBehaviour
     public void CompleteObjective(string name)
     {
         ObjectiveProgress target = mainObjectives.Find(x => x.objectiveName == name);
-        if (target != null) Debug.Log(target.objectiveName + " " + target.isCompleted);
+
+        if (target == null)
+        {
+            target = subObjectives.Find(x => x.objectiveName == name);
+        }
+
         if (target == null || target.isCompleted) return;
 
         target.isCompleted = true;
+        Debug.Log($"[목표] {target.objectiveName} 완료");
 
-        if (currentStep == 2)
-        {
-            // 연구실 단계일 때는 실시간으로 UI 연쇄 반응 큐
-            if (!isProcessingLabQueue)
-            {
-                StartCoroutine(ProcessLabObjectivesSequence());
-            }
-        }
-        else
-        {
-            UpdateObjectiveUI();
-            StartCoroutine(ProcessNextStepAfterDelay(name));
-        }
+        // 목표 달성에 따른 다음 목표 해금 조건 검사
+        CheckAndUnlockNextObjectives(name);
+        UpdateObjectiveUI();
     }
 
-    private IEnumerator ProcessNextStepAfterDelay(string name)
+    /// <summary>
+    /// 클러이한 목표 다음에 활성화될 목표들 해금
+    /// </summary>
+    /// <param name="clearedObjectiveName"></param>
+    private void CheckAndUnlockNextObjectives(string clearedObjectiveName)
     {
-        if (currentStep == 0 && name == "EscapeCrewRoom")
+        // 1. 선원실 탈출 성공 시
+        if (clearedObjectiveName == "EscapeCrewRoom")
         {
-            yield return new WaitForSeconds(2f);
-            currentStep = 1;
-            UpdateObjectiveUI();
+            // 메인
+            UnlockObjective("RestorePower");          // 전력 복구하기 해금
+            // 서브
+            UnlockObjective("UnlockCrewRoom");        // 1-4 문 열기 해금
         }
-        else if (currentStep == 1 && name == "RestorePower")
+        // 2. 전력 복구 성공 시
+        else if (clearedObjectiveName == "RestorePower")
         {
-            yield return new WaitForSeconds(2f);
-            currentStep = 2;
-            UpdateObjectiveUI();
+            // 메인 - 연구실 3개 해금
+            UnlockObjective("CheckDB");
+            UnlockObjective("GetSample");
+            UnlockObjective("CraftCure");
+
+            // 서브
+            UnlockObjective("OperateRemoteAlarm");    // 원격 경보 조작해보기 해금
+            UnlockObjective("FireTorpedo");           // 어뢰 발사하기 해금
+        }
+        // 3. 연구실 3개 목표 성공 시
+        else if (clearedObjectiveName == "CraftCure")
+        {
+            // 치료제 제조 시 투여 목표 해금
+            UnlockObjective("AdministerCure");
+        }
+        else if (clearedObjectiveName == "AdministerCure")
+        {
+            // 올바른 치료제 투여 시 탈출실 해치 열기 해금
+            UnlockObjective("GoToEscapeRoom");
+        }
+        // 4. 서브: 어뢰 발사하기 성공 시
+        else if (clearedObjectiveName == "FireTorpedo")
+        {
+            UnlockObjective("FixTorpedoRadar");       // 서브: 어뢰 레이더 수리하기 해금
         }
     }
 
     /// <summary>
-    /// 연구실 전용 실시간 연쇄 업데이트 코루틴
+    /// 특정 목표 해금하기
     /// </summary>
-    private IEnumerator ProcessLabObjectivesSequence()
+    /// <param name="name"></param>
+    public void UnlockObjective(string name)
     {
-        isProcessingLabQueue = true;
+        ObjectiveProgress target = mainObjectives.Find(x => x.objectiveName == name);
 
-        while (labSubClearCount < 4)
+        if (target == null)
         {
-            ObjectiveProgress currentTargetData = mainObjectives[2 + labSubClearCount];
-
-            if (currentTargetData.isCompleted)
-            {
-                labSubClearCount++;
-                UpdateObjectiveUI();
-
-                yield return new WaitForSeconds(2f);
-
-                if (labSubClearCount == 4)
-                {
-                    currentStep = 3;
-                    UpdateObjectiveUI();
-                    break;
-                }
-            }
-            else
-            {
-                break;
-            }
+            target = subObjectives.Find(x => x.objectiveName == name);
         }
 
-        isProcessingLabQueue = false;
+        if (target != null && !target.isUnlocked)
+        {
+            target.isUnlocked = true;
+        }
     }
 
     /// <summary>
@@ -265,7 +278,5 @@ public class ObjectiveManager : MonoBehaviour
         Debug.Log($"[치트 강제 완료] {name} 완료 처리 시도. 대단계(currentStep): {currentStep}, 연구실 카운트: {labSubClearCount}");
 
         UpdateObjectiveUI();
-
-        StartCoroutine(ProcessNextStepAfterDelay(name));
     }
 }

@@ -89,6 +89,7 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
 
         if (selectedItem == escapeDoorHydraulicValveItem)
         {
+            ObjectiveManager.Instance.CompleteObjective("OperateHydraulicValve");
             Success(); // 성공
         }
     }

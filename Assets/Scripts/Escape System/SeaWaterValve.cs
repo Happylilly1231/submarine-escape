@@ -29,7 +29,6 @@ public class SeaWaterValve : InteractableBase
 
     private bool _isUnderwater = false;
 
-    private ObjectiveManager objectiveManager;
     private EqualizingQTE equalizingQTE;
 
     [Header("Sound")]
@@ -40,7 +39,6 @@ public class SeaWaterValve : InteractableBase
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
-        objectiveManager = FindObjectOfType<ObjectiveManager>();
         equalizingQTE = GetComponent<EqualizingQTE>();
 
         hatchLightObj.SetActive(false);
@@ -82,7 +80,7 @@ public class SeaWaterValve : InteractableBase
         inventoryUI.SetActive(false);
         statUI.SetActive(false);
 
-        objectiveManager.CompleteObjective("GoToEscapeRoom");
+        ObjectiveManager.Instance.CompleteObjective("GoToEscapeRoom");
         Debug.Log("물 채우기를 시작합니다.");
         StartWaterSequence();
     }

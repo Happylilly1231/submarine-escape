@@ -169,6 +169,8 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
         if (_currentSelectedArea != AlertArea.None)
         {
+            ObjectiveManager.Instance.CompleteObjective("OperateRemoteAlarm");
+
             // 해당 구역 경보 발생
             if (_currentSelectedArea == AlertArea.ControlRoom)
                 SubmarineInGameManager.instance.AlertOn(_currentSelectedArea, 3); // 조종실 선택되면 마지막 장비인 통신 장비 파괴 경보

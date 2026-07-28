@@ -5,7 +5,8 @@ using UnityEngine;
 public enum CabinetLockType
 {
     None,       // 그냥 열림
-    KeyRequired // 열쇠 필요
+    KeyRequired, // 열쇠 필요
+    Locked // 잠김
 }
 
 /// <summary>
@@ -46,6 +47,8 @@ public class Cabinet : InteractableBase
                     return LocalizationHelper.GetLocalizedInteractText("Interact/Open", "E");
                 else
                     return LocalizationHelper.GetLocalizedInteractText("Interact/LockedKeyRequired");
+            case CabinetLockType.Locked:
+                return LocalizationHelper.GetLocalizedInteractText("Interact/Locked");
         }
 
         return "";

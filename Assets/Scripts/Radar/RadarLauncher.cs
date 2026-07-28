@@ -82,6 +82,8 @@ public class RadarLauncher : MonoBehaviour
         // 경보 발생
         SubmarineInGameManager.instance.AlertOn(AlertArea.ControlRoom, _radarController.CurrentTorpedoIndex); // 0, 1, 2
 
+        if (_radarController.CurrentTorpedoIndex == 0) ObjectiveManager.Instance.UnlockObjective("FixTorpedoRadar"); // 1차 수리 해금
+
         // 실제 어뢰 발사
         StartCoroutine(FireCoroutine(FireMode.Real));
         _radarDisplay.UpdateFireButtonActive(); // 발사 버튼 활성화 여부 갱신
