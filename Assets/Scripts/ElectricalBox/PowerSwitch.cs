@@ -86,10 +86,7 @@ public class PowerSwitch : InteractableBase
     {
         if (!_isFirst)
         {
-            // if (SaveSystemManager.Instance != null)
-            // {
-            //     SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
-            // }
+            SavePointManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
             ObjectiveManager.Instance.CompleteObjective("RestorePower");
             _isFirst = true;
         }

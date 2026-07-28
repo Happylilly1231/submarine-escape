@@ -44,13 +44,13 @@ public class EndingDetailView : MonoBehaviour
         AudioManager.Instance.StopBGM(); // 브금 종료
     }
 
-    public void ShowDetail(Sprite image, string info, float firstTime, float bestTime, string beatPlayerName)
+    public void ShowDetail(Sprite image, string info, float firstTime, float bestTime)
     {
         endingIamge.sprite = image;
         description.text = info;
 
         firstTimeText.text = FormatTime(firstTime);
-        bestTimeText.text = $"[{beatPlayerName}] {FormatTime(bestTime)}";
+        bestTimeText.text = FormatTime(bestTime);
 
         detailPanel.SetActive(true);
     }

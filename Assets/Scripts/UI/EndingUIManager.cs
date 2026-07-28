@@ -49,9 +49,9 @@ public class EndingUIManager : MonoBehaviour
             gameOverButtons[2].onClick.AddListener(GameManager.instance.QuitGame);
         }
 
-        PlayerRecord lastRecord = GameManager.instance.GetLatestEndingRecord();
+        EEndingType lastEndingType = EndingSaveManager.Instance.GetLatestEndingType();
 
-        endingTitleText.text = GetLocalizedEndingTitle(lastRecord.endingType);
+        endingTitleText.text = GetLocalizedEndingTitle(lastEndingType);
     }
 
     /// <summary>

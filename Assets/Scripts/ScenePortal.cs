@@ -11,6 +11,8 @@ public class ScenePortal : Door
 
     public override void OpenDoor(float angle)
     {
+        if (sceneName == "SubmarineScene") SavePointManager.Instance.IsLoadGameMode = false;
+
         FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 연출 포커스 상태로 전환
 
         base.OpenDoor(angle);

@@ -26,18 +26,18 @@ public class IntroSequencer : MonoBehaviour
         // 게임 초기 설정
         SubmarineInGameManager.instance.InitGame();
 
-        SkipIntroSequenceRoutine();
-
-        // // 세이브 로드 상태라면
-        // if (SaveSystemManager.Instance != null && SaveSystemManager.IsLoadGameMode)
-        // {
-        //     SkipIntroSequenceRoutine();
-        // }
-        // else
-        // {
-        //     // 새 게임인 경우에만 인트로 연출 시작
-        //     StartCoroutine(PlayIntroSequence());
-        // }
+        // 세이브 로드 상태라면
+        if (SavePointManager.Instance != null && SavePointManager.Instance.IsLoadGameMode)
+        {
+            Debug.Log("세이브 로드 상태");
+            SkipIntroSequenceRoutine();
+        }
+        else
+        {
+            Debug.Log("새 게임 시작");
+            // 새 게임인 경우에만 인트로 연출 시작
+            StartCoroutine(PlayIntroSequence());
+        }
     }
 
     IEnumerator PlayIntroSequence()
@@ -83,9 +83,9 @@ public class IntroSequencer : MonoBehaviour
         _animator.applyRootMotion = false;
 
         // 안전해진 타이밍에 세이브 좌표 주입
-        if (SaveSystemManager.Instance != null)
+        if (SavePointManager.Instance != null)
         {
-            var saveData = SaveSystemManager.Instance.GetCurrentSavePointData();
+            var saveData = SavePointManager.Instance.GetCurrentSavePointData();
             if (saveData != null)
             {
                 Vector3 targetPos = saveData.playerPosition.ToVector3();

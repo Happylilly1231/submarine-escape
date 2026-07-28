@@ -302,7 +302,7 @@ public class KeyPadController : PuzzleController
         else
         {
             ObjectiveManager.Instance.CompleteObjective("EscapeCrewRoom");
-            //SaveSystemManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
+            SavePointManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
         }
 
         currentState = EPuzzleState.Success;
