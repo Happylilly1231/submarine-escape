@@ -70,10 +70,15 @@ public class KeyPadController : PuzzleController
         flashlight.SetActive(false);
         ToggleColliders(false);
 
+        base.ExitPuzzle();
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
         Click.performed -= OnPointerClick;
         KeyE.performed -= OnExecuteAction;
-
-        base.ExitPuzzle();
     }
     #endregion
 

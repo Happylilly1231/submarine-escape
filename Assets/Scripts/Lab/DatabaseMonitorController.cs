@@ -25,6 +25,8 @@ public class DatabaseMonitorController : PuzzleController
     private DatabaseMonitorDisplay _monitorDisplay;
     private ObjectiveManager objectiveManager;
 
+    public bool HasLogined { get; private set; } = false; // 로그인 한 번이라도 했는지 여부
+
     private void Awake()
     {
         _monitorDisplay = GetComponent<DatabaseMonitorDisplay>();
@@ -135,6 +137,9 @@ public class DatabaseMonitorController : PuzzleController
 
                 SetToggleMapEnabled(true); // Tab으로 맵 열기 가능
                 SetInputLock(false); // 입력 잠금 해제
+
+                HasLogined = true; // 한번이라도 로그인했음으로 설정
+
                 return true;
             }
         }

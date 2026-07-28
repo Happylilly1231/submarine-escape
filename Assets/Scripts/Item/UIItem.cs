@@ -8,14 +8,17 @@ public class UIItem : MonoBehaviour
 {
     [Header("Localized Sprite Settings")]
     private string _assetTableKey; // 예: "Item/Sprite/KeyPadManual"
-    private SpriteRenderer _spriteRenderer; // 이미지 갈아끼울 렌더러
+    [SerializeField] private SpriteRenderer spriteRenderer; // 이미지 갈아끼울 렌더러 (인스펙터에서 꼭 설정 안해도 됨)
+    private InventoryManager _inventoryManager;
 
     private void Awake()
     {
         string itemName = GetComponent<ItemPickUp>().Item.ItemName;
         string cleanItemName = itemName.Replace(" ", "");
         _assetTableKey = $"Item/Sprite/{cleanItemName}";
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null) // 인스펙터에서 따로 설정해주지 않았으면 -> 그냥 붙어있는 거 가져옴
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        _inventoryManager = FindAnyObjectByType<InventoryManager>();
     }
 
     private void OnEnable()
@@ -41,14 +44,14 @@ public class UIItem : MonoBehaviour
     /// </summary>
     private void UpdateLocalizedSprite()
     {
-        if (_spriteRenderer == null || string.IsNullOrEmpty(_assetTableKey)) return;
+        if (spriteRenderer == null || string.IsNullOrEmpty(_assetTableKey)) return;
 
         // Asset Table 'AT_UI'에서 언어별 Sprite 로드
         Sprite localizedSprite = LocalizationSettings.AssetDatabase.GetLocalizedAsset<Sprite>("AT_UI", _assetTableKey);
 
         if (localizedSprite != null)
         {
-            _spriteRenderer.sprite = localizedSprite;
+            spriteRenderer.sprite = localizedSprite;
         }
     }
 
@@ -90,6 +93,16 @@ public class UIItem : MonoBehaviour
                     transform.localRotation = Quaternion.Euler(19, 0, 0);
                 }
                 Debug.Log("모스부호표 - 확대");
+                break;
+            case "SubjectFolder":
+                PlayerNoteManager.instance.RegisterClue("SubjectFolder1");
+                PlayerNoteManager.instance.RegisterClue("SubjectFolder2");
+                PlayerNoteManager.instance.RegisterClue("SubjectFolder3");
+                _inventoryManager.ConsumeItemInSlot(GetComponent<ItemPickUp>().Item); // 소모
+                break;
+            case "Project_Participant":
+                PlayerNoteManager.instance.RegisterClue("Project_Participant");
+                _inventoryManager.ConsumeItemInSlot(GetComponent<ItemPickUp>().Item); // 소모
                 break;
         }
     }

@@ -90,7 +90,9 @@ public class RadarTarget
 
         // 점 위치, 색상, 크기 갱신
         dotRectTransform.anchoredPosition = uiPos;
-        dotImg.color = new Color(0, 1, 0, 0.7f + _normPos.z * 0.3f); // 높이가 올라가면 진해짐(높이 0 기준 0.7f)
+        Color currentColor = dotImg.color;
+        currentColor.a = 0.7f + _normPos.z + 0.3f;
+        dotImg.color = currentColor; // 높이가 올라가면 진해짐(높이 0 기준 0.7f)
         dotRectTransform.localScale = Vector3.one * (1f + _normPos.z * 0.3f); // 높이가 올라가면 커짐(높이 0 기준 1f)
 
         // 좌표 텍스트 갱신

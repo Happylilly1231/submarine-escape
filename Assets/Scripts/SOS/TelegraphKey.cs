@@ -154,11 +154,7 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public override void ExitPuzzle()
     {
-        Click.started -= OnClickStarted;
-        Click.canceled -= OnClickCanceled;
-        RightClick.performed -= OnRightClickPerformed;
-        if (IsSuccessed)
-            KeyE.performed -= OnKeyEPerformed;
+        UnsubscribeEvents();
 
         // 데이터와 화면 UI를 깨끗하게 비워줌
         _currentWord.Clear();
@@ -192,6 +188,17 @@ public class TelegraphKey : PuzzleController, IInteractable
 
         // 송신기 내려놓기
         PutDownTransmitter();
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        Click.started -= OnClickStarted;
+        Click.canceled -= OnClickCanceled;
+        RightClick.performed -= OnRightClickPerformed;
+        if (IsSuccessed)
+            KeyE.performed -= OnKeyEPerformed;
     }
     #endregion
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -50,8 +51,9 @@ public class RecordingDevice : PuzzleController, IInteractable
         LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         // 언어 변경 이벤트 해제
         LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
     }
@@ -150,9 +152,21 @@ public class RecordingDevice : PuzzleController, IInteractable
         // 현재 언어 텍스트 읽어오기
         string currentText = GetCurrentLocalizedText();
 
-        float defaultTime = 0.1f;
+        // 현재 설정된 언어의 코드 확인 (예: "en", "ko" 등)
+        string currentLocaleCode = LocalizationSettings.SelectedLocale != null
+            ? LocalizationSettings.SelectedLocale.Identifier.Code
+            : "";
+
+        // 영어일 경우 기본 타이핑 속도를 2배로 축소 (0.1f -> 0.05f)
+        bool isEnglish = currentLocaleCode.StartsWith("en");
+        float defaultTime = isEnglish ? 0.05f : 0.1f;
+
         bool fast = false;
         float t = defaultTime;
+
+        // StringBuilder 생성 (미리 전체 텍스트 용량만큼 할당하여 찌꺼기 완벽 차단)
+        StringBuilder sb = new StringBuilder(currentText.Length);
+
         for (int i = 0; i < currentText.Length; i++)
         {
             if (currentText[i] == '*')
@@ -165,12 +179,15 @@ public class RecordingDevice : PuzzleController, IInteractable
                 if (!fast)
                 {
                     if (currentText[i] == '.')
-                        t = defaultTime + 0.2f;
+                        t = defaultTime + (isEnglish ? 0.1f : 0.2f); // 마침표 대기시간도 함께 조정
                     else
                         t = defaultTime;
                 }
 
-                recordingText.text += currentText[i].ToString();
+                // char를 직접 Append하여 문자열 동적 생성 방지
+                sb.Append(currentText[i]);
+
+                recordingText.text = sb.ToString();
             }
 
             yield return new WaitForSeconds(t);

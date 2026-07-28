@@ -65,7 +65,7 @@ public class RadarController : PuzzleController
     public TorpedoState CurrentTorpedoState { get; private set; } // 현재 어뢰 상태
 
     // 위험 거리 경보
-    private float _dangerDistance = 90f; // 위험 거리
+    private float _dangerDistance = 50f; // 위험 거리
     private float _maxSpeedMultiplier = 2f; // 통신 시 괴물이 빨라질 최대 배속
     private float _accelerationSpeed = 1f; // 속도가 변하는 부드러운 정도 (Lerp용)
     private float _currentSpeedMultiplier = 1f; // 현재 괴물의 속도 배율
@@ -149,7 +149,7 @@ public class RadarController : PuzzleController
                 if (!_isDangerAlertActive)
                 {
                     _isDangerAlertActive = true;
-                    _radarDisplay.SetDangerBackround(true);
+                    _radarDisplay.SetDangerUI(true);
                     // 깜빡거림 추가 예정
                     Debug.Log($"<color=red>[경보]</color> 괴물 접근 감지! 현재 거리: {currentDistance}m (경보 발령)");
                 }
@@ -159,7 +159,7 @@ public class RadarController : PuzzleController
                 if (_isDangerAlertActive)
                 {
                     _isDangerAlertActive = false;
-                    _radarDisplay.SetDangerBackround(false);
+                    _radarDisplay.SetDangerUI(false);
                     Debug.Log($"<color=green>[안정]</color> 괴물이 멀어졌습니다. 현재 거리: {currentDistance}m (경보 해제)");
                 }
             }
@@ -218,8 +218,9 @@ public class RadarController : PuzzleController
             deepSeaMonster.ClampPosTextsInside();
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         TorpedoLoadPanel.OnLoaded -= SetCurrentTorpedoState;
         loadAvailableTorpedoTube.OnDoorOpenStateChanged -= SetTorpedoStateByDoor;
     }
@@ -265,6 +266,23 @@ public class RadarController : PuzzleController
         // 인게임 UI 활성화
         SubmarineInGameManager.instance.SetActiveInGameUI(true);
 
+        // 화면 끄지 않음
+
+        // 선택 여부 초기화
+        SelectPlanarPos(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
+
+        // 인벤토리 다시 보이게 하기
+        inventoryManager.OpenInventory();
+
+        // 발사 애니메이션 재생 중지
+        _radarLauncher.StopFireAnimationLoop();
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
         // 수동 전환이 아직 되지 않았을 때 -> 키 입력 이벤트 구독 해제
         if (!_isManualModeActive)
         {
@@ -279,18 +297,6 @@ public class RadarController : PuzzleController
             Click.canceled -= OnClickCanceled;
             Point.performed -= OnPoint;
         }
-
-        // 화면 끄지 않음
-
-        // 선택 여부 초기화
-        SelectPlanarPos(false);
-        SelectHeight(true); // 높이는 선택됨으로 설정
-
-        // 인벤토리 다시 보이게 하기
-        inventoryManager.OpenInventory();
-
-        // 발사 애니메이션 재생 중지
-        _radarLauncher.StopFireAnimationLoop();
     }
     #endregion
 

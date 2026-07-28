@@ -253,6 +253,7 @@ public class PlayerInteractor : MonoBehaviour
                 _currentFurniture.Interact();
                 if (canInteract && validItem != null && validItem.IsConsumable)
                 {
+                    Debug.Log(validItem.ItemName);
                     _inventoryManager.ConsumeItemInSlot(validItem);
                 }
             }

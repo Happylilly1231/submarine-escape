@@ -106,13 +106,18 @@ public class ManualHydraulicSystem : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        Click.performed -= OnClickPerformed;
-        Space.performed -= OnSpace;
-        TorpedoTube.OnOpened -= ExitAfterSuccess;
-
         gaugeBarSlider.gameObject.SetActive(false);
         _currentSelectDoorIndex = -1;
         topInfoText.text = "";
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        Click.performed -= OnClickPerformed;
+        Space.performed -= OnSpace;
+        TorpedoTube.OnOpened -= ExitAfterSuccess;
     }
     #endregion
 

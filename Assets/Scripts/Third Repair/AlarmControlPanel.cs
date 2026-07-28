@@ -59,47 +59,15 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     {
         SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted += ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded += DeactivateAlarmingUI;
-        // // 언어 변경 이벤트 구독
-        // LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
+
         SubmarineInGameManager.instance.OnNonMachinerySpaceAlertStarted -= ActivateAlarmingUI;
         SubmarineInGameManager.instance.OnAlertEnded -= DeactivateAlarmingUI;
-        // // 언어 변경 이벤트 해제
-        // LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
     }
-
-    #region Localization
-    // /// <summary>
-    // /// 언어 변경 시
-    // /// </summary>
-    // /// <param name="newLocale"></param>
-    // private void OnLanguageChanged(Locale newLocale)
-    // {
-    //     // activatedScreenUI가 열려있는 상태에서 언어가 바뀐 경우
-    //     if (activatedScreenUI != null && activatedScreenUI.activeSelf)
-    //     {
-    //         UpdateCurrentInfoText();
-    //     }
-    // }
-
-    // /// <summary>
-    // /// 현재 정보 텍스트 업데이트
-    // /// </summary>
-    // private void UpdateCurrentInfoText()
-    // {
-    //     if (_currentSelectedArea == AlertArea.None) // 미선택
-    //     {
-    //         infoText.text = LocalizationSettings.StringDatabase.GetLocalizedString("ST_UI", UNSELECTED_KEY);
-    //     }
-    //     else // 선택
-    //     {
-    //         infoText.text = LocalizationHelper.GetLocalizedTextWithParameter("SELECTED_KEY", _currentSelectedArea.ToString(), "E");
-    //     }
-    // }
-    #endregion
 
     #region IInteractable
     public bool CanInteractwithSelectedItem(Item item)
@@ -149,14 +117,19 @@ public class AlarmControlPanel : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        KeyE.performed -= OnKeyEPerformed;
-
         SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 활성화
 
         activatedScreenUI.SetActive(false); // 활성화 화면 비활성화
         _collider.enabled = true;
 
         UnselectArea(); // 선택 해제
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        KeyE.performed -= OnKeyEPerformed;
     }
     #endregion
 

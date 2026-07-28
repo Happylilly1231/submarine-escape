@@ -29,6 +29,7 @@ public class RadarDisplay : MonoBehaviour
     [SerializeField] private Image radarImg; // 레이더 이미지
     [SerializeField] private Sprite defaultRadar; // 기본 레이더
     [SerializeField] private Sprite redRadar; // 빨간 레이더
+    private Image _originDotImg; // 원점 이미지 
 
     public GameObject heightLever; // 높이 레버
     public GameObject fireButton; // 발사 버튼
@@ -36,6 +37,8 @@ public class RadarDisplay : MonoBehaviour
     private RadarController _radarController;
 
     private Coroutine _showExplosionCoroutine = null;
+
+    private Color _dangerColor = new Color(250f / 255f, 170f / 255f, 90f / 255f);
 
     private void Awake()
     {
@@ -47,6 +50,8 @@ public class RadarDisplay : MonoBehaviour
 
         ResetHeaderText();
         SetEnterImageHighlight(false);
+
+        _originDotImg = originDot.GetComponent<Image>();
     }
 
     public void SetLockedUIActive(bool isActive)
@@ -201,15 +206,29 @@ public class RadarDisplay : MonoBehaviour
     }
 
     /// <summary>
-    /// 레이더 배경을 위험(빨간색)으로 할지 여부 설정
+    /// 레이더 UI를 위험(빨간색)으로 할지 여부 설정
     /// </summary>
     /// <param name="isDanger">현재 위험 여부</param>
-    public void SetDangerBackround(bool isDanger)
+    public void SetDangerUI(bool isDanger)
     {
         if (isDanger)
+        {
             radarImg.sprite = redRadar;
+            _radarController.deepSeaMonster.dotImg.color = Color.red;
+            _radarController.deepSeaMonster.posText.color = _dangerColor;
+            _radarController.submarine2.dotImg.color = Color.red;
+            _radarController.submarine2.posText.color = _dangerColor;
+            _originDotImg.color = Color.red;
+        }
         else
+        {
             radarImg.sprite = defaultRadar;
+            _radarController.deepSeaMonster.dotImg.color = Color.green;
+            _radarController.deepSeaMonster.posText.color = Color.green;
+            _radarController.submarine2.dotImg.color = Color.green;
+            _radarController.submarine2.posText.color = Color.green;
+            _originDotImg.color = Color.green;
+        }
     }
 
     #region 발사
