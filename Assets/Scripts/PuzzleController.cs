@@ -150,8 +150,8 @@ public abstract class PuzzleController : MonoBehaviour
     public virtual void ExitPuzzle()
     {
         IsPuzzleStarted = false;
-        _exit.performed -= OnExit;
-        if (IsHoverRequired) _point.performed -= OnPoint; // 호버 필요할 때만 미리 구독해두었던 것 해제
+
+        UnsubscribeEvents();
 
         // InputManager.instance.SwitchActionMapWithPermanent("Player");
 
@@ -268,5 +268,20 @@ public abstract class PuzzleController : MonoBehaviour
             _currentHover.OnHoverExit();
             _currentHover = null;
         }
+    }
+
+    /// <summary>
+    /// 모든 InputAction 이벤트 구독 해제 (씬 전환/오브젝트 비활성화 시 자동 방어용)
+    /// </summary>
+    protected virtual void UnsubscribeEvents()
+    {
+        if (_exit != null) _exit.performed -= OnExit;
+        if (IsHoverRequired && _point != null) _point.performed -= OnPoint;
+    }
+
+    // 오브젝트가 비활성화되거나 Destroy될 때(씬 전환, 타이틀 이동 등) 자동으로 이벤트 연결 해제
+    protected virtual void OnDisable()
+    {
+        UnsubscribeEvents();
     }
 }

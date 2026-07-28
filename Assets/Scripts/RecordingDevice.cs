@@ -50,8 +50,9 @@ public class RecordingDevice : PuzzleController, IInteractable
         LocalizationSettings.SelectedLocaleChanged += OnLanguageChanged;
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         // 언어 변경 이벤트 해제
         LocalizationSettings.SelectedLocaleChanged -= OnLanguageChanged;
     }

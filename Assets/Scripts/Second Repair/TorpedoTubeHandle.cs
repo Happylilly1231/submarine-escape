@@ -110,14 +110,30 @@ public class TorpedoTubeHandle : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        torpedoTube.OnUnlocked -= ExitPuzzle;
-
         StopAllCoroutines();
         for (int i = 0; i < forcePoints.Length; i++)
         {
             forcePoints[i].gameObject.SetActive(false);
         }
         torpedoTubeUnlockUI.SetActive(false); // UI 끄기
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        torpedoTube.OnUnlocked -= ExitPuzzle;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+
+        if (ForceKey != null)
+        {
+            ForceKey.performed -= OnForceKeyAxis;
+            ForceKey.canceled -= OnForceKeyAxis;
+        }
     }
     #endregion
 

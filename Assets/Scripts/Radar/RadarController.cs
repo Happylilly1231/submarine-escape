@@ -218,8 +218,9 @@ public class RadarController : PuzzleController
             deepSeaMonster.ClampPosTextsInside();
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         TorpedoLoadPanel.OnLoaded -= SetCurrentTorpedoState;
         loadAvailableTorpedoTube.OnDoorOpenStateChanged -= SetTorpedoStateByDoor;
     }
@@ -265,6 +266,23 @@ public class RadarController : PuzzleController
         // 인게임 UI 활성화
         SubmarineInGameManager.instance.SetActiveInGameUI(true);
 
+        // 화면 끄지 않음
+
+        // 선택 여부 초기화
+        SelectPlanarPos(false);
+        SelectHeight(true); // 높이는 선택됨으로 설정
+
+        // 인벤토리 다시 보이게 하기
+        inventoryManager.OpenInventory();
+
+        // 발사 애니메이션 재생 중지
+        _radarLauncher.StopFireAnimationLoop();
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
         // 수동 전환이 아직 되지 않았을 때 -> 키 입력 이벤트 구독 해제
         if (!_isManualModeActive)
         {
@@ -279,18 +297,6 @@ public class RadarController : PuzzleController
             Click.canceled -= OnClickCanceled;
             Point.performed -= OnPoint;
         }
-
-        // 화면 끄지 않음
-
-        // 선택 여부 초기화
-        SelectPlanarPos(false);
-        SelectHeight(true); // 높이는 선택됨으로 설정
-
-        // 인벤토리 다시 보이게 하기
-        inventoryManager.OpenInventory();
-
-        // 발사 애니메이션 재생 중지
-        _radarLauncher.StopFireAnimationLoop();
     }
     #endregion
 

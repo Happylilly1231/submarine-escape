@@ -75,13 +75,6 @@ public class PowerController : PuzzleController
         if (_isExiting) return;
         _isExiting = true;
 
-        if (!IsComplete)
-        {
-            // 입력 이벤트 해제
-            Click.started -= powerGridManager.OnPointerDown;
-            Click.canceled -= powerGridManager.OnPointerUp;
-        }
-
         hintText.gameObject.SetActive(false); // 힌트 비활성화
 
         powerPuzzle_panel.SetActive(false);
@@ -95,6 +88,18 @@ public class PowerController : PuzzleController
             flashlight.SetActive(false);
             _isExiting = false;
         });
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        if (!IsComplete)
+        {
+            // 입력 이벤트 해제
+            Click.started -= powerGridManager.OnPointerDown;
+            Click.canceled -= powerGridManager.OnPointerUp;
+        }
     }
     #endregion
 

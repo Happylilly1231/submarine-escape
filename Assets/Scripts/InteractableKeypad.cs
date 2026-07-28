@@ -75,6 +75,11 @@ public class InteractableKeypad : PuzzleController, IInteractable
         if (!LightingManager.instance.IsPowerOn) whiteLight.SetActive(false);
 
         _collider.enabled = true;
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
 
         Click.performed -= OnClickPerformed;
     }

@@ -17,6 +17,7 @@ public class Clue
 {
     public string clueId;
     public Button clueImgButton;
+    public GameObject clueObj;
     public LocalizedSprite clueLocalizedSprite;
 }
 
@@ -124,7 +125,8 @@ public class PlayerNoteManager : MonoBehaviour
         // 단서 누르면 줌인 함수 연결
         foreach (var clue in clueList)
         {
-            clue.clueImgButton.onClick.AddListener(() => ZoomInClue(clue));
+            if (clue.clueImgButton != null)
+                clue.clueImgButton.onClick.AddListener(() => ZoomInClue(clue));
         }
 
         // 단서 줌아웃 함수 연결
@@ -147,14 +149,16 @@ public class PlayerNoteManager : MonoBehaviour
     /// <param name="clueId"></param>
     public void RegisterClue(string clueId)
     {
-        clueDict[clueId].gameObject.SetActive(true);
-
         // 현재 단서 활성화 여부 현재 데이터에 저장
         for (int i = 0; i < clueList.Count; i++)
         {
             if (clueId == clueList[i].clueId)
             {
                 currentPlayerNoteData.clueActiveStates[i] = true;
+                if (clueList[i].clueImgButton != null)
+                    clueList[i].clueImgButton.gameObject.SetActive(true);
+                if (clueList[i].clueObj != null)
+                    clueList[i].clueObj.SetActive(true);
             }
         }
     }
@@ -214,46 +218,13 @@ public class PlayerNoteManager : MonoBehaviour
         }
     }
 
-    private void OnDable()
+    private void OnDisable()
     {
         if (_currentLocalizedSprite != null)
         {
             _currentLocalizedSprite.AssetChanged -= OnSpriteChanged;
         }
     }
-
-    // /// <summary>
-    // /// 에셋 테이블에서 해당 Key의 Sprite를 가져와 적용
-    // /// </summary>
-    // private void LoadAndApplySprite(string key)
-    // {
-    //     // AssetDatabase에서 지정한 테이블("AT_UI")과 Key로 Sprite 로드
-    //     var handle = LocalizationSettings.AssetDatabase.GetLocalizedAssetAsync<Sprite>("AT_UI", key);
-
-    //     handle.Completed += (AsyncOperationHandle<Sprite> op) =>
-    //     {
-    //         if (op.Status == AsyncOperationStatus.Succeeded && op.Result != null)
-    //         {
-    //             bigClueImage.sprite = op.Result;
-    //         }
-    //         else
-    //         {
-    //             Debug.LogWarning($"[Localizer] Sprite를 찾을 수 없음: Key({key})");
-    //         }
-    //     };
-    // }
-
-    // /// <summary>
-    // /// 언어 변경 시 호출되는 콜백
-    // /// </summary>
-    // private void OnLanguageChanged(UnityEngine.Localization.Locale newLocale)
-    // {
-    //     // 현재 띄워져 있던 Key가 있다면 최신 언어 이미지로 다시 불러옴
-    //     if (!string.IsNullOrEmpty(_currentKey))
-    //     {
-    //         LoadAndApplySprite(_currentKey);
-    //     }
-    // }
 
     /// <summary>
     /// 토글이 켜지거나 꺼질 때 실행되는 함수
@@ -309,7 +280,10 @@ public class PlayerNoteManager : MonoBehaviour
     {
         for (int i = 0; i < clueList.Count; i++)
         {
-            clueList[i].clueImgButton.gameObject.SetActive(currentPlayerNoteData.clueActiveStates[i]);
+            if (clueList[i].clueImgButton != null)
+                clueList[i].clueImgButton.gameObject.SetActive(currentPlayerNoteData.clueActiveStates[i]);
+            if (clueList[i].clueObj != null)
+                clueList[i].clueObj.SetActive(currentPlayerNoteData.clueActiveStates[i]);
         }
 
         for (int i = 0; i < checkboxes.Length; i++)

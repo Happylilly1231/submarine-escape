@@ -60,10 +60,15 @@ public class EscapeRoomDoorRepairController : PuzzleController, IInteractable
     {
         base.ExitPuzzle();
 
-        KeyE.performed -= OnKeyEPerformed;
-
         if (!_isComplete) // 완료되면 밸브 때문에 닫을 수 X
             CloseDoor(); // 함 문 닫기
+    }
+
+    protected override void UnsubscribeEvents()
+    {
+        base.UnsubscribeEvents();
+
+        KeyE.performed -= OnKeyEPerformed;
     }
     #endregion
 
