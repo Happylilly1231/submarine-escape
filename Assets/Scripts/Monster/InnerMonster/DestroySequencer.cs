@@ -138,7 +138,10 @@ public class DestroySequencer : MonoBehaviour
             // 샘플 오브젝트들 비활성화
             foreach (var sample in samples)
             {
-                sample.SetActive(false);
+                if (sample != null)
+                {
+                    sample.SetActive(false);
+                }
             }
         });
         seq.AppendInterval(1.5f);
