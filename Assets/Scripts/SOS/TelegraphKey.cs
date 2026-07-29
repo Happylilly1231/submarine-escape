@@ -128,6 +128,7 @@ public class TelegraphKey : PuzzleController, IInteractable
     public override void ActivatePuzzle()
     {
         SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
+        inventoryManager.CloseInventory(); // 인벤토리 닫기 (슬롯 선택 해제 (안하면 아이템 장착 해제해도 아이템 이름 보임))
         itemEquipController.UnequipItem(); // 아이템 장착 해제
         SubmarineInGameManager.instance.InteractorUI.SetActive(true); // 상호작용 UI 활성화
 

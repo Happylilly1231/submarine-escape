@@ -124,7 +124,7 @@ public class InventoryManager : MonoBehaviour
     /// <summary>
     /// 선택된 슬롯의 테두리를 네온 스프라이트로 변경
     /// </summary>
-    private void SelectSlot(int slotIndex)
+    public void SelectSlot(int slotIndex)
     {
         if (slotIndex >= 0 && slotIndex < inventorySlots.Length) inventorySlots[slotIndex].GetComponent<Image>().sprite = selectedSlotSprite;
         if (_selectedSlotIndex >= 0) inventorySlots[_selectedSlotIndex].GetComponent<Image>().sprite = slotSprite;

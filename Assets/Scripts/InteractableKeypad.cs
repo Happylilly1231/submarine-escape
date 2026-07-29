@@ -51,6 +51,9 @@ public class InteractableKeypad : PuzzleController, IInteractable
 
     public void Interact()
     {
+        if (isBroken)
+            return;
+
         if (!_isUnlocked)
             ActivatePuzzle();
     }

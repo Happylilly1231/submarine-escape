@@ -61,15 +61,19 @@ public class DestroySequencer : MonoBehaviour
                 {
                     // 장치 이미 부순 경우도 처리 잘하기!!!
                     case AlertArea.Galley:
+                        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
                         seq = DestroySequence_Galley();
                         break;
                     case AlertArea.Storage01:
+                        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
                         seq = DestroySequence_Storage01();
                         break;
                     case AlertArea.EngineRoom:
+                        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
                         seq = DestroySequence_EngineRoom();
                         break;
                     case AlertArea.ControlRoom:
+                        FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence);
                         seq = DestroySequence_ControlRoom();
                         break;
                 }
@@ -88,6 +92,8 @@ public class DestroySequencer : MonoBehaviour
 
                 _currentOnComplete?.Invoke();
                 _currentOnComplete = null;
+
+                FocusManager.Instance.PopFocusState();
             });
         }
     }
