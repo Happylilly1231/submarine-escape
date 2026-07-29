@@ -123,12 +123,14 @@ public abstract class LabEquipment : MonoBehaviour
                 targetIdx++;
             }
 
-            // 데이터 이동 후 시험관 내부 비우기
+            // 성공 여부 미리 넘기기
+            syringe.IsSuccess = tube.IsSuccess;
+
+            // 데이터 이동 후 시험관 내부 비우기 (성공 여부 리셋)
             for (int i = 0; i < tube.Slots.Length; i++)
             {
                 tube.Remove(i);
             }
-            syringe.IsSuccess = tube.IsSuccess;
         }
         // 일반 샘플 넣기
         else if (obj is Item item) slots[slotIdx].sample = item;

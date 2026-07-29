@@ -34,6 +34,9 @@ public class SavePointData
     [Header("[ Objective States ]")]
     public List<ObjectiveProgress> mainObjectives = new List<ObjectiveProgress>();
     public List<ObjectiveProgress> subObjectives = new List<ObjectiveProgress>();
+
+    [Header("[ Player Note States ]")]
+    public PlayerNoteData playerNoteData;
 }
 
 /// <summary>

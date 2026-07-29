@@ -20,16 +20,40 @@ public class Clue
 }
 
 [System.Serializable]
-public struct PlayerNoteData
+public class PlayerNoteData
 {
-    [System.ComponentModel.Description("1~2페이지: 단서 활성화 여부")]
+    [System.ComponentModel.Description("1~4페이지: 단서 활성화 여부")]
     public bool[] clueActiveStates;
 
-    [System.ComponentModel.Description("3~4페이지: 데이터베이스 샘플 등 체크박스 상태")]
+    [System.ComponentModel.Description("5~6페이지: 데이터베이스 샘플 등 체크박스 상태")]
     public bool[] checkStates;
 
-    [System.ComponentModel.Description("5~8페이지: 자유 타이핑 메모 텍스트 데이터")]
+    [System.ComponentModel.Description("7~10페이지: 자유 타이핑 메모 텍스트 데이터")]
     public string[] memoPageTexts;
+
+    // 데이터베이스 모니터 로그인 여부
+    public bool hasLoginedDatabase;
+
+    /// <summary>
+    /// 깊은 복사(Deep Copy)를 통해 독립된 데이터 객체 생성
+    /// </summary>
+    public PlayerNoteData Clone()
+    {
+        PlayerNoteData newData = new PlayerNoteData();
+
+        if (this.clueActiveStates != null)
+            newData.clueActiveStates = (bool[])this.clueActiveStates.Clone();
+
+        if (this.checkStates != null)
+            newData.checkStates = (bool[])this.checkStates.Clone();
+
+        if (this.memoPageTexts != null)
+            newData.memoPageTexts = (string[])this.memoPageTexts.Clone();
+
+        newData.hasLoginedDatabase = (bool)this.hasLoginedDatabase;
+
+        return newData;
+    }
 }
 
 public class PlayerNoteManager : MonoBehaviour
@@ -239,6 +263,7 @@ public class PlayerNoteManager : MonoBehaviour
     /// </summary>
     private void InitNewNote()
     {
+        currentPlayerNoteData = new PlayerNoteData();
         currentPlayerNoteData.clueActiveStates = new bool[clueList.Count];
         currentPlayerNoteData.checkStates = new bool[checkboxes.Length];
         currentPlayerNoteData.memoPageTexts = new string[memoPageInputFields.Length];
@@ -257,6 +282,24 @@ public class PlayerNoteManager : MonoBehaviour
     /// <returns>저장할 데이터</returns>
     public PlayerNoteData GetCurrentPlayerNoteData()
     {
+        // 저장 직전에 메모장 입력값을 데이터 객체에 반영
+        if (memoPageInputFields != null && currentPlayerNoteData.memoPageTexts != null)
+        {
+            for (int i = 0; i < memoPageInputFields.Length; i++)
+            {
+                if (memoPageInputFields[i] != null)
+                {
+                    currentPlayerNoteData.memoPageTexts[i] = memoPageInputFields[i].text;
+                }
+            }
+        }
+
+        // 데이터베이스 모니터 로그인 상태 저장
+        if (_databaseMonitorController != null)
+        {
+            currentPlayerNoteData.hasLoginedDatabase = _databaseMonitorController.HasLogined;
+        }
+
         return currentPlayerNoteData;
     }
 
@@ -267,6 +310,12 @@ public class PlayerNoteManager : MonoBehaviour
     public void LoadPlayerNoteData(PlayerNoteData loadedData)
     {
         currentPlayerNoteData = loadedData;
+
+        // 로드된 로그인 상태를 DatabaseMonitorController에도 복원
+        if (_databaseMonitorController != null)
+        {
+            _databaseMonitorController.HasLogined = loadedData.hasLoginedDatabase;
+        }
 
         UpdateNoteUI();
     }

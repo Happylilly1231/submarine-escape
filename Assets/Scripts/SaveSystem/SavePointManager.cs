@@ -275,6 +275,19 @@ public class SavePointManager : MonoBehaviour
     {
         if (saveBridge == null || dataCollection == null) return;
 
+        // [세이브 데이터 가져오기]
+        SavePointData targetData = GetSavePointData(pendingLoadType);
+
+        if (targetData != null)
+        {
+            // [플레이어 노트 UI 데이터 복구]
+            if (PlayerNoteManager.instance != null && targetData.playerNoteData != null)
+            {
+                PlayerNoteManager.instance.LoadPlayerNoteData(targetData.playerNoteData);
+                Debug.Log($"[{pendingLoadType}] 플레이어 노트 UI 동기화 완료");
+            }
+        }
+
         // 선원실 탈출 해제와 전력 복구는 이후 추가될 목표를 고려한다고 해도 선형적이므로(어뢰 발사나 치료제나 다 이 2개가 우선적으로 되어야 함) >= 비교로 여부 판단
         bool isCrewKeyPadUnlocked = pendingLoadType >= ESavePointType.CrewKeyPad;
         bool isPowerRestoration = pendingLoadType >= ESavePointType.PowerRestoration;
@@ -363,6 +376,17 @@ public class SavePointManager : MonoBehaviour
         SetPlayerInventory(targetData);
         SetWorldItem(targetData);
         SetObjectives(targetData); // 목표 데이터 채우기
+
+        // [단서 데이터 저장]
+        if (PlayerNoteManager.instance != null)
+        {
+            // 💡 그냥 넘기지 않고 .Clone()으로 독립된 복사본을 만들어 저장!
+            var currentData = PlayerNoteManager.instance.GetCurrentPlayerNoteData();
+            if (currentData != null)
+            {
+                targetData.playerNoteData = currentData.Clone();
+            }
+        }
 
         SaveAllData();
     }

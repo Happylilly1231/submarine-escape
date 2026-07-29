@@ -166,12 +166,8 @@ public class PlayerInteractor : MonoBehaviour
                 {
                     if (!_currentEquipment.Slots[0].IsEmpty)
                     {
-                        // 최종 조합물이 든 페트리 접시를 들고 있는 경우에만 -> 현미경에 올려서 관찰 가능
-                        if (_heldEquipment is PetriDish petriDish && petriDish.ContainsResult)
-                        {
-                            microscope.InteractMicroscope();
-                            _inventoryManager.UpdateActionText();
-                        }
+                        microscope.InteractMicroscope();
+                        _inventoryManager.UpdateActionText();
                         return;
                     }
                 }
@@ -415,7 +411,8 @@ public class PlayerInteractor : MonoBehaviour
             // 생체 데이터 추출기를 들고 있지 않을 때만 -> LabEquipment와 상호작용 가능
             // (생체 데이터 추출기 아이템을 들고 있을 때는 페트리 접시의 IInteractable과 상호작용해야 하기 때문)
             // 추가: 주사기를 들고 있을 때도 LabEquipment 감지 불가 -> R키로 버리기를 해야하는데 실험기구가 감지되면 회수 R과 중복되기 때문
-            if (!_itemEquipController.HasItem || _itemEquipController.HeldItemData.ItemName != "Bio Data Extractor" || _itemEquipController.HeldItemData.ItemName != "Syringe")
+            if (!_itemEquipController.HasItem ||
+                (_itemEquipController.HeldItemData.ItemName != "Bio Data Extractor" && _itemEquipController.HeldItemData.ItemName != "Syringe"))
             {
                 // 2. 실험 기구 감지
                 if (_sphereCastHit.transform.TryGetComponent(out LabEquipment equipment))
