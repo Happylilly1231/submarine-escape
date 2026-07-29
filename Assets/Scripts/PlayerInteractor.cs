@@ -122,13 +122,16 @@ public class PlayerInteractor : MonoBehaviour
         {
             if (_heldEquipment is Syringe syringe && syringe.HasContent)
             {
+                // Remove하면 성공 변수 초기화되므로 미리 해줌
+                if (syringe.IsSuccess) ObjectiveManager.Instance.CompleteObjective("AdministerCure");
+                _playerMutation.InjectSerum(syringe.IsSuccess); // 플레이어에게 주입
+
                 // 주사기 내부 데이터 삭제
                 for (int i = 0; i < syringe.Slots.Length; i++)
                 {
                     syringe.Remove(i);
                 }
-                if (syringe.IsSuccess) ObjectiveManager.Instance.CompleteObjective("AdministerCure");
-                _playerMutation.InjectSerum(syringe.IsSuccess); // 플레이어에게 주입
+
                 if (_currentEquipment)
                     if (_isHoldingEquipment)
                     {
@@ -163,8 +166,12 @@ public class PlayerInteractor : MonoBehaviour
                 {
                     if (!_currentEquipment.Slots[0].IsEmpty)
                     {
-                        microscope.InteractMicroscope();
-                        _inventoryManager.UpdateActionText();
+                        // 최종 조합물이 든 페트리 접시를 들고 있는 경우에만 -> 현미경에 올려서 관찰 가능
+                        if (_heldEquipment is PetriDish petriDish && petriDish.ContainsResult)
+                        {
+                            microscope.InteractMicroscope();
+                            _inventoryManager.UpdateActionText();
+                        }
                         return;
                     }
                 }
@@ -184,6 +191,16 @@ public class PlayerInteractor : MonoBehaviour
                 // 손에 실험기구를 들고 있는 경우 - 슬롯에 넣기
                 if (_isHoldingEquipment && _heldEquipment != null)
                 {
+                    // 현미경에 상호작용하는데
+                    if (_currentEquipment is Microscope microscope2)
+                    {
+                        // 최종 조합물이 든 페트리 접시를 들고 있지 않으면 -> 현미경에 올리기 불가
+                        if (_heldEquipment is not PetriDish petriDish || !petriDish.ContainsResult)
+                        {
+                            return;
+                        }
+                    }
+
                     if (_heldEquipment is TestTube tube && tube.IsResultTube)
                     {
                         if (_currentEquipment is PetriDish petriDish)
@@ -261,13 +278,27 @@ public class PlayerInteractor : MonoBehaviour
     }
 
     /// <summary>
-    /// R키 입력으로 현재 선택된 슬롯의 내용물을 빼냄
+    /// R키 입력으로 현재 선택된 슬롯의 내용물을 빼냄 (+추가: 주사기 내용물 버리기)
     /// <para> - 샘플이면 인벤토리로, 실험기구면 손으로 </para>
     /// </summary>
     /// <param name="context"></param>
     public void OnWithdrawItem(InputAction.CallbackContext context)
     {
-        if (!context.performed || _currentEquipment == null) return;
+        if (!context.performed) return;
+
+        // 들고 있는 기구가 주사기라면 -> R: 버리기
+        if (_heldEquipment is Syringe syringe && syringe.HasContent)
+        {
+            // 주사기 내부 데이터 삭제
+            for (int i = 0; i < syringe.Slots.Length; i++)
+            {
+                syringe.Remove(i);
+            }
+            _inventoryManager.UpdateActionText();
+            return;
+        }
+
+        if (_currentEquipment == null) return;
 
         // 조합 결과물일때는 내용물 못 빼냄
         if (_currentEquipment is TestTube tube && tube.IsResultTube) return;
@@ -282,6 +313,7 @@ public class PlayerInteractor : MonoBehaviour
         {
             // 기구가 들어있다면 손으로 빼기 (이미 무언가 들고 있다면 불가)
             if (_isHoldingEquipment) return;
+
             // 원심분리기 작동 중에는 슬롯의 내용물 못뺌
             if (_currentEquipment is Centrifuge centrifuge)
             {
@@ -382,7 +414,8 @@ public class PlayerInteractor : MonoBehaviour
 
             // 생체 데이터 추출기를 들고 있지 않을 때만 -> LabEquipment와 상호작용 가능
             // (생체 데이터 추출기 아이템을 들고 있을 때는 페트리 접시의 IInteractable과 상호작용해야 하기 때문)
-            if (!_itemEquipController.HasItem || _itemEquipController.HeldItemData.ItemName != "Bio Data Extractor")
+            // 추가: 주사기를 들고 있을 때도 LabEquipment 감지 불가 -> R키로 버리기를 해야하는데 실험기구가 감지되면 회수 R과 중복되기 때문
+            if (!_itemEquipController.HasItem || _itemEquipController.HeldItemData.ItemName != "Bio Data Extractor" || _itemEquipController.HeldItemData.ItemName != "Syringe")
             {
                 // 2. 실험 기구 감지
                 if (_sphereCastHit.transform.TryGetComponent(out LabEquipment equipment))
