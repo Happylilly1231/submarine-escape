@@ -39,21 +39,21 @@ public class SoundButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 클릭 시 약간 눌리는 듯한 느낌(Punch)을 추가할 수도 있습니다.
-        transform.DOPunchScale(new Vector3(-0.1f, -0.1f, 0), 0.1f);
+        // [핵심] 고정 수치(-0.1f) 대신 원래 크기의 10%만큼 축소 연출
+        transform.DOPunchScale(_originalScale * -0.1f, 0.1f);
 
         AudioManager.Instance.PlayButtonClickSound();
-    }
-
-    // 씬이 바뀌거나 오브젝트가 파괴될 때 혹시 모를 메모리 찌꺼기 정리
-    void OnDestroy()
-    {
-        transform.DOKill();
     }
 
     void OnDisable()
     {
         transform.DOKill();
         transform.localScale = _originalScale;
+    }
+
+    // 씬이 바뀌거나 오브젝트가 파괴될 때 혹시 모를 메모리 찌꺼기 정리
+    void OnDestroy()
+    {
+        transform.DOKill();
     }
 }

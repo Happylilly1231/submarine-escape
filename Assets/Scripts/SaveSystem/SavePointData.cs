@@ -30,6 +30,10 @@ public class SavePointData
     // public bool isInsideMonsterBerserk;                // 내부 괴물 폭주 여부
 
     public List<WorldItemSaveData> worldItems = new List<WorldItemSaveData>(); // 아이템 오브젝트들
+
+    [Header("[ Objective States ]")]
+    public List<ObjectiveProgress> mainObjectives = new List<ObjectiveProgress>();
+    public List<ObjectiveProgress> subObjectives = new List<ObjectiveProgress>();
 }
 
 /// <summary>

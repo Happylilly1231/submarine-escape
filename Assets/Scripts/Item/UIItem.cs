@@ -79,7 +79,33 @@ public class UIItem : MonoBehaviour
                 Debug.Log("키패드 매뉴얼 - 확대");
                 break;
             case "Radar System Manual":
+                Debug.Log(isViewing);
+                if (!isViewing) // 확대
+                {
+                    transform.localPosition = new Vector3(0, 0.05f, 0.4f);
+                    transform.localRotation = Quaternion.Euler(0, 0, 0);
+                }
+                else // 원래 위치로
+                {
+                    transform.localPosition = new Vector3(0, 0, 0.5f);
+                    transform.localRotation = Quaternion.Euler(19, 0, 0);
+                }
+                Debug.Log("레이더시스템메뉴얼 - 확대");
+                break;
             case "Morse Code Chart":
+                Debug.Log(isViewing);
+                if (!isViewing) // 확대
+                {
+                    transform.localPosition = new Vector3(0, 0.05f, 0.4f);
+                    transform.localRotation = Quaternion.Euler(0, 0, 0);
+                }
+                else // 원래 위치로
+                {
+                    transform.localPosition = new Vector3(0, 0, 0.5f);
+                    transform.localRotation = Quaternion.Euler(19, 0, 0);
+                }
+                Debug.Log("모스부호표 - 확대");
+                break;
             case "Backroom Escape Hint Memo":
                 Debug.Log(isViewing);
                 if (!isViewing) // 확대
@@ -92,7 +118,7 @@ public class UIItem : MonoBehaviour
                     transform.localPosition = new Vector3(0, 0, 0.5f);
                     transform.localRotation = Quaternion.Euler(19, 0, 0);
                 }
-                Debug.Log("모스부호표 - 확대");
+                Debug.Log("백룸 힌트 메모 - 확대");
                 break;
             case "SubjectFolder":
                 PlayerNoteManager.instance.RegisterClue("SubjectFolder1");

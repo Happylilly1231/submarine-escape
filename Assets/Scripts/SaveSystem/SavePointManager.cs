@@ -259,6 +259,12 @@ public class SavePointManager : MonoBehaviour
             GameTime.Instance.SetTime(data.playTime);
         }
 
+        // [ 목표 복구 ]
+        if (objectiveManager != null && data.mainObjectives != null && data.mainObjectives.Count > 0)
+        {
+            objectiveManager.LoadObjectiveData(data.mainObjectives, data.subObjectives);
+        }
+
         Debug.Log($"[{type}] 세이브 데이터 로드 완료!");
     }
 
@@ -269,14 +275,9 @@ public class SavePointManager : MonoBehaviour
     {
         if (saveBridge == null || dataCollection == null) return;
 
-        bool isCrewKeyPadUnlocked = IsSavePointUnlocked(ESavePointType.CrewKeyPad);
-        bool isPowerRestoration = IsSavePointUnlocked(ESavePointType.PowerRestoration);
-
-        if (objectiveManager != null)
-        {
-            if (isPowerRestoration) objectiveManager.ForceCompleteObjective("RestorePower");
-            else if (isCrewKeyPadUnlocked) objectiveManager.ForceCompleteObjective("EscapeCrewRoom");
-        }
+        // 선원실 탈출 해제와 전력 복구는 이후 추가될 목표를 고려한다고 해도 선형적이므로(어뢰 발사나 치료제나 다 이 2개가 우선적으로 되어야 함) >= 비교로 여부 판단
+        bool isCrewKeyPadUnlocked = pendingLoadType >= ESavePointType.CrewKeyPad;
+        bool isPowerRestoration = pendingLoadType >= ESavePointType.PowerRestoration;
 
         if (isCrewKeyPadUnlocked && saveBridge.CrewKeyPadController != null)
         {
@@ -284,7 +285,7 @@ public class SavePointManager : MonoBehaviour
             Debug.Log("세이브 파일에서 선원실 탈출 확인 -> 문을 강제로 열었습니다.");
         }
 
-        if (isPowerRestoration && pendingLoadType != ESavePointType.CrewKeyPad && saveBridge.PowerSwitch != null)
+        if (isPowerRestoration && saveBridge.PowerSwitch != null)
         {
             saveBridge.PowerSwitch.ForcePowerRestoration();
             Debug.Log("세이브 파일에서 전력 복구 확인 -> 잠수함 전력을 킵니다.");
@@ -361,6 +362,7 @@ public class SavePointManager : MonoBehaviour
 
         SetPlayerInventory(targetData);
         SetWorldItem(targetData);
+        SetObjectives(targetData); // 목표 데이터 채우기
 
         SaveAllData();
     }
@@ -409,6 +411,38 @@ public class SavePointManager : MonoBehaviour
         }
     }
 
+    // 현재 ObjectiveManager의 목표들을 SavePointData로 복사
+    private void SetObjectives(SavePointData data)
+    {
+        if (objectiveManager == null) return;
+
+        if (data.mainObjectives == null) data.mainObjectives = new List<ObjectiveProgress>();
+        data.mainObjectives.Clear();
+        foreach (var obj in objectiveManager.mainObjectives)
+        {
+            data.mainObjectives.Add(new ObjectiveProgress
+            {
+                objectiveName = obj.objectiveName,
+                localizationKey = obj.localizationKey,
+                isUnlocked = obj.isUnlocked,
+                isCompleted = obj.isCompleted
+            });
+        }
+
+        if (data.subObjectives == null) data.subObjectives = new List<ObjectiveProgress>();
+        data.subObjectives.Clear();
+        foreach (var obj in objectiveManager.subObjectives)
+        {
+            data.subObjectives.Add(new ObjectiveProgress
+            {
+                objectiveName = obj.objectiveName,
+                localizationKey = obj.localizationKey,
+                isUnlocked = obj.isUnlocked,
+                isCompleted = obj.isCompleted
+            });
+        }
+    }
+
     public void SaveAllData()
     {
         if (dataCollection == null) return;
@@ -453,5 +487,35 @@ public class SavePointManager : MonoBehaviour
             return null;
 
         return dataCollection.savePointList[_currentPlayingIdx];
+    }
+
+    /// <summary>
+    /// 모든 세이브 포인트 데이터를 완전 초기화 (파일 삭제 및 기본값 재생성)
+    /// </summary>
+    public void ResetAllSaveData()
+    {
+        try
+        {
+            // 1. 세이브 파일이 존재하면 삭제
+            if (File.Exists(saveFilePath))
+            {
+                File.Delete(saveFilePath);
+                Debug.Log("[SavePointManager] 세이브 파일 삭제 완료");
+            }
+
+            // 2. 초기 데이터 구조 새로 생성
+            dataCollection = CreateDefaultSavePointData();
+
+            // 3. 인덱스 및 상태 초기화
+            _currentPlayingIdx = -1;
+            IsLoadGameMode = false;
+            hasPendingLoad = false;
+
+            Debug.Log("<color=#FF0000><b>[SavePointManager] 모든 세이브 포인트 데이터가 성공적으로 리셋되었습니다.</b></color>");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[SavePointManager] 데이터 리셋 실패: {e.Message}");
+        }
     }
 }
