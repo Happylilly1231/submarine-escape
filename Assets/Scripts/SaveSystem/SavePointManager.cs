@@ -8,7 +8,8 @@ public class SavePointManager : MonoBehaviour
 {
     public static SavePointManager Instance { get; private set; }
 
-    private static string saveFilePath => Path.Combine(Application.persistentDataPath, "SavePointDataCollection.json");
+    private static string saveFilePath =>
+    Path.Combine(Application.persistentDataPath, "SavePointDataCollection.dat");
 
     private SavePointDataCollection dataCollection;
     private int _currentPlayingIdx = -1; // 현재 플레이 중인 세이브포인트 리스트 인덱스
@@ -55,8 +56,34 @@ public class SavePointManager : MonoBehaviour
 
         try
         {
-            string json = File.ReadAllText(saveFilePath);
+            string encryptedJson = File.ReadAllText(saveFilePath);
+
+            EncryptedSaveData encryptedData = JsonUtility.FromJson<EncryptedSaveData>(encryptedJson);
+
+            if (encryptedData == null || string.IsNullOrEmpty(encryptedData.encryptedData) || string.IsNullOrEmpty(encryptedData.hmac))
+            {
+                throw new Exception("세이브 데이터가 손상되었습니다.");
+            }
+
+            bool isValid = SaveEncryption.VerifyHMAC(encryptedData.encryptedData, encryptedData.hmac);
+
+            if (!isValid)
+            {
+                throw new Exception("세이브 데이터가 손상되었거나 변조되었습니다.");
+            }
+
+            string json = SaveEncryption.Decrypt(encryptedData.encryptedData);
+
             dataCollection = JsonUtility.FromJson<SavePointDataCollection>(json);
+            if (dataCollection == null)
+            {
+                throw new Exception("세이브 데이터 변환에 실패했습니다.");
+            }
+
+            if (dataCollection.savePointList == null)
+            {
+                dataCollection.savePointList = new List<SavePointData>();
+            }
 
             ValidateMissingSavePoints(dataCollection);
             return dataCollection.savePointList;
@@ -64,6 +91,8 @@ public class SavePointManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"[SaveSystemManager] 데이터 불러오기 실패: {e.Message}");
+
+            BackupCorruptedSave(); // 손상된 세이브 파일 백업
             dataCollection = CreateDefaultSavePointData();
             return dataCollection.savePointList;
         }
@@ -473,12 +502,49 @@ public class SavePointManager : MonoBehaviour
 
         try
         {
-            string json = JsonUtility.ToJson(dataCollection, true);
-            File.WriteAllText(saveFilePath, json);
+            string json = JsonUtility.ToJson(dataCollection, false);
+
+            string encryptedData = SaveEncryption.Encrypt(json);
+            string hmac = SaveEncryption.CreateHMAC(encryptedData);
+
+            EncryptedSaveData encryptedSaveData = new EncryptedSaveData
+            {
+                encryptedData = encryptedData,
+                hmac = hmac
+            };
+
+            string encryptedJson = JsonUtility.ToJson(encryptedSaveData, true);
+            File.WriteAllText(saveFilePath, encryptedJson);
+
+            Debug.Log($"[SaveSystemManager] 세이브 데이터 저장 완료: {saveFilePath}");
         }
         catch (Exception e)
         {
             Debug.LogError($"[SaveSystemManager] 파일 저장 실패: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 손상된 세이브 파일 백업
+    /// </summary>
+    private void BackupCorruptedSave()
+    {
+        try
+        {
+            if (!File.Exists(saveFilePath)) return;
+
+            string backupFilePath =
+                Path.Combine(
+                    Application.persistentDataPath,
+                    $"SavePointDataCollection_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.dat");
+
+            File.Copy(saveFilePath, backupFilePath, true);
+
+            Debug.Log($"손상된 세이브 데이터 백업 완료: {backupFilePath}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"손상된 세이브 데이터 백업 실패: {e.Message}");
         }
     }
 
