@@ -37,6 +37,11 @@ public class RoomPasswordController : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        SetUpPuzzle();
+    }
+
     private void OnDisable()
     {
         // 이벤트 해제
@@ -60,13 +65,13 @@ public class RoomPasswordController : MonoBehaviour
     {
         if (_keypad1 != null)
         {
-            int password1 = 0525;
+            string password1 = "0525";
             _keypad1.keypadCombo = password1;
         }
 
         if (_keypad2 != null)
         {
-            int password2 = 9264;
+            string password2 = "9264";
             _keypad2.keypadCombo = password2;
         }
     }

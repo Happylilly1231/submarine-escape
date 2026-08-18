@@ -8,7 +8,8 @@ public class SavePointManager : MonoBehaviour
 {
     public static SavePointManager Instance { get; private set; }
 
-    private static string saveFilePath => Path.Combine(Application.persistentDataPath, "SavePointDataCollection.json");
+    private static string saveFilePath =>
+    Path.Combine(Application.persistentDataPath, "SavePointDataCollection.dat");
 
     private SavePointDataCollection dataCollection;
     private int _currentPlayingIdx = -1; // 현재 플레이 중인 세이브포인트 리스트 인덱스
@@ -55,8 +56,34 @@ public class SavePointManager : MonoBehaviour
 
         try
         {
-            string json = File.ReadAllText(saveFilePath);
+            string encryptedJson = File.ReadAllText(saveFilePath);
+
+            EncryptedSaveData encryptedData = JsonUtility.FromJson<EncryptedSaveData>(encryptedJson);
+
+            if (encryptedData == null || string.IsNullOrEmpty(encryptedData.encryptedData) || string.IsNullOrEmpty(encryptedData.hmac))
+            {
+                throw new Exception("세이브 데이터가 손상되었습니다.");
+            }
+
+            bool isValid = SaveEncryption.VerifyHMAC(encryptedData.encryptedData, encryptedData.hmac);
+
+            if (!isValid)
+            {
+                throw new Exception("세이브 데이터가 손상되었거나 변조되었습니다.");
+            }
+
+            string json = SaveEncryption.Decrypt(encryptedData.encryptedData);
+
             dataCollection = JsonUtility.FromJson<SavePointDataCollection>(json);
+            if (dataCollection == null)
+            {
+                throw new Exception("세이브 데이터 변환에 실패했습니다.");
+            }
+
+            if (dataCollection.savePointList == null)
+            {
+                dataCollection.savePointList = new List<SavePointData>();
+            }
 
             ValidateMissingSavePoints(dataCollection);
             return dataCollection.savePointList;
@@ -64,6 +91,8 @@ public class SavePointManager : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError($"[SaveSystemManager] 데이터 불러오기 실패: {e.Message}");
+
+            BackupCorruptedSave(); // 손상된 세이브 파일 백업
             dataCollection = CreateDefaultSavePointData();
             return dataCollection.savePointList;
         }
@@ -259,6 +288,12 @@ public class SavePointManager : MonoBehaviour
             GameTime.Instance.SetTime(data.playTime);
         }
 
+        // [ 목표 복구 ]
+        if (objectiveManager != null && data.mainObjectives != null && data.mainObjectives.Count > 0)
+        {
+            objectiveManager.LoadObjectiveData(data.mainObjectives, data.subObjectives);
+        }
+
         Debug.Log($"[{type}] 세이브 데이터 로드 완료!");
     }
 
@@ -269,14 +304,22 @@ public class SavePointManager : MonoBehaviour
     {
         if (saveBridge == null || dataCollection == null) return;
 
-        bool isCrewKeyPadUnlocked = IsSavePointUnlocked(ESavePointType.CrewKeyPad);
-        bool isPowerRestoration = IsSavePointUnlocked(ESavePointType.PowerRestoration);
+        // [세이브 데이터 가져오기]
+        SavePointData targetData = GetSavePointData(pendingLoadType);
 
-        if (objectiveManager != null)
+        if (targetData != null)
         {
-            if (isPowerRestoration) objectiveManager.ForceCompleteObjective("RestorePower");
-            else if (isCrewKeyPadUnlocked) objectiveManager.ForceCompleteObjective("EscapeCrewRoom");
+            // [플레이어 노트 UI 데이터 복구]
+            if (PlayerNoteManager.instance != null && targetData.playerNoteData != null)
+            {
+                PlayerNoteManager.instance.LoadPlayerNoteData(targetData.playerNoteData);
+                Debug.Log($"[{pendingLoadType}] 플레이어 노트 UI 동기화 완료");
+            }
         }
+
+        // 선원실 탈출 해제와 전력 복구는 이후 추가될 목표를 고려한다고 해도 선형적이므로(어뢰 발사나 치료제나 다 이 2개가 우선적으로 되어야 함) >= 비교로 여부 판단
+        bool isCrewKeyPadUnlocked = pendingLoadType >= ESavePointType.CrewKeyPad;
+        bool isPowerRestoration = pendingLoadType >= ESavePointType.PowerRestoration;
 
         if (isCrewKeyPadUnlocked && saveBridge.CrewKeyPadController != null)
         {
@@ -284,7 +327,7 @@ public class SavePointManager : MonoBehaviour
             Debug.Log("세이브 파일에서 선원실 탈출 확인 -> 문을 강제로 열었습니다.");
         }
 
-        if (isPowerRestoration && pendingLoadType != ESavePointType.CrewKeyPad && saveBridge.PowerSwitch != null)
+        if (isPowerRestoration && saveBridge.PowerSwitch != null)
         {
             saveBridge.PowerSwitch.ForcePowerRestoration();
             Debug.Log("세이브 파일에서 전력 복구 확인 -> 잠수함 전력을 킵니다.");
@@ -361,6 +404,18 @@ public class SavePointManager : MonoBehaviour
 
         SetPlayerInventory(targetData);
         SetWorldItem(targetData);
+        SetObjectives(targetData); // 목표 데이터 채우기
+
+        // [단서 데이터 저장]
+        if (PlayerNoteManager.instance != null)
+        {
+            // 💡 그냥 넘기지 않고 .Clone()으로 독립된 복사본을 만들어 저장!
+            var currentData = PlayerNoteManager.instance.GetCurrentPlayerNoteData();
+            if (currentData != null)
+            {
+                targetData.playerNoteData = currentData.Clone();
+            }
+        }
 
         SaveAllData();
     }
@@ -409,18 +464,87 @@ public class SavePointManager : MonoBehaviour
         }
     }
 
+    // 현재 ObjectiveManager의 목표들을 SavePointData로 복사
+    private void SetObjectives(SavePointData data)
+    {
+        if (objectiveManager == null) return;
+
+        if (data.mainObjectives == null) data.mainObjectives = new List<ObjectiveProgress>();
+        data.mainObjectives.Clear();
+        foreach (var obj in objectiveManager.mainObjectives)
+        {
+            data.mainObjectives.Add(new ObjectiveProgress
+            {
+                objectiveName = obj.objectiveName,
+                localizationKey = obj.localizationKey,
+                isUnlocked = obj.isUnlocked,
+                isCompleted = obj.isCompleted
+            });
+        }
+
+        if (data.subObjectives == null) data.subObjectives = new List<ObjectiveProgress>();
+        data.subObjectives.Clear();
+        foreach (var obj in objectiveManager.subObjectives)
+        {
+            data.subObjectives.Add(new ObjectiveProgress
+            {
+                objectiveName = obj.objectiveName,
+                localizationKey = obj.localizationKey,
+                isUnlocked = obj.isUnlocked,
+                isCompleted = obj.isCompleted
+            });
+        }
+    }
+
     public void SaveAllData()
     {
         if (dataCollection == null) return;
 
         try
         {
-            string json = JsonUtility.ToJson(dataCollection, true);
-            File.WriteAllText(saveFilePath, json);
+            string json = JsonUtility.ToJson(dataCollection, false);
+
+            string encryptedData = SaveEncryption.Encrypt(json);
+            string hmac = SaveEncryption.CreateHMAC(encryptedData);
+
+            EncryptedSaveData encryptedSaveData = new EncryptedSaveData
+            {
+                encryptedData = encryptedData,
+                hmac = hmac
+            };
+
+            string encryptedJson = JsonUtility.ToJson(encryptedSaveData, true);
+            File.WriteAllText(saveFilePath, encryptedJson);
+
+            Debug.Log($"[SaveSystemManager] 세이브 데이터 저장 완료: {saveFilePath}");
         }
         catch (Exception e)
         {
             Debug.LogError($"[SaveSystemManager] 파일 저장 실패: {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 손상된 세이브 파일 백업
+    /// </summary>
+    private void BackupCorruptedSave()
+    {
+        try
+        {
+            if (!File.Exists(saveFilePath)) return;
+
+            string backupFilePath =
+                Path.Combine(
+                    Application.persistentDataPath,
+                    $"SavePointDataCollection_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.dat");
+
+            File.Copy(saveFilePath, backupFilePath, true);
+
+            Debug.Log($"손상된 세이브 데이터 백업 완료: {backupFilePath}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"손상된 세이브 데이터 백업 실패: {e.Message}");
         }
     }
 
@@ -453,5 +577,35 @@ public class SavePointManager : MonoBehaviour
             return null;
 
         return dataCollection.savePointList[_currentPlayingIdx];
+    }
+
+    /// <summary>
+    /// 모든 세이브 포인트 데이터를 완전 초기화 (파일 삭제 및 기본값 재생성)
+    /// </summary>
+    public void ResetAllSaveData()
+    {
+        try
+        {
+            // 1. 세이브 파일이 존재하면 삭제
+            if (File.Exists(saveFilePath))
+            {
+                File.Delete(saveFilePath);
+                Debug.Log("[SavePointManager] 세이브 파일 삭제 완료");
+            }
+
+            // 2. 초기 데이터 구조 새로 생성
+            dataCollection = CreateDefaultSavePointData();
+
+            // 3. 인덱스 및 상태 초기화
+            _currentPlayingIdx = -1;
+            IsLoadGameMode = false;
+            hasPendingLoad = false;
+
+            Debug.Log("<color=#FF0000><b>[SavePointManager] 모든 세이브 포인트 데이터가 성공적으로 리셋되었습니다.</b></color>");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[SavePointManager] 데이터 리셋 실패: {e.Message}");
+        }
     }
 }

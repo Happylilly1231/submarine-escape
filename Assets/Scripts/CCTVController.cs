@@ -14,8 +14,8 @@ public class CCTVController : PuzzleController
 
     [SerializeField] private GameObject interactUI;
 
-    // 영상이 한 번이라도 끝까지 재생되었는지 플래그
-    private bool isVideoFinished = false;
+    // // 영상이 한 번이라도 끝까지 재생되었는지 플래그
+    // private bool isVideoFinished = false;
 
     public override void Start()
     {

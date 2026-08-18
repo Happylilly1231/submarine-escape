@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -89,7 +88,8 @@ public class DebuggingUIManager : MonoBehaviour
     public void UnlockCrewRoomDoor()
     {
         crewRoomDoor.isLocked = false;
-        objectiveManager.CompleteObjective("EscapeCrewRoom");
+        ObjectiveManager.Instance.CompleteObjective("EscapeCrewRoom");
+        SavePointManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
         Debug.Log("[Debug] ✅ 성공 - 선원실 문 잠금 해제 완료");
     }
 

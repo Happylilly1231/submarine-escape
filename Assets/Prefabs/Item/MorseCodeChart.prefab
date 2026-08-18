@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: -6129095713465522215}
   - component: {fileID: -7156183026651039485}
   - component: {fileID: 8099367525213461895}
+  - component: {fileID: 7727936138316821763}
   m_Layer: 0
   m_Name: MorseCodeChart
   m_TagString: Untagged
@@ -114,7 +115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41b87225b60a4dc40be431197b4ea637, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  assetTableKey: 
+  spriteRenderer: {fileID: 0}
 --- !u!135 &8099367525213461895
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -135,4 +136,25 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Radius: 2.2
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &7727936138316821763
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2783371661473418686}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.5, y: 7, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}

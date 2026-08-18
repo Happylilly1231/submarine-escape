@@ -124,7 +124,7 @@ public class InventoryManager : MonoBehaviour
     /// <summary>
     /// 선택된 슬롯의 테두리를 네온 스프라이트로 변경
     /// </summary>
-    private void SelectSlot(int slotIndex)
+    public void SelectSlot(int slotIndex)
     {
         if (slotIndex >= 0 && slotIndex < inventorySlots.Length) inventorySlots[slotIndex].GetComponent<Image>().sprite = selectedSlotSprite;
         if (_selectedSlotIndex >= 0) inventorySlots[_selectedSlotIndex].GetComponent<Image>().sprite = slotSprite;
@@ -170,10 +170,20 @@ public class InventoryManager : MonoBehaviour
                     {
                         AppendAction(sb, "Action/Lab/InsertSample", "E");
                     }
-                    // 실험기구를 손에 들고 있다면 넣기
+                    // 실험기구를 손에 들고 있다면 사용
                     if (_playerInteractor.IsHoldingEquipment && _playerInteractor.CurrentEquipment.CanInsert(_playerInteractor.HeldEquipment))
                     {
-                        AppendAction(sb, "Action/Lab/UseLabEquipment", "E");
+                        // 현미경을 바라보고 있는 경우
+                        if (_playerInteractor.CurrentEquipment is Microscope microscope)
+                        {
+                            // 최종 조합물이 든 페트리 접시를 들고 있다면 -> 사용 가능
+                            if (_playerInteractor.HeldEquipment is PetriDish petriDish && petriDish.ContainsResult)
+                                AppendAction(sb, "Action/Lab/UseLabEquipment", "E");
+                            else // 그 외 (빈 페트리 접시, 샘플만 든 페트리 접시, 아무것도 들고 있지 않을 때) -> 최종 조합물이 든 페트리접시만 사용 가능하다고 알려줌
+                                AppendAction(sb, "Action/Lab/OnlyFinalCompoundPetriDish");
+                        }
+                        else
+                            AppendAction(sb, "Action/Lab/UseLabEquipment", "E");
                     }
                 }
             }
@@ -182,7 +192,7 @@ public class InventoryManager : MonoBehaviour
                 // 현미경 확대 가이드
                 if (_playerInteractor.CurrentEquipment is Microscope microscope)
                 {
-                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) AppendAction(sb, "Action/Lab/Inspect", "E"); // 슬롯에 샘플이 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
+                    if (!microscope.Slots[0].IsEmpty && microscope.IsPowerOn) AppendAction(sb, "Action/Lab/Inspect", "E"); // 슬롯에 페트리접시가 들어있고 전력이 켜져 있을 때 현미경 관찰 가능
                 }
                 // 슬롯에 무언가 들어있다면 꺼내기 가이드
                 if (_playerInteractor.CurrentEquipment is Centrifuge centrifuge1)
@@ -229,7 +239,11 @@ public class InventoryManager : MonoBehaviour
 
             if (_playerInteractor.HeldEquipment is Syringe syringe)
             {
-                if (syringe.HasContent) AppendAction(sb, "Action/Lab/UseCure", "E");
+                if (syringe.HasContent)
+                {
+                    AppendAction(sb, "Action/Lab/EmptySyringe", "R"); // 비우기
+                    AppendAction(sb, "Action/Lab/UseCure", "E"); // 치료제 사용
+                }
             }
         }
 

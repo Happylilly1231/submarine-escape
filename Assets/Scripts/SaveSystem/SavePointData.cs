@@ -24,12 +24,26 @@ public class SavePointData
     public int mutationStage;                               // 괴물화 진행 단계
     public bool isCureInjected;                             // 치료제 투여 여부
 
-    // [Header("[ Monster States ]")]
-    // public SerializableVector3 insideMonsterPosition;  // 내부 괴물 위치
-    // public SerializableVector3 outsideMonsterPosition; // 외부 괴물 위치
-    // public bool isInsideMonsterBerserk;                // 내부 괴물 폭주 여부
+    [Header("[ Monster States ]")]
+    public SerializableVector3 insideMonsterPosition;  // 내부 괴물 위치
+    public SerializableVector3 outsideMonsterPosition; // 외부 괴물 위치
+    public bool isInsideMonsterBerserk;                // 내부 괴물 폭주 여부
 
     public List<WorldItemSaveData> worldItems = new List<WorldItemSaveData>(); // 아이템 오브젝트들
+
+    [Header("[ Objective States ]")]
+    public List<ObjectiveProgress> mainObjectives = new List<ObjectiveProgress>();
+    public List<ObjectiveProgress> subObjectives = new List<ObjectiveProgress>();
+
+    [Header("[ Player Note States ]")]
+    public PlayerNoteData playerNoteData;
+}
+
+[Serializable]
+public class EncryptedSaveData
+{
+    public string encryptedData;
+    public string hmac;
 }
 
 /// <summary>

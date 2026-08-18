@@ -65,7 +65,22 @@ public class Syringe : LabEquipment
     {
         base.Remove(slotIdx);
 
-        HasContent = false;
+        // 슬롯이 전부 비었는지 체크 후 _isResultTube 해제
+        bool isEmptyAll = true;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (!slots[i].IsEmpty)
+            {
+                isEmptyAll = false;
+                break;
+            }
+        }
+
+        if (isEmptyAll)
+        {
+            HasContent = false;
+            IsSuccess = false; // 성공 변수도 초기화
+        }
 
         // 시험관을 빼면 비주얼 비활성화
         SetActiveLiquidVisual(false);

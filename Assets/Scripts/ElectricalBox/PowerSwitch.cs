@@ -86,8 +86,8 @@ public class PowerSwitch : InteractableBase
     {
         if (!_isFirst)
         {
-            SavePointManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
             ObjectiveManager.Instance.CompleteObjective("RestorePower");
+            SavePointManager.Instance.UpdateSavePoint(ESavePointType.PowerRestoration, GameTime.Instance.TimeSinceStart);
             _isFirst = true;
         }
         _isPowerOn = turnOn;

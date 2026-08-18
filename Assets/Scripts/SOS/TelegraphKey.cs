@@ -74,6 +74,8 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public bool IsBrokenWithJumpscare { get; private set; } = false;
 
+    private bool _hasCompletedFirstResponse = false; // 첫 응답 수신을 '완전히' 끝냈는지 여부
+
     [SerializeField] private Renderer bodyRenderer;
 
     private void Awake()
@@ -126,6 +128,7 @@ public class TelegraphKey : PuzzleController, IInteractable
     public override void ActivatePuzzle()
     {
         SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
+        inventoryManager.CloseInventory(); // 인벤토리 닫기 (슬롯 선택 해제 (안하면 아이템 장착 해제해도 아이템 이름 보임))
         itemEquipController.UnequipItem(); // 아이템 장착 해제
         SubmarineInGameManager.instance.InteractorUI.SetActive(true); // 상호작용 UI 활성화
 
@@ -140,15 +143,6 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     public override void StartPuzzle()
     {
-        if (IsSuccessed)
-            KeyE.performed += OnKeyEPerformed;
-        else
-        {
-            Click.started += OnClickStarted;
-            Click.canceled += OnClickCanceled;
-            RightClick.performed += OnRightClickPerformed;
-        }
-
         PickUpTransmitter(); // 송신기 들기
     }
 
@@ -166,15 +160,21 @@ public class TelegraphKey : PuzzleController, IInteractable
         // 플레이어가 모스 부호를 입력 중이었을 때 -> 피드백 종료
         if (_holdCheckCoroutine != null)
         {
-            StopFeedback();
+            StopCoroutine(_holdCheckCoroutine);
             _holdCheckCoroutine = null;
         }
+        StopFeedback();
 
-        // 녹음 재생 중이었을 때 -> 종료 (맨 처음 응답은 녹음이 아니므로 퍼즐 종료할 때 종료하지 않음)
-        if (_currentPlayRecordingCoroutine != null)
-        {
-            StopRecording();
-        }
+        // 2. 녹음 및 모스부호 재생 완전 강제 정지 (수정)
+        StopRecording();
+
+        // 3. 오디오 및 머티리얼 강제 리셋 (나가면 모든 소리/불빛 즉시 정지)
+        morseAudioSource.Stop();
+        noiseAudioSource.Stop();
+        _communicationLightMaterial.DisableKeyword("_EMISSION");
+
+        _isResponding = false;
+        IsCommunicating = false;
 
         // 세션 자동 종료 코루틴 실행 중이면 중지 (종료됐으니까)
         if (_autoSessionEndCheckCoroutine != null)
@@ -182,9 +182,8 @@ public class TelegraphKey : PuzzleController, IInteractable
             StopCoroutine(_autoSessionEndCheckCoroutine);
         }
 
-        // // 퍼즐 인풋 잠금 일단 해제 (다른 퍼즐에 영향 주지 않기 위해서. 만약, 다시 퍼즐에 들어올 때 아직 잠겨져 있어야 하는 상태면 잠글 것임)
-        // Click.Enable();
-        // RightClick.Enable();
+        // 5. 나갈 때는 반드시 모든 Input Action Lock을 해제하여 재입장 시 클릭이 먹히도록 조치
+        SetMorseInputLock(false);
 
         // 송신기 내려놓기
         PutDownTransmitter();
@@ -197,8 +196,8 @@ public class TelegraphKey : PuzzleController, IInteractable
         Click.started -= OnClickStarted;
         Click.canceled -= OnClickCanceled;
         RightClick.performed -= OnRightClickPerformed;
-        if (IsSuccessed)
-            KeyE.performed -= OnKeyEPerformed;
+        // 무조건 E키 구독 해제 (IsSuccessed 조건 제거하여 중복 구독 방지)
+        KeyE.performed -= OnKeyEPerformed;
     }
     #endregion
 
@@ -278,6 +277,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         if (_autoSessionEndCheckCoroutine != null)
         {
             StopCoroutine(_autoSessionEndCheckCoroutine);
+            _autoSessionEndCheckCoroutine = null;
         }
 
         // 아무것도 입력 안 했을 때는 무시
@@ -315,6 +315,31 @@ public class TelegraphKey : PuzzleController, IInteractable
             base.StartPuzzle();
 
             communicationTextUI.SetActive(true); // 하단 통신 텍스트 UI 활성화
+
+            // 이벤트 중복 구독 방지를 위해 먼저 Safe Unsubscribe
+            KeyE.performed -= OnKeyEPerformed;
+            Click.started -= OnClickStarted;
+            Click.canceled -= OnClickCanceled;
+            RightClick.performed -= OnRightClickPerformed;
+
+            // 1. SOS 성공 후 첫 응답을 다 듣지 못하고 나갔다가 다시 들었을 때
+            if (IsSuccessed && !_hasCompletedFirstResponse)
+            {
+                // 첫 응답 재생 재개
+                StartCoroutine(SuccessResponse());
+            }
+            // 2. 이미 첫 응답까지 완전히 완료된 상태 (녹음 재생만 가능)
+            else if (IsSuccessed)
+            {
+                KeyE.performed += OnKeyEPerformed;
+            }
+            // 3. 퍼즐 진행 중 (모스부호 입력 및 송신 가능)
+            else
+            {
+                Click.started += OnClickStarted;
+                Click.canceled += OnClickCanceled;
+                RightClick.performed += OnRightClickPerformed;
+            }
 
             // 현재 퍼즐 인풋 잠금 여부에 따라 다시 설정
             SetMorseInputLock(_isPuzzleInputLocked);
@@ -382,7 +407,8 @@ public class TelegraphKey : PuzzleController, IInteractable
         SetMorseInputLock(true); // 모스 부호 입력 막음
 
         // 자동 종료 이유 설명
-        yield return StartCoroutine(TypeText("5초 간 미입력. 미전송. 통신 자동 종료.", 0.05f));
+        _currentTypeTextCoroutine = StartCoroutine(TypeText("5초 간 미입력. 미전송. 통신 자동 종료.", 0.05f));
+        yield return _currentTypeTextCoroutine;
         yield return new WaitForSeconds(1f);
 
         _currentWord.Clear();
@@ -565,7 +591,9 @@ public class TelegraphKey : PuzzleController, IInteractable
         // 입력된 모스 부호에 따른 응답 로직
         if (IsSubmarineLeft) // 본부 잠수함이 이미 떠난 경우 -> 응답 없음
         {
-            yield return StartCoroutine(TypeText("... ... 응답 없음.", 0.1f));
+            _currentTypeTextCoroutine = StartCoroutine(TypeText("... ... 응답 없음.", 0.1f));
+            yield return _currentTypeTextCoroutine;
+            _currentTypeTextCoroutine = null;
             SetMorseInputLock(false);
             yield break;
         }
@@ -587,13 +615,17 @@ public class TelegraphKey : PuzzleController, IInteractable
             if (isValidCode)
             {
                 Debug.Log($"코드표 확인 완료 ({MorseDictionary.MorseToText[morseCode]}). 본부: SIL 송신");
-                yield return StartCoroutine(PlayMorseString("... .. .ㅡ.."));
+                _currentPlayMorseCoroutine = StartCoroutine(PlayMorseString("... .. .ㅡ.."));
+                yield return _currentPlayMorseCoroutine;
+                _currentPlayMorseCoroutine = null;
             }
             // 코드표에 없는 잘못된 모스부호를 보낸 경우 -> RPT (재요청)
             else
             {
                 Debug.Log("알 수 없는 부호. 본부: RPT 송신");
-                yield return StartCoroutine(PlayMorseString(".ㅡ. .ㅡㅡ. ㅡ"));
+                _currentPlayMorseCoroutine = StartCoroutine(PlayMorseString(".ㅡ. .ㅡㅡ. ㅡ"));
+                yield return _currentPlayMorseCoroutine;
+                _currentPlayMorseCoroutine = null;
 
             }
             SetMorseInputLock(false); // 모스부호 입력 막은 거 해제
@@ -608,42 +640,50 @@ public class TelegraphKey : PuzzleController, IInteractable
     /// <returns></returns>
     private IEnumerator SuccessResponse()
     {
-        SetInputLock(true); // 나가지 못하도록 입력 막기
+        if (!IsSuccessed)
+        {
+            IsSuccessed = true;
 
-        noiseAudioSource.Play(); // 노이즈 재생
+            SetInputLock(true); // 나가지 못하도록 입력 막기
+            noiseAudioSource.Play(); // 노이즈 재생
 
-        string sosDetails = "SOS... 본부 응답하라. 실험체가 폭주하여 괴물로 변이하였다. 본인을 제외한 전원 사망. 즉시 구출을 요청한다. 반복한다. 즉시 구출을...";
+            string sosDetails = "SOS... 본부 응답하라. 실험체가 폭주하여 괴물로 변이하였다. 본인을 제외한 전원 사망. 즉시 구출을 요청한다. 반복한다. 즉시 구출을...";
 
-        yield return StartCoroutine(TypeText(sosDetails, 0.1f));
-        yield return new WaitForSeconds(2f);
+            yield return StartCoroutine(TypeText(sosDetails, 0.1f));
+            yield return new WaitForSeconds(2f);
 
-        yield return StartCoroutine(TypeText("... ...", 0.1f));
-        yield return new WaitForSeconds(1f);
-        contextText.text = ""; // 기존 텍스트 초기화
+            yield return StartCoroutine(TypeText("... ...", 0.1f));
+            yield return new WaitForSeconds(1f);
+            contextText.text = ""; // 기존 텍스트 초기화
 
-        noiseAudioSource.Stop(); // 노이즈 중지
-        SetInputLock(false); // 입력 잠금 해제
+            noiseAudioSource.Stop(); // 노이즈 중지
+            SetInputLock(false); // 입력 잠금 해제
+
+            // 모스 부호 입력 관련 구독은 해제 -> 더 이상 클릭, 우클릭으로 입력 불가
+            Click.started -= OnClickStarted;
+            Click.canceled -= OnClickCanceled;
+            RightClick.performed -= OnRightClickPerformed;
+        }
 
         // HAS 문장 수신
-        yield return StartCoroutine(PlayMorseString(HAS_SIGNAL));
+        _currentPlayMorseCoroutine = StartCoroutine(PlayMorseString(HAS_SIGNAL));
+        yield return _currentPlayMorseCoroutine;
+        _currentPlayMorseCoroutine = null;
 
-        yield return new WaitForSeconds(1f);
+        // 끝까지 다 들었을 때만 완료 처리!
+        _hasCompletedFirstResponse = true;
 
-        yield return StartCoroutine(TypeText("[통신 자동 녹음 완료]", 0.1f));
-
-        // yield return new WaitForSeconds(2f);
-
-        // 본부 잠수함이 FIN(..ㅡ. .. ㅡ.)을 보냄
-        Debug.Log("본부 잠수함: FIN 송신 (연락 종료)");
-        yield return StartCoroutine(PlayMorseString("..ㅡ. .. ㅡ."));
+        _currentTypeTextCoroutine = StartCoroutine(TypeText("[통신 자동 녹음 완료]", 0.1f));
+        yield return _currentTypeTextCoroutine;
+        _currentTypeTextCoroutine = null;
 
         yield return new WaitForSeconds(1f);
 
         // 본부 잠수함 떠남
         radarController.LeaveSubmarine();
-        IsSuccessed = true;
-        // IsSubmarineLeft = true; // 이제 더 이상 신호를 주고받을 수 없도록 플래그 차단
 
+        // 방어적 중복 제거 후 등록 -> 안 나가고 바로 E키 눌러서 녹음 재생 가능
+        KeyE.performed -= OnKeyEPerformed;
         KeyE.performed += OnKeyEPerformed; // E키 사용 가능
         inventoryManager.UpdateActionText(); // 액션 텍스트 업데이트
     }
@@ -766,25 +806,32 @@ public class TelegraphKey : PuzzleController, IInteractable
 
     private void StopRecording()
     {
-        StopCoroutine(_currentPlayRecordingCoroutine);
-        _currentPlayRecordingCoroutine = null;
+        if (_currentPlayRecordingCoroutine != null)
+        {
+            StopCoroutine(_currentPlayRecordingCoroutine);
+            _currentPlayRecordingCoroutine = null;
+        }
 
         if (_currentPlayMorseCoroutine != null)
         {
             StopCoroutine(_currentPlayMorseCoroutine);
-            _currentTypeTextCoroutine = null;
-            _communicationLightMaterial.DisableKeyword("_EMISSION");
-            _isResponding = false;
+            _currentPlayMorseCoroutine = null;
 
         }
+
         if (_currentTypeTextCoroutine != null)
         {
             StopCoroutine(_currentTypeTextCoroutine);
-            _currentPlayRecordingCoroutine = null;
+            _currentTypeTextCoroutine = null;
         }
 
-        noiseAudioSource.Stop();
-        _currentPlayRecordingCoroutine = null;
+        if (_communicationLightMaterial != null)
+            _communicationLightMaterial.DisableKeyword("_EMISSION");
+
+        _isResponding = false;
+
+        if (noiseAudioSource != null) noiseAudioSource.Stop();
+        if (morseAudioSource != null) morseAudioSource.Stop();
     }
 
     /// <summary>

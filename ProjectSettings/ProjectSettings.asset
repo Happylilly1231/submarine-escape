@@ -145,6 +145,7 @@ PlayerSettings:
   preloadedAssets:
   - {fileID: 11400000, guid: e41738d85c76461408d5a1054d2c0b31, type: 2}
   - {fileID: -944628639613478452, guid: 7c68db057bcb243418703c9e19fb9947, type: 3}
+  - {fileID: 11400000, guid: 1acd944958a48ce43af6c80cc478fa49, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -291,7 +292,14 @@ PlayerSettings:
   AndroidMinifyDebug: 0
   AndroidValidateAppBundleSize: 1
   AndroidAppBundleSizeToValidate: 150
-  m_BuildTargetIcons: []
+  m_BuildTargetIcons:
+  - m_BuildTarget: 
+    m_Icons:
+    - serializedVersion: 2
+      m_Icon: {fileID: 2800000, guid: 7dd7ae1936d49534ba71928e0c19b788, type: 3}
+      m_Width: 128
+      m_Height: 128
+      m_Kind: 0
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: iPhone
     m_Icons:

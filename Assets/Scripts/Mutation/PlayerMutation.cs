@@ -286,6 +286,9 @@ public class PlayerMutation : MonoBehaviour
     {
         LightingManager.instance.OnLightTurnedOn -= ReactLightOrSound;
         SubmarineInGameManager.instance.OnAlertStarted -= ReactLightOrSound;
+
+        //  모든 DOTween 연출 끄기
+        transform.DOKill();
     }
 
     /// <summary>
@@ -378,12 +381,6 @@ public class PlayerMutation : MonoBehaviour
         // 사운드 및 비네트 즉시 종료
         mutationAudioSource.Stop();
         vignetteImg.gameObject.SetActive(false);
-    }
-
-    private void OnDestroy()
-    {
-        //  모든 DOTween 연출 끄기
-        transform.DOKill();
     }
 }
 

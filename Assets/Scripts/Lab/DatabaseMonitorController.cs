@@ -25,7 +25,7 @@ public class DatabaseMonitorController : PuzzleController
     private DatabaseMonitorDisplay _monitorDisplay;
     private ObjectiveManager objectiveManager;
 
-    public bool HasLogined { get; private set; } = false; // 로그인 한 번이라도 했는지 여부
+    public bool HasLogined { get; set; } = false; // 로그인 한 번이라도 했는지 여부 (플레이어 노트 데이터에 저장되고 플레이어 노트 매니저에서 갱신해줌 주의)
 
     private void Awake()
     {

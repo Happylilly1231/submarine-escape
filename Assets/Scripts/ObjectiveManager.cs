@@ -226,57 +226,124 @@ public class ObjectiveManager : MonoBehaviour
         }
     }
 
+    // /// <summary>
+    // /// [치트/디버그 전용] 특정 목표를 즉시 완료 처리하고 시스템의 단계를 해당 위치로 강제 워프시킵니다.
+    // /// 이전 단계의 목표들은 화면에 보이지 않고 전부 완료 처리됩니다.
+    // /// </summary>
+    // /// <param name="name">완료 처리할 목표의 objectiveName</param>
+    // public void ForceCompleteObjective(string name)
+    // {
+    //     int targetIndex = mainObjectives.FindIndex(x => x.objectiveName == name);
+
+    //     if (targetIndex != -1)
+    //     {
+    //         // 1. [핵심] 전체 목표 상태를 리셋하거나 후속 목표들을 초기화
+    //         for (int i = 0; i < mainObjectives.Count; i++)
+    //         {
+    //             if (i <= targetIndex)
+    //             {
+    //                 // 선택한 목표 포함 이전 목표들은 완료 및 해금
+    //                 mainObjectives[i].isUnlocked = true;
+    //                 mainObjectives[i].isCompleted = true;
+    //             }
+    //             else
+    //             {
+    //                 // 선택한 목표 '이후'의 목표들은 다시 잠금 및 미완료 상태로 리셋!
+    //                 mainObjectives[i].isUnlocked = false;
+    //                 mainObjectives[i].isCompleted = false;
+    //             }
+    //         }
+
+    //         // 2. 선택한 목표에 연결된 '다음 목표들' 해금 (RestorePower 완료 시 CheckDB, GetSample 등 해금)
+    //         CheckAndUnlockNextObjectives(name); // 다음 목표 해금 연동
+    //     }
+    //     else
+    //     {
+    //         // 서브 목표 처리
+    //         ObjectiveProgress subTarget = subObjectives.Find(x => x.objectiveName == name);
+    //         if (subTarget != null)
+    //         {
+    //             subTarget.isUnlocked = true;
+    //             subTarget.isCompleted = true;
+    //             CheckAndUnlockNextObjectives(name);
+    //         }
+    //     }
+
+    //     // 목표 이름에 따라 currentStep, labSubClearCount 강제 세팅
+    //     if (name == "EscapeCrewRoom") // 0번 완료 처리 -> 바로 1번으로 전환
+    //     {
+    //         currentStep = 0;
+    //     }
+    //     else if (name == "RestorePower") // 1번 완료 처리 -> 바로 2번(연구실 시작)으로 전환
+    //     {
+    //         currentStep = 1;
+    //     }
+    //     else if (name == "CheckDB") // 연구실 1번째 완료
+    //     {
+    //         currentStep = 2;
+    //         labSubClearCount = 0;
+    //     }
+    //     else if (name == "GetSample") // 연구실 2번째 완료
+    //     {
+    //         currentStep = 2;
+    //         labSubClearCount = 1;
+    //     }
+    //     else if (name == "CraftCure") // 연구실 3번째 완료
+    //     {
+    //         currentStep = 2;
+    //         labSubClearCount = 2;
+    //     }
+    //     else if (name == "AdministerCure") // 연구실 4번째 완료
+    //     {
+    //         currentStep = 2;
+    //         labSubClearCount = 3;
+    //     }
+    //     else if (name == "GoToEscapeRoom") // 탈출실 완료
+    //     {
+    //         currentStep = 3;
+    //     }
+
+    //     Debug.Log($"[치트 강제 완료] {name} 완료 처리 시도. 대단계(currentStep): {currentStep}, 연구실 카운트: {labSubClearCount}");
+
+    //     UpdateObjectiveUI();
+    // }
+
     /// <summary>
-    /// [치트/디버그 전용] 특정 목표를 즉시 완료 처리하고 시스템의 단계를 해당 위치로 강제 워프시킵니다.
-    /// 이전 단계의 목표들은 화면에 보이지 않고 전부 완료 처리됩니다.
+    /// 세이브 데이터로부터 목표 진행 상황 덮어쓰기
     /// </summary>
-    /// <param name="name">완료 처리할 목표의 objectiveName</param>
-    public void ForceCompleteObjective(string name)
+    public void LoadObjectiveData(List<ObjectiveProgress> savedMain, List<ObjectiveProgress> savedSub)
     {
-        int targetIndex = mainObjectives.FindIndex(x => x.objectiveName == name);
-
-        // 선택한 목표를 포함하여 '그 이전의 모든 목표'를 전부 완료(isCompleted = true) 처리
-        for (int i = 0; i <= targetIndex; i++)
+        if (savedMain != null && savedMain.Count > 0)
         {
-            mainObjectives[i].isCompleted = true;
+            mainObjectives.Clear();
+            foreach (var obj in savedMain)
+            {
+                mainObjectives.Add(new ObjectiveProgress
+                {
+                    objectiveName = obj.objectiveName,
+                    localizationKey = obj.localizationKey,
+                    isUnlocked = obj.isUnlocked,
+                    isCompleted = obj.isCompleted
+                });
+            }
         }
 
-        // 목표 이름에 따라 currentStep, labSubClearCount 강제 세팅
-        if (name == "EscapeCrewRoom") // 0번 완료 처리 -> 바로 1번으로 전환
+        if (savedSub != null && savedSub.Count > 0)
         {
-            currentStep = 0;
-        }
-        else if (name == "RestorePower") // 1번 완료 처리 -> 바로 2번(연구실 시작)으로 전환
-        {
-            currentStep = 1;
-        }
-        else if (name == "CheckDB") // 연구실 1번째 완료
-        {
-            currentStep = 2;
-            labSubClearCount = 0;
-        }
-        else if (name == "GetSample") // 연구실 2번째 완료
-        {
-            currentStep = 2;
-            labSubClearCount = 1;
-        }
-        else if (name == "CraftCure") // 연구실 3번째 완료
-        {
-            currentStep = 2;
-            labSubClearCount = 2;
-        }
-        else if (name == "AdministerCure") // 연구실 4번째 완료
-        {
-            currentStep = 2;
-            labSubClearCount = 3;
-        }
-        else if (name == "GoToEscapeRoom") // 탈출실 완료
-        {
-            currentStep = 3;
+            subObjectives.Clear();
+            foreach (var obj in savedSub)
+            {
+                subObjectives.Add(new ObjectiveProgress
+                {
+                    objectiveName = obj.objectiveName,
+                    localizationKey = obj.localizationKey,
+                    isUnlocked = obj.isUnlocked,
+                    isCompleted = obj.isCompleted
+                });
+            }
         }
 
-        Debug.Log($"[치트 강제 완료] {name} 완료 처리 시도. 대단계(currentStep): {currentStep}, 연구실 카운트: {labSubClearCount}");
-
+        // 데이터 덮어씌운 후 UI 갱신
         UpdateObjectiveUI();
     }
 }

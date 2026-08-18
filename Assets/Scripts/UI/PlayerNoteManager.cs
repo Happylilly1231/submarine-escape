@@ -2,10 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Localization;
-using UnityEngine.Localization.Settings;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
@@ -22,16 +20,40 @@ public class Clue
 }
 
 [System.Serializable]
-public struct PlayerNoteData
+public class PlayerNoteData
 {
-    [System.ComponentModel.Description("1~2페이지: 단서 활성화 여부")]
+    [System.ComponentModel.Description("1~4페이지: 단서 활성화 여부")]
     public bool[] clueActiveStates;
 
-    [System.ComponentModel.Description("3~4페이지: 데이터베이스 샘플 등 체크박스 상태")]
+    [System.ComponentModel.Description("5~6페이지: 데이터베이스 샘플 등 체크박스 상태")]
     public bool[] checkStates;
 
-    [System.ComponentModel.Description("5~8페이지: 자유 타이핑 메모 텍스트 데이터")]
+    [System.ComponentModel.Description("7~10페이지: 자유 타이핑 메모 텍스트 데이터")]
     public string[] memoPageTexts;
+
+    // 데이터베이스 모니터 로그인 여부
+    public bool hasLoginedDatabase;
+
+    /// <summary>
+    /// 깊은 복사(Deep Copy)를 통해 독립된 데이터 객체 생성
+    /// </summary>
+    public PlayerNoteData Clone()
+    {
+        PlayerNoteData newData = new PlayerNoteData();
+
+        if (this.clueActiveStates != null)
+            newData.clueActiveStates = (bool[])this.clueActiveStates.Clone();
+
+        if (this.checkStates != null)
+            newData.checkStates = (bool[])this.checkStates.Clone();
+
+        if (this.memoPageTexts != null)
+            newData.memoPageTexts = (string[])this.memoPageTexts.Clone();
+
+        newData.hasLoginedDatabase = (bool)this.hasLoginedDatabase;
+
+        return newData;
+    }
 }
 
 public class PlayerNoteManager : MonoBehaviour
@@ -119,8 +141,15 @@ public class PlayerNoteManager : MonoBehaviour
         _leftPageNumText.text = $"{_currentSpreadIdx * 2 + 1} / {_totalPageCount}";
         _rightPageNumText.text = $"{_currentSpreadIdx * 2 + 2} / {_totalPageCount}";
 
-        // 새 노트로 초기화
-        InitNewNote();
+        // 토글 값이 변경될 때 실행될 메서드 등록
+        for (int i = 0; i < checkboxes.Length; i++)
+        {
+            int idx = i;
+            checkboxes[i].onValueChanged.AddListener((isOn) =>
+            {
+                OnToggleValueChanged(idx, isOn);
+            });
+        }
 
         // 단서 누르면 줌인 함수 연결
         foreach (var clue in clueList)
@@ -132,15 +161,8 @@ public class PlayerNoteManager : MonoBehaviour
         // 단서 줌아웃 함수 연결
         zoomOutButton.onClick.AddListener(ZoomOutClue);
 
-        // 토글 값이 변경될 때 실행될 메서드 등록
-        for (int i = 0; i < checkboxes.Length; i++)
-        {
-            int idx = i;
-            checkboxes[i].onValueChanged.AddListener((isOn) =>
-            {
-                OnToggleValueChanged(idx, isOn);
-            });
-        }
+        // 새 노트로 초기화
+        InitNewNote();
     }
 
     /// <summary>
@@ -241,6 +263,7 @@ public class PlayerNoteManager : MonoBehaviour
     /// </summary>
     private void InitNewNote()
     {
+        currentPlayerNoteData = new PlayerNoteData();
         currentPlayerNoteData.clueActiveStates = new bool[clueList.Count];
         currentPlayerNoteData.checkStates = new bool[checkboxes.Length];
         currentPlayerNoteData.memoPageTexts = new string[memoPageInputFields.Length];
@@ -259,6 +282,24 @@ public class PlayerNoteManager : MonoBehaviour
     /// <returns>저장할 데이터</returns>
     public PlayerNoteData GetCurrentPlayerNoteData()
     {
+        // 저장 직전에 메모장 입력값을 데이터 객체에 반영
+        if (memoPageInputFields != null && currentPlayerNoteData.memoPageTexts != null)
+        {
+            for (int i = 0; i < memoPageInputFields.Length; i++)
+            {
+                if (memoPageInputFields[i] != null)
+                {
+                    currentPlayerNoteData.memoPageTexts[i] = memoPageInputFields[i].text;
+                }
+            }
+        }
+
+        // 데이터베이스 모니터 로그인 상태 저장
+        if (_databaseMonitorController != null)
+        {
+            currentPlayerNoteData.hasLoginedDatabase = _databaseMonitorController.HasLogined;
+        }
+
         return currentPlayerNoteData;
     }
 
@@ -269,6 +310,12 @@ public class PlayerNoteManager : MonoBehaviour
     public void LoadPlayerNoteData(PlayerNoteData loadedData)
     {
         currentPlayerNoteData = loadedData;
+
+        // 로드된 로그인 상태를 DatabaseMonitorController에도 복원
+        if (_databaseMonitorController != null)
+        {
+            _databaseMonitorController.HasLogined = loadedData.hasLoginedDatabase;
+        }
 
         UpdateNoteUI();
     }
@@ -336,7 +383,7 @@ public class PlayerNoteManager : MonoBehaviour
 
         // 펼쳐야 하는 페이지들 내용 로드 필요
 
-        if (spreadIdx == 1) // 샘플 페이지면
+        if (spreadIdx == 2) // 샘플 페이지면
         {
             // 데이터베이스 모니터를 한번이라도 로그인했으면 -> 샘플 페이지 보여줌 
             foreach (var memo in creatureSampleMemoGroups)

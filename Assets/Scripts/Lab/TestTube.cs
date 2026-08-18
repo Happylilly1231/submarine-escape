@@ -49,6 +49,26 @@ public class TestTube : LabEquipment
     public override void Remove(int slotIdx)
     {
         base.Remove(slotIdx);
+
+        // 슬롯이 전부 비었는지 체크 후 _isResultTube 해제
+        bool isEmptyAll = true;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (!slots[i].IsEmpty)
+            {
+                isEmptyAll = false;
+                break;
+            }
+        }
+
+        if (isEmptyAll)
+        {
+            _isResultTube = false;
+            IsSuccess = false;
+            IsH1 = false;
+            IsH2S1 = false;
+        }
+
         UpdateVisuals();
     }
 

@@ -12,7 +12,7 @@ namespace NavKeypad
         [SerializeField] private UnityEvent onAccessGranted;
         [SerializeField] private UnityEvent onAccessDenied;
         [Header("Combination Code (9 Numbers Max)")]
-        public int keypadCombo = 12345;
+        public string keypadCombo = "12345";
 
         public UnityEvent OnAccessGranted => onAccessGranted;
         public UnityEvent OnAccessDenied => onAccessDenied;
@@ -76,7 +76,7 @@ namespace NavKeypad
             if (!string.IsNullOrEmpty(currentInput))
             {
                 // 입력 문자열과 목표 비밀번호가 완전히 같은지 비교
-                bool granted = currentInput.Equals(keypadCombo.ToString("D4"));
+                bool granted = currentInput.Equals(keypadCombo);
 
                 if (!displayingResult)
                 {

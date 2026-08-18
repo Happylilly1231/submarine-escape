@@ -157,8 +157,6 @@ public class FocusManager : MonoBehaviour
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
 
                 if (GameTime.Instance != null) GameTime.Instance.SetPause(true); // 게임 시간 정지
-                if (SubmarineInGameManager.instance != null)
-                    SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
 
                 // 연출이 보이도록 모든 창 다 끄고 나가기
                 if (oldState == GameFocusState.Puzzle)
@@ -174,6 +172,9 @@ public class FocusManager : MonoBehaviour
                     if (inGameMenuController != null)
                         inGameMenuController.CloseInGameMenu();
                 }
+
+                if (SubmarineInGameManager.instance != null)
+                    SubmarineInGameManager.instance.SetActiveInGameUI(false); // 인게임 UI 비활성화
                 break;
 
             case GameFocusState.Puzzle:

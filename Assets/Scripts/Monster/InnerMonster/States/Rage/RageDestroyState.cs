@@ -18,9 +18,7 @@ namespace InnerMonsterStates
     /// </summary>
     public class RageDestroyState : IState<InnerMonsterController>
     {
-        private float _destroyTime; // 파괴하는데 걸리는 시간
         private float _needDestroyAttackCount; // 필요한 파괴 공격 수
-        private float _timer; // 타이머
         // private bool _isSequencing = false; // 연출 보여주는 중인지 여부
         private bool _isDestroying = false;
 
@@ -33,7 +31,6 @@ namespace InnerMonsterStates
             owner.currentAttackType = EAttackType.RageDestroyAttack; // 현재 공격 타입 -> 폭주 파괴 공격
             owner.Animator.SetBool("isRageDestroying", true); // 폭주 파괴 애니메이션 재생
             AudioManager.Instance.PlayGlobalOneShot(owner.destroyRageSound);
-            _timer = 0f; // 타이머 초기화
 
             if (owner.IsDestroyImmediately) // 즉시 파괴 경우 -> 즉시 파괴
             {
@@ -47,29 +44,24 @@ namespace InnerMonsterStates
                 {
                     case EDestroyObjType.Door:
                         _needDestroyAttackCount = 2;
-                        // _destroyTime = 7f;
                         owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
                         break;
                     case EDestroyObjType.EscapeRoomDoor:
                         _needDestroyAttackCount = 10;
-                        // _destroyTime = 30f;
                         owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
                         break;
                     case EDestroyObjType.MachinerySpaceDoor:
                         _needDestroyAttackCount = 15;
-                        // _destroyTime = 60f;
                         owner.currentDestroyObj.gameObject.GetComponent<Renderer>().material.color = Color.red; // 문 빨간색으로 표시
                         break;
                     case EDestroyObjType.Equipment:
                         if (SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.TorpedoRoom) // 어뢰실 장치의 경우 늦게 부서지게 함
                         {
                             _needDestroyAttackCount = 7;
-                            // _destroyTime = 20f;
                         }
                         else
                         {
                             _needDestroyAttackCount = 1;
-                            // _destroyTime = 3.5f;
                         }
                         break;
                 }
@@ -77,7 +69,6 @@ namespace InnerMonsterStates
 
             // 이벤트 구독
             InnerMonsterController.OnAnimationRageDestroyAttackTouched += PlayDestroyingSound;
-            // InnerMonsterController.OnRageStartAnimationEnded += PlayDestroyingSound; // 폭주 시작 애니메이션 종료 -> 파괴 중 사운드 재생
         }
 
         public void Update(InnerMonsterController owner)
@@ -95,13 +86,6 @@ namespace InnerMonsterStates
                     if (SubmarineInGameManager.instance.IsEscaped) return;
                     RageDestroy(owner); // 폭주 파괴
                 }
-
-                // _timer += Time.deltaTime;
-
-                // if (_timer > _destroyTime)
-                // {
-                //     RageDestroy(owner); // 폭주 파괴
-                // }
             }
 
             switch (owner.currentDestroyObjType)
@@ -150,13 +134,11 @@ namespace InnerMonsterStates
 
             // 이벤트 구독 해제
             InnerMonsterController.OnAnimationRageDestroyAttackTouched -= PlayDestroyingSound;
-            // InnerMonsterController.OnRageStartAnimationEnded -= PlayDestroyingSound;
         }
 
         private void PlayDestroyingSound(InnerMonsterController monster)
         {
             AudioManager.Instance.PlayGlobalOneShot(monster.destroyingSound);
-            // AudioManager.Instance.PlaySoundSafe(monster.destroyAudioSource, monster.destroyingSound);
         }
 
         /// <summary>

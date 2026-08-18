@@ -179,12 +179,14 @@ public class SubmarineInGameManager : MonoBehaviour
     // Ctrl + F1 디버깅 탭 토글(ESC로 메뉴를 연 상태에서만 사용 가능)
     public void OnToggleDebug(InputAction.CallbackContext context)
     {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR // 개발 빌드거나 에디터 상태일 때만 -> 디버깅 사용 가능
         if (context.performed)
         {
             if (!MenuUIController.instance.MenuUI.activeSelf) return; // 메뉴가 열려있지 않을 때는 디버깅 UI 활성화/비활성화 불가능
 
             MenuUIController.instance.ToggleDebuggingUI(); // 디버깅 UI 활성화/비활성화
         }
+#endif
     }
 
     public void SetEscaped()
