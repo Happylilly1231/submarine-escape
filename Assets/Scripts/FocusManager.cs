@@ -13,6 +13,7 @@ public enum GameFocusState
     ESCMenu,        // ESC 메뉴(실제 정지) 포커스 
     Diary,           // 다이어리 포커스
     UIScene,        // UI만 있고, 플레이어 없는 씬 - EndingScene 전용 포커스
+    DeepSea,        // 심해 전용
 }
 
 public class FocusManager : MonoBehaviour
@@ -71,6 +72,8 @@ public class FocusManager : MonoBehaviour
             ResetFocusState(GameFocusState.UIScene);
         else if (scene.name == "EndingFrameScene") // 임시!!!
             ResetFocusState(GameFocusState.ESCMenu);
+        else if (scene.name == "DeepSeaScene")
+            ResetFocusState(GameFocusState.DeepSea);
         else
             ResetFocusState(GameFocusState.None);
         Debug.Log($"{scene.name} 씬 로드됨. 포커스 초기화.");
@@ -205,6 +208,12 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.UIScene:
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
+
+            case GameFocusState.DeepSea: // 심해
+                // PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
+                // SetCenterUIActive(true); // 가운데 UI 요소 켜기
+                GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
+                break;
         }
 
         // 인풋 관리
@@ -253,8 +262,11 @@ public class FocusManager : MonoBehaviour
 
             case GameFocusState.ESCMenu:
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
-                PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
-                PlayerManager.Instance.playerInput.actions["ToggleDebug"].Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요)
+                if (oldState == GameFocusState.DeepSea)
+                    PlayerManager.Instance.playerInput.actions["DeepSea/ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
+                else
+                    PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
+                PlayerManager.Instance.playerInput.actions["ToggleDebug"]?.Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요) (해당 액션이 있을 때만)
                 break;
 
             case GameFocusState.Diary:
@@ -264,6 +276,10 @@ public class FocusManager : MonoBehaviour
 
             case GameFocusState.UIScene:
                 // PlayerInput을 가진 플레이어가 없으므로 인풋 비활성화 필요 X
+                break;
+
+            case GameFocusState.DeepSea:
+                InputManager.instance.SwitchActionMapWithPermanent("DeepSea"); // 심해 전용 액션 맵으로 변환
                 break;
         }
     }
