@@ -12,27 +12,43 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private CapsuleCollider capsuleCollider;
 
+    [Header("=== Area Reference ===")]
+    [SerializeField] private DeepSeaAreaController areaController; // 에디터에서 연결
+
+    [Header("=== 1인칭 회피 연출 ===")]
+    [SerializeField] private ParticleSystem cameraDashBubbleFX; // Main Camera 자식으로 둔 파티클
+
     [Header("=== Camera Positions ===")]
     [SerializeField] private Transform cameraPosEye;      // 눈 앞 카메라 피벗 (기본/상승/하강/정지)
     [SerializeField] private Transform cameraPosTopHead;  // 정수리 카메라 피벗 (순수 평지 이동 시)
     [SerializeField] private Transform activeCameraPos;   // 실제 카메리가 따라다니는 피벗
 
     [Header("=== Move Settings ===")]
-    private float normalSpeed = 5f;
-    private float sprintSpeed = 15f;
-    private float verticalSpeed = 6f;
-    private float meshRotationSpeed = 8f; // 기존 반응성 유지
+    [SerializeField] private float normalSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 15f;
+    [SerializeField] private float verticalSpeed = 6f;
+    private float meshRotationSpeed = 8f;
     private float cameraPosLerpSpeed = 8f;
+
+    [Header("=== Dash (Evasion) Settings ===")]
+    [SerializeField] private float dashForce = 22f;          // 회피 순간 속도 (Impulse)
+    [SerializeField] private float dashDuration = 0.2f;      // 회피 유지 시간
+    [SerializeField] private float dashCooldown = 0.8f;      // 회피 재사용 대기시간
+    [SerializeField] private float holdThreshold = 0.2f;     // 이 시간(초) 이상 누르면 가속(Sprint)으로 판정
 
     [Header("=== Oxygen Settings ===")]
     [SerializeField] private float maxOxygen = 100f;
+    public float MaxOxygen => maxOxygen;         // 기존 최대 산소 변수명에 맞게 연결
     [SerializeField] private float currentOxygen = 100f;
-    [SerializeField] private float sprintOxygenCostPerSec = 7f;
+    public float CurrentOxygen => currentOxygen; // 기존 산소 변수명에 맞게 연결
+    [SerializeField] private float baseOxygenCostPerSec = 0.2f;   // 기본 초당 산소 소모 (약 8분 분량)
+    [SerializeField] private float sprintOxygenCostPerSec = 1.3f; // 가속 이동 시 추가 소모 (총 1.5/s)
+    [SerializeField] private float dashOxygenCost = 8.0f;         // 회피 1회당 산소 소모
 
     #region External Accessors
     public float MouseX { get; private set; }
     public float MouseY { get; private set; }
-    public float CurrentOxygen => currentOxygen;
+    public bool IsDashing => _isDashing;
     #endregion
 
     private Rigidbody _rb;
@@ -42,8 +58,15 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private bool _isDescendPressed; // Left Ctrl / C
     private float _verticalInput = 0f; // +1: 상승, -1: 하강, 0: 정지
 
-    private Vector3 standingCenter = new Vector3(0, 1f, 0); // 서 있을 때 Center
-    private Vector3 swimmingCenter = new Vector3(0, 0.65f, 0); // 엎드렸을 때 Center
+    // Shift 입력 버퍼 및 회피 상태 변수
+    private float _shiftPressStartTime;
+    private bool _isShiftHeld;
+    private bool _isDashing;
+    private float _lastDashTime = -999f;
+    private Vector3 _dashDirection;
+
+    private Vector3 standingCenter = new Vector3(0, 1f, 0);
+    private Vector3 swimmingCenter = new Vector3(0, 0.65f, 0);
 
     private readonly int _isSwimmingHash = Animator.StringToHash("IsSwimming");
     private readonly int _swimSpeedHash = Animator.StringToHash("SwimSpeed");
@@ -65,6 +88,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
         if (GameManager.instance != null && GameManager.instance.IsPausing) return;
 
         ReadInputs();
+        HandleShiftInputLogic();
+        HandleBaseOxygenConsumption();
         HandleRotation();
         HandleAnimationAndMeshRotation();
         UpdateCameraPivot();
@@ -86,45 +111,157 @@ public class DeepSeaPlayerMove : MonoBehaviour
         var descendAction = playerInput.actions.FindAction("DeepSea/Descend");
 
         _moveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
-        _isSprintPressed = sprintAction != null && sprintAction.IsPressed();
+        _isShiftHeld = sprintAction != null && sprintAction.IsPressed();
 
-        // 1. 단순 키 할당 (기존 방식 유지)
+        // 상승 / 하강 최신 입력 처리
         bool ascendNow = ascendAction != null ? ascendAction.IsPressed() : Keyboard.current.spaceKey.isPressed;
         bool descendNow = descendAction != null ? descendAction.IsPressed() : (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.cKey.isPressed);
 
-        // 2. 입력 변화 감지 및 최신 입력 우선 처리
-        if (ascendNow && !_isAscendPressed)
+        // 수면 위인지 체크
+        bool isAtSurface = areaController != null && transform.position.y >= areaController.SurfaceY;
+
+        if (isAtSurface)
         {
-            // 상승 키를 방금 새로 눌렀음 -> 상승 우선
-            _verticalInput = 1f;
-        }
-        else if (descendNow && !_isDescendPressed)
-        {
-            // 하강 키를 방금 새로 눌렀음 -> 하강 우선
-            _verticalInput = -1f;
-        }
-        else if (!ascendNow && !descendNow)
-        {
-            // 둘 다 안 누름
+            // 수면에 도달하면 위/아래 키 입력을 무시하여 수직 이동을 막음
             _verticalInput = 0f;
         }
-        else if (ascendNow && !descendNow)
+        else
         {
-            _verticalInput = 1f;
-        }
-        else if (!ascendNow && descendNow)
-        {
-            _verticalInput = -1f;
+            // 기존 상승/하강 최신 입력 처리 로직
+            if (ascendNow && !_isAscendPressed) _verticalInput = 1f;
+            else if (descendNow && !_isDescendPressed) _verticalInput = -1f;
+            else if (!ascendNow && !descendNow) _verticalInput = 0f;
+            else if (ascendNow && !descendNow) _verticalInput = 1f;
+            else if (!ascendNow && descendNow) _verticalInput = -1f;
         }
 
         _isAscendPressed = ascendNow;
         _isDescendPressed = descendNow;
 
-        // 마우스 회전값 등 기존 로직...
+        // 마우스 감도 처리
         float sensitivity = GameManager.instance != null ? GameManager.instance.MouseSensitivity : 1f;
         Vector2 lookInput = lookAction != null ? lookAction.ReadValue<Vector2>() : Vector2.zero;
         MouseX = lookInput.x * sensitivity;
         MouseY = lookInput.y * sensitivity;
+    }
+
+    // Shift 클릭(회피)과 길게 누르기(가속) 분기 로직
+    private void HandleShiftInputLogic()
+    {
+        if (_isShiftHeld)
+        {
+            if (_shiftPressStartTime == 0f)
+            {
+                _shiftPressStartTime = Time.time;
+            }
+
+            // 지정한 시간(0.2초) 이상 누르고 있으면 가속 이동 활성화
+            if (Time.time - _shiftPressStartTime >= holdThreshold)
+            {
+                _isSprintPressed = true;
+                Debug.Log("가속 이동 시작!");
+            }
+        }
+        else
+        {
+            // Shift를 뗐을 때: 누른 시간이 threshold 미만이었고 쿨타임이 지났다면 회피(Dash) 실행
+            if (_shiftPressStartTime > 0f)
+            {
+                float pressDuration = Time.time - _shiftPressStartTime;
+                if (pressDuration < holdThreshold && Time.time >= _lastDashTime + dashCooldown)
+                {
+                    TryExecuteDash();
+                }
+            }
+
+            _shiftPressStartTime = 0f;
+            _isSprintPressed = false;
+        }
+    }
+
+    // 회피 실행 함수
+    private void TryExecuteDash()
+    {
+        if (currentOxygen < dashOxygenCost || _isDashing) return;
+
+        ConsumeOxygen(dashOxygenCost);
+        _lastDashTime = Time.time;
+        StartCoroutine(DashCoroutine());
+    }
+
+    private IEnumerator DashCoroutine()
+    {
+        _isDashing = true;
+
+        Transform mainCam = Camera.main != null ? Camera.main.transform : transform;
+        Vector3 camForward = Vector3.ProjectOnPlane(mainCam.forward, Vector3.up).normalized;
+        Vector3 camRight = mainCam.right;
+
+        Vector3 inputDir = (camForward * _moveInput.y + camRight * _moveInput.x).normalized;
+        if (inputDir.sqrMagnitude < 0.01f)
+        {
+            inputDir = transform.forward;
+        }
+
+        inputDir.y = _verticalInput;
+        _dashDirection = inputDir.normalized;
+
+        // 1. 카메라 FOV 연출 (속도감)
+        if (Camera.main != null)
+        {
+            StartCoroutine(DashFOVCoroutine(Camera.main));
+        }
+
+        // 2. 1인칭 시야 기포 연출 재생
+        if (cameraDashBubbleFX != null)
+        {
+            cameraDashBubbleFX.Play();
+        }
+
+        Debug.Log("회피! " + _dashDirection);
+
+        // 3. dashDuration 동안 회피 속도 강제 유지 (물리 감쇄 방지)
+        float elapsedTime = 0f;
+        while (elapsedTime < dashDuration)
+        {
+            _rb.velocity = _dashDirection * dashForce;
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        _isDashing = false;
+    }
+
+    private IEnumerator DashFOVCoroutine(Camera mainCam)
+    {
+        float startFOV = mainCam.fieldOfView;
+        float targetFOV = startFOV + 8f; // 순간적으로 8도 넓혀 속도감 연출
+
+        // 순간 확장
+        float t = 0f;
+        while (t < 0.08f)
+        {
+            mainCam.fieldOfView = Mathf.Lerp(startFOV, targetFOV, t / 0.08f);
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        // 복구
+        t = 0f;
+        while (t < 0.15f)
+        {
+            mainCam.fieldOfView = Mathf.Lerp(targetFOV, startFOV, t / 0.15f);
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        mainCam.fieldOfView = startFOV;
+    }
+
+    private void HandleBaseOxygenConsumption()
+    {
+        // 평소에도 지속해서 기본 산소 감소
+        ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime);
     }
 
     private void HandleRotation()
@@ -134,6 +271,9 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     private void HandleMovement()
     {
+        // 회피 중일 때는 회피 물리력이 움직임을 제어함
+        if (_isDashing) return;
+
         Transform mainCam = Camera.main != null ? Camera.main.transform : transform;
 
         Vector3 camForward = Vector3.ProjectOnPlane(mainCam.forward, Vector3.up).normalized;
@@ -151,8 +291,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
         }
 
         Vector3 targetVelocity = moveDir * currentSpeed;
-
-        // _verticalInput 값을 직접 적용 (1: 상승, -1: 하강)
         targetVelocity.y = _verticalInput * verticalSpeed;
 
         _rb.AddForce(targetVelocity - _rb.velocity, ForceMode.VelocityChange);
@@ -160,37 +298,20 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     private void HandleAnimationAndMeshRotation()
     {
-        Vector3 velocity = _rb.velocity;
-        // 오직 W(전진) 입력이 있을 때만 전진 수영 판단!
-        bool isForwardMoving = _moveInput.y > 0.1f; // W 전진 중인가?
+        bool isForwardMoving = _moveInput.y > 0.1f;
 
-        // 1. 메쉬 회전 보정 (상승/하강 Pitch & Roll)
         if (modelTransform != null)
         {
             float targetPitch = 0f;
             float targetRoll = 0f;
 
-            // 1. 상승/하강 Pitch
             if (_verticalInput > 0f) targetPitch = -35f;
             else if (_verticalInput < 0f) targetPitch = 35f;
 
-            // 2. A/D Roll (몸 좌우 기울임)
             if (_moveInput.x < -0.1f) targetRoll = 15f;
             else if (_moveInput.x > 0.1f) targetRoll = -15f;
 
-            Quaternion targetLocalRotation;
-
-            // W(전진) + 상승/하강 대각선 이동 시 진행 방향을 바라봄
-            if (isForwardMoving && !Mathf.Approximately(_verticalInput, 0f))
-            {
-                Vector3 localVel = transform.InverseTransformDirection(velocity);
-                targetLocalRotation = Quaternion.LookRotation(localVel);
-            }
-            else
-            {
-                // 그 외(S, A, D, 단독 상승/하강)는 정면 고정 후 Pitch/Roll 오프셋 적용
-                targetLocalRotation = Quaternion.Euler(targetPitch, 0f, targetRoll);
-            }
+            Quaternion targetLocalRotation = Quaternion.Euler(targetPitch, 0f, targetRoll);
 
             modelTransform.localRotation = Quaternion.Slerp(
                 modelTransform.localRotation,
@@ -199,30 +320,26 @@ public class DeepSeaPlayerMove : MonoBehaviour
             );
         }
 
-        // 2. [핵심] 애니메이션 엎드림 포즈에 맞춘 콜라이더 축/Center 보정
         if (capsuleCollider != null)
         {
             if (isForwardMoving)
             {
-                // W 전진 수영 중일 때: Z축 방향(2)으로 콜라이더를 누움
-                capsuleCollider.direction = 2; // 0: X-Axis, 1: Y-Axis, 2: Z-Axis
+                capsuleCollider.direction = 2; // Z-Axis
                 capsuleCollider.center = swimmingCenter;
             }
             else
             {
-                // 서 있을 때 (Idle, S, A, D): Y축 방향(1)으로 세움
-                capsuleCollider.direction = 1;
+                capsuleCollider.direction = 1; // Y-Axis
                 capsuleCollider.center = standingCenter;
             }
         }
 
-        // 3. 애니메이션 제어
         if (animator != null)
         {
             animator.SetBool(_isSwimmingHash, isForwardMoving);
 
             bool isSprinting = _isSprintPressed && currentOxygen > 0f;
-            float speedMultiplier = isSprinting ? 1.5f : 1.0f;
+            float speedMultiplier = isSprinting ? 1.5f : (_isDashing ? 2.0f : 1.0f);
             animator.SetFloat(_swimSpeedHash, speedMultiplier);
         }
     }
@@ -231,22 +348,11 @@ public class DeepSeaPlayerMove : MonoBehaviour
     {
         if (activeCameraPos == null || cameraPosEye == null || cameraPosTopHead == null) return;
 
-        bool isAscending = _verticalInput > 0f;      // 상승 중 (Space)
-        bool isDescending = _verticalInput < 0f;     // 하강 중 (Ctrl/C)
-        bool isForwardMoving = _moveInput.y > 0.1f; // W(전진) 키 입력 중
+        bool isAscending = _verticalInput > 0f;
+        bool isDescending = _verticalInput < 0f;
+        bool isForwardMoving = _moveInput.y > 0.1f;
 
-        bool needsTopHeadPivot;
-
-        if (isAscending)
-        {
-            // 상승 중일 때는 W를 같이 누르더라도 예외 없이 눈 앞(Eye) 피벗 사용!
-            needsTopHeadPivot = false;
-        }
-        else
-        {
-            // 상승이 아닐 때만 W 전진 또는 하강일 때 정수리(TopHead) 피벗 사용
-            needsTopHeadPivot = isForwardMoving || isDescending;
-        }
+        bool needsTopHeadPivot = !isAscending && (isForwardMoving || isDescending);
 
         Transform targetPivot = needsTopHeadPivot ? cameraPosTopHead : cameraPosEye;
 
