@@ -852,6 +852,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Dodge"",
+                    ""type"": ""Button"",
+                    ""id"": ""d6f6ae89-2527-4e8e-82a5-c4d2861a7321"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -964,6 +973,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Descend"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2a5c4fd-0051-4a97-b077-678a436bbbd5"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Dodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -1028,6 +1048,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_DeepSea_Ascend = m_DeepSea.FindAction("Ascend", throwIfNotFound: true);
         m_DeepSea_ToggleMenu = m_DeepSea.FindAction("ToggleMenu", throwIfNotFound: true);
         m_DeepSea_Descend = m_DeepSea.FindAction("Descend", throwIfNotFound: true);
+        m_DeepSea_Dodge = m_DeepSea.FindAction("Dodge", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -1669,6 +1690,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_DeepSea_Ascend;
     private readonly InputAction m_DeepSea_ToggleMenu;
     private readonly InputAction m_DeepSea_Descend;
+    private readonly InputAction m_DeepSea_Dodge;
     /// <summary>
     /// Provides access to input actions defined in input action map "DeepSea".
     /// </summary>
@@ -1704,6 +1726,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "DeepSea/Descend".
         /// </summary>
         public InputAction @Descend => m_Wrapper.m_DeepSea_Descend;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Dodge".
+        /// </summary>
+        public InputAction @Dodge => m_Wrapper.m_DeepSea_Dodge;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1748,6 +1774,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Descend.started += instance.OnDescend;
             @Descend.performed += instance.OnDescend;
             @Descend.canceled += instance.OnDescend;
+            @Dodge.started += instance.OnDodge;
+            @Dodge.performed += instance.OnDodge;
+            @Dodge.canceled += instance.OnDodge;
         }
 
         /// <summary>
@@ -1777,6 +1806,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Descend.started -= instance.OnDescend;
             @Descend.performed -= instance.OnDescend;
             @Descend.canceled -= instance.OnDescend;
+            @Dodge.started -= instance.OnDodge;
+            @Dodge.performed -= instance.OnDodge;
+            @Dodge.canceled -= instance.OnDodge;
         }
 
         /// <summary>
@@ -2085,5 +2117,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDescend(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Dodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDodge(InputAction.CallbackContext context);
     }
 }
