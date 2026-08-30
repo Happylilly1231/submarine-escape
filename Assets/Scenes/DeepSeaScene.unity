@@ -2859,14 +2859,14 @@ MonoBehaviour:
   deepSeaAreaController: {fileID: 1244593945}
   cameraDashBubbleFX: {fileID: 1619685718}
   cameraPosHead: {fileID: 2066706481}
-  normalSpeed: 5
-  sprintSpeed: 15
-  dashForce: 22
-  dashDuration: 0.2
-  holdSprintThreshold: 0.2
-  baseOxygenCostPerSec: 0.2
-  sprintOxygenCostPerSec: 7
-  dashOxygenCost: 8
+  normalSpeed: 6
+  sprintSpeed: 9.5
+  slowSpeed: 4.2
+  dashForce: 12
+  dashDuration: 0.3
+  baseOxygenCostPerSec: 0.1
+  sprintOxygenCostPerSec: 0.8
+  dashOxygenCost: 6
 --- !u!54 &632505568
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3270,6 +3270,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 33617019-3eb8-4568-a375-087068a45212
     m_ActionName: DeepSea/Descend[/Keyboard/leftCtrl]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: d6f6ae89-2527-4e8e-82a5-c4d2861a7321
+    m_ActionName: DeepSea/Dodge[/Keyboard/q]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player
@@ -3310,7 +3314,7 @@ GameObject:
   - component: {fileID: 695900886}
   - component: {fileID: 695900885}
   m_Layer: 0
-  m_Name: Particle System
+  m_Name: Floating Particle System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10139,7 +10143,7 @@ GameObject:
   - component: {fileID: 1153112995}
   - component: {fileID: 1153112994}
   m_Layer: 0
-  m_Name: Sink Hole_325m
+  m_Name: Sink Hole_350m
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10154,7 +10158,7 @@ Transform:
   m_GameObject: {fileID: 1153112991}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -50, z: 0}
+  m_LocalPosition: {x: 0, y: -51, z: 0}
   m_LocalScale: {x: 250, y: 1, z: 250}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10621,12 +10625,14 @@ MonoBehaviour:
   maxRadius: 250
   shallowSeaY: 500
   surfaceY: 650
+  bottomY: -50
   deepSeaVolume: {fileID: 1851205188}
   shallowSeaVolume: {fileID: 408609350}
   surfaceVolume: {fileID: 1936220191}
   deepSeaReverb: 23
   shallowSeaReverb: 3
   surfaceReverb: 0
+  floatingParticles: {fileID: 695900886}
 --- !u!4 &1244593946
 Transform:
   m_ObjectHideFlags: 0
@@ -19042,8 +19048,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -110, y: 85}
-  m_SizeDelta: {x: 400, y: 50}
+  m_AnchoredPosition: {x: -135, y: 85}
+  m_SizeDelta: {x: 1000, y: 50}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &2101997473
 MonoBehaviour:
@@ -19065,10 +19071,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: X:000 | Y:000 | Z:000
+  m_text: "X:000 | Y:000 | Z:000 | \uC218\uC2EC: 325m"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 5a6117b9c91289743a39dc4ed521d00a, type: 2}
+  m_sharedMaterial: {fileID: -440651621371215574, guid: 5a6117b9c91289743a39dc4ed521d00a,
+    type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -19099,7 +19106,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 4
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0

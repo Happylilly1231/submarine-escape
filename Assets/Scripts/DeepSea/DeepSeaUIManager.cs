@@ -45,7 +45,7 @@ public class DeepSeaUIManager : MonoBehaviour
         if (positionText == null) return;
 
         Vector3 pos = player.transform.position;
-        positionText.text = $"X: {pos.x:F0} | Y: {pos.y:F0} | Z: {pos.z:F0}";
+        positionText.text = $"X: {pos.x:F0} | Y: {pos.y:F0} | Z: {pos.z:F0} | 수심: {player.DisplayDepth:F0}m";
     }
 
     // 2. 산소 UI 표시

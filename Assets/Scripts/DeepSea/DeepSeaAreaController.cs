@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
+public enum SeaZone { DeepSea, ShallowSea, Surface }
+
 public class DeepSeaAreaController : MonoBehaviour
 {
     [Header("=== References ===")]
@@ -10,11 +12,13 @@ public class DeepSeaAreaController : MonoBehaviour
 
     [Header("=== 1. Boundary Settings (XZ Circle) ===")]
     [SerializeField] private Vector3 mapCenter = Vector3.zero; // 원형 맵의 중심점
-    [SerializeField] private float maxRadius = 50f;            // 플레이 가능 최대 반경
+    [SerializeField] private float maxRadius = 250f;            // 플레이 가능 최대 반경
 
     [Header("=== 2. Depth Y Level Settings ===")]
-    [SerializeField] private float shallowSeaY = 20f; // 이 Y값 이상이면 얕은 바다 Volume 적용
-    [SerializeField] private float surfaceY = 35f;    // 수면 Y값 (더 이상 위로 못 올라감)
+    [SerializeField] private float shallowSeaY = 500f; // 이 Y값 이상이면 얕은 바다 Volume 적용
+    [SerializeField] private float surfaceY = 650f;    // 수면 Y값 (더 이상 위로 못 올라감)
+    [SerializeField] private float bottomY = -50f;    // 이 아래로 못 내려감
+    public float MaxDepthY { get; private set; } = 700f;
 
     [Header("=== 3. Post Process Volumes ===")]
     [SerializeField] private Volume deepSeaVolume;    // 심해 볼륨 (흑백/어두움)
@@ -29,10 +33,14 @@ public class DeepSeaAreaController : MonoBehaviour
     // 수면 밖: 울림 없음
     [SerializeField] private AudioReverbPreset surfaceReverb = AudioReverbPreset.Off;
 
-    public float SurfaceY => surfaceY;
+    [Header("=== Particle Systems ===")]
+    [SerializeField] private ParticleSystem floatingParticles; // 메인 카메라 하위 부유물 파티클
 
-    private enum SeaZone { DeepSea, ShallowSea, Surface }
+    public float SurfaceY => surfaceY;
+    public float BottomY => bottomY;
+
     private SeaZone _currentZone = SeaZone.DeepSea;
+    public SeaZone CurrentZone => _currentZone;
 
     private void Start()
     {
@@ -105,11 +113,8 @@ public class DeepSeaAreaController : MonoBehaviour
             pos.z = mapCenter.z + currentXZ.y;
         }
 
-        // Y 수면 제한
-        if (pos.y > surfaceY)
-        {
-            pos.y = surfaceY;
-        }
+        // Y축 수면 및 바닥 제한 (-50 ~ 650 범위 고정)
+        pos.y = Mathf.Clamp(pos.y, bottomY, surfaceY);
 
         playerTransform.position = pos;
     }
@@ -162,6 +167,24 @@ public class DeepSeaAreaController : MonoBehaviour
                     break;
             }
         }
+
+        // 수면 도달 시 부유물 파티클 비활성화
+        if (floatingParticles != null)
+        {
+            if (zone == SeaZone.Surface)
+            {
+                floatingParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            else
+            {
+                // 다시 바다 속으로 들어오면 재생
+                var emission = floatingParticles.emission;
+                emission.enabled = true;
+
+                if (!floatingParticles.isPlaying)
+                    floatingParticles.Play();
+            }
+        }
     }
 
     private void OnDrawGizmosSelected()
@@ -175,5 +198,9 @@ public class DeepSeaAreaController : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(mapCenter + new Vector3(-maxRadius, surfaceY, 0), mapCenter + new Vector3(maxRadius, surfaceY, 0));
+
+        // 바닥선 (검은색/파란색)
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(mapCenter + new Vector3(-maxRadius, bottomY, 0), mapCenter + new Vector3(maxRadius, bottomY, 0));
     }
 }

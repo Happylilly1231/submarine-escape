@@ -7,23 +7,14 @@ using UnityEngine;
 /// </summary>
 public class DeepSeaCameraController : MonoBehaviour
 {
-    [Header("=== Target References ===")]
-    [Tooltip("심해 플레이어 이동 스크립트")]
     [SerializeField] private DeepSeaPlayerMove playerMove;
-
-    [Tooltip("카메라가 위치할 플레이어의 카메라 피벗/머리 Transform")]
     [SerializeField] private Transform cameraPos;
-
-    [Header("=== Clamp Settings ===")]
-    [SerializeField] private float minPitch = -70f; // 바닥 완전히 볼 수 있게
-    [SerializeField] private float maxPitch = 70f;  // 하늘 볼 수 있게
+    [SerializeField] private float minPitch = -70f;
+    [SerializeField] private float maxPitch = 70f;
+    [SerializeField] private float cameraRotationSpeed = 12f; // 부드러운 회전 속도
 
     private float _xRotation = 0f; // 카메라 상하 회전값 (Pitch)
-
-    private float _previousVerticalInput = 0f;
-    private Vector2 _previousMoveInput = Vector2.zero;
-
-    [SerializeField] private float cameraRotationSpeed = 12f; // 부드러운 회전 속도 (10~15 추천)
+    private float _previousModelXAngle = 0f; // 이전 프레임의 모델 X축 각도 저장용
 
     private void LateUpdate()
     {
@@ -37,37 +28,36 @@ public class DeepSeaCameraController : MonoBehaviour
 
     private void HandleCameraRotation()
     {
-        // 1. 방향 입력 변경 시 마우스 추가 상하 시선(_xRotation) 리셋
-        bool isAnyInputChanged = !Mathf.Approximately(playerMove.VerticalInput, _previousVerticalInput) ||
-                                 !Mathf.Approximately(playerMove.MoveInput.x, _previousMoveInput.x) ||
-                                 !Mathf.Approximately(playerMove.MoveInput.y, _previousMoveInput.y);
+        // 1. 현재 모델의 Local X축 각도 가져오기 (-180 ~ 180 범위 보정)
+        float currentModelXAngle = playerMove.ModelTransform.localEulerAngles.x;
+        if (currentModelXAngle > 180f) currentModelXAngle -= 360f;
 
-        if (isAnyInputChanged)
+        // 2. 방향 전환 등으로 모델의 꺾임 각도가 변경되었는지 확인
+        float angleDelta = currentModelXAngle - _previousModelXAngle;
+
+        if (Mathf.Abs(angleDelta) > 0.01f)
         {
-            if (_previousVerticalInput >= 0f && playerMove.VerticalInput < 0f) // 아래로 내려가기 시작했을 때만
-                _xRotation = 0f; // 정면 리셋
-            _previousVerticalInput = playerMove.VerticalInput;
-            _previousMoveInput = playerMove.MoveInput;
+            // 모델이 꺾인 각도(angleDelta)만큼 _xRotation을 반대로 보정하여 시선 튀는 현상 방지
+            _xRotation -= angleDelta;
+
+            // 보정된 값이 상하 제한 범위를 벗어나면 가장 가까운 한계값(minPitch ~ maxPitch)으로 램프
+            _xRotation = Mathf.Clamp(_xRotation, minPitch, maxPitch);
+
+            _previousModelXAngle = currentModelXAngle;
         }
 
-        // 2. 마우스 상하(Pitch) 입력 연산
+        // 3. 마우스 상하(Pitch) 입력 추가 반영
         _xRotation -= playerMove.MouseY;
         _xRotation = Mathf.Clamp(_xRotation, minPitch, maxPitch);
 
-        // 3. 모델 X축 각도 가져오기 (Euler 0~360 범위 보정)
-        float modelXAngle = playerMove.ModelTransform.localEulerAngles.x;
-        if (modelXAngle > 180f) modelXAngle -= 360f;
+        // 4. 기존 쿼터니언 회전 결합 (머리 정면 추종 유지)
+        Quaternion baseYaw = Quaternion.Euler(0f, playerMove.transform.eulerAngles.y, 0f);
+        Quaternion modelPitch = Quaternion.Euler(currentModelXAngle, 0f, 0f);
+        Quaternion mousePitch = Quaternion.Euler(_xRotation, 0f, 0f);
 
-        // 4. 각 회전을 독립적인 Quaternion으로 생성
-        Quaternion baseYaw = Quaternion.Euler(0f, playerMove.transform.eulerAngles.y, 0f); // Y축 (좌우)
-        Quaternion modelPitch = Quaternion.Euler(modelXAngle, 0f, 0f);                      // 모델 자체 X축 (90/120도)
-        Quaternion mousePitch = Quaternion.Euler(_xRotation, 0f, 0f);                       // 마우스 X축 (시야 상하)
-
-        // 5. [중요] 회전 순서 결합: Y축 회전 -> 모델 X축 꺾임 -> 마우스 상하 회전
-        // 순서대로 곱해줘야 마우스를 올릴 때 다른 축으로 시야가 비틀리지 않습니다.
         Quaternion targetRotation = baseYaw * modelPitch * mousePitch;
 
-        // 6. 부드러운 회전 적용
+        // 5. 회전 적용
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * cameraRotationSpeed);
     }
 }

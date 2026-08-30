@@ -16,44 +16,42 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private Transform cameraPosHead; // 머리 카메라 위치
 
     [Header("이동")]
-    [SerializeField] private float normalSpeed = 5f; // 기본 이동 속도
-    [SerializeField] private float sprintSpeed = 15f; // 가속 이동 속도
+    [SerializeField] private float normalSpeed = 6f; // 기본 이동 속도
+    [SerializeField] private float sprintSpeed = 9.5f; // 가속 이동 속도
+    [SerializeField] private float slowSpeed = 4.2f; // 느려질 때 속도
     private float meshRotationSpeed = 8f; // 메쉬(모델) 회전 속도
     private Vector3 _moveDir2D; // 2차원(X, Z) 이동 방향
     private Vector3 _moveDir3D; // 3차원(X, Y, Z) 이동 방향
 
     [Header("회피")]
-    [SerializeField] private float dashForce = 35f; // 회피 속도
+    [SerializeField] private float dashForce = 12f; // 회피 속도
     [SerializeField] private float dashDuration = 0.3f; // 회피하는 시간
-    [SerializeField] private float holdSprintThreshold = 0.2f; // 가속 이동으로 전환되는 임계 시간 (이 이상 Shift 키 누르면 회피가 아닌 가속 이동)
-    private Coroutine _currentCheckSprintHoldCoroutine; // 현재 Shift 키 hold 시간 체크 코루틴 (가속 이동 여부 판단)
-    private float _shiftPressStartTime = 0f; // Shift키를 딱 누른 시간 
     private Vector3 _dashDirection; // 회피 방향
     private bool _isSprintPressed = false; // 가속 이동 Shift 키가 눌리고 있는지 여부 (실제 가속 이동 중 여부와 다름, 정지해있으면 가속이 아니라 기본 초당 산소 소모량 소모)
-    private bool _hasSprintTriggered = false; // 이번 Shift 입력 동안 가속으로 전환되었는지 여부 플래그
 
     [Header("산소")]
-    [SerializeField] private float baseOxygenCostPerSec = 0.2f; // 기본 초당 산소 소모량 (약 8분 분량)
-    [SerializeField] private float sprintOxygenCostPerSec = 1.5f; // 가속 이동 시 산소 소모량
-    [SerializeField] private float dashOxygenCost = 8.0f; // 회피 시 산소 소모량
+    [SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
+    [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
+    [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
     // 입력
     private PlayerInput _playerInput;
     private InputAction _moveAction;
     private InputAction _lookAction;
-    private InputAction _shiftAction;
+    private InputAction _sprintAction;
+    private InputAction _dodgeAction;
     private InputAction _ascendAction;
     private InputAction _descendAction;
     private Vector2 _moveInput; // 2차원 이동 입력
     private float _verticalInput = 0f; // 상하 이동 입력
 
     // 애니메이션
-    // private readonly int _isSwimmingHash = Animator.StringToHash("IsSwimming");
     private readonly int _isCrawlSwimmingHash = Animator.StringToHash("IsCrawlSwimming");
     private readonly int _swimSpeedHash = Animator.StringToHash("SwimSpeed");
 
     // 기타
     private Rigidbody _rb;
+    private Transform _mainCamTransform;
     private Vector3 _standingCenter = new Vector3(0, 1f, 0);
     private Vector3 _swimmingCenter = new Vector3(0, 0.65f, 0);
 
@@ -71,6 +69,24 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public bool IsDashing { get; private set; } = false; // 회피 중인지 여부
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
 
+    /// <summary>
+    /// 게임 표기용 현재 수심 (1/2배 적용된 Y좌표 - 수심 350 ~ 0m(수면))
+    /// 외부 UI나 다른 스크립트에서 playerMove.DisplayDepth 로 접근
+    /// </summary>
+    public float DisplayDepth
+    {
+        get
+        {
+            // 700 - (현재 y - (-50))
+            float rawDepthY = deepSeaAreaController.MaxDepthY - (transform.position.y - deepSeaAreaController.BottomY);
+
+            // 수심 계산: 반으로 나누기
+            float calculatedDepth = Mathf.Max(0f, rawDepthY) * 0.5f;
+
+            return calculatedDepth;
+        }
+    }
+
     #endregion
 
 
@@ -79,12 +95,14 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _mainCamTransform = Camera.main.transform;
 
         // 입력 관련 변수 가져오기
         _playerInput = GetComponent<PlayerInput>();
         _moveAction = _playerInput.actions.FindAction("DeepSea/Move");
         _lookAction = _playerInput.actions.FindAction("DeepSea/Look");
-        _shiftAction = _playerInput.actions.FindAction("DeepSea/Sprint");
+        _sprintAction = _playerInput.actions.FindAction("DeepSea/Sprint");
+        _dodgeAction = _playerInput.actions.FindAction("DeepSea/Dodge");
         _ascendAction = _playerInput.actions.FindAction("DeepSea/Ascend");
         _descendAction = _playerInput.actions.FindAction("DeepSea/Descend");
     }
@@ -92,15 +110,17 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void OnEnable()
     {
         // Shift 키 입력 이벤트 구독
-        _shiftAction.started += OnShiftStarted;
-        _shiftAction.canceled += OnShiftCanceled;
+        _sprintAction.started += OnShiftStarted;
+        _sprintAction.canceled += OnShiftCanceled;
+        _dodgeAction.performed += OnDashPerformed;
     }
 
     private void OnDisable()
     {
         // Shift 키 입력 이벤트 구독 해제
-        _shiftAction.started -= OnShiftStarted;
-        _shiftAction.canceled -= OnShiftCanceled;
+        _sprintAction.started -= OnShiftStarted;
+        _sprintAction.canceled -= OnShiftCanceled;
+        _dodgeAction.performed -= OnDashPerformed;
     }
 
     private void Update()
@@ -212,11 +232,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// <param name="context"></param>
     private void OnShiftStarted(InputAction.CallbackContext context)
     {
-        _hasSprintTriggered = false; // 새로 누를 때 초기화
-
-        // 가속 전환 코루틴 시작
-        if (_currentCheckSprintHoldCoroutine != null) StopCoroutine(_currentCheckSprintHoldCoroutine);
-        _currentCheckSprintHoldCoroutine = StartCoroutine(CheckSprintHoldCoroutine());
+        _isSprintPressed = true;
     }
 
     /// <summary>
@@ -225,35 +241,23 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// <param name="context"></param>
     private void OnShiftCanceled(InputAction.CallbackContext context)
     {
-        // 코루틴 중단
-        if (_currentCheckSprintHoldCoroutine != null)
-        {
-            StopCoroutine(_currentCheckSprintHoldCoroutine);
-            _currentCheckSprintHoldCoroutine = null;
-        }
-
-        // [핵심] 뗄 때까지 가속(_isSprintPressed)이 켜진 적이 없다면 = '톡' 짧게 누른 것 -> 회피 실행!
-        if (!_hasSprintTriggered)
-        {
-            TryExecuteDash();
-        }
-
-        // 뗐으므로 가속 해제
         _isSprintPressed = false;
     }
 
     /// <summary>
-    /// 가속 임계 시간 도달 시 가속 이동 활성화 코루틴
+    /// Q키 -> 회피
     /// </summary>
-    /// <returns></returns>
-    private IEnumerator CheckSprintHoldCoroutine()
+    /// <param name="context"></param>
+    private void OnDashPerformed(InputAction.CallbackContext context)
     {
-        yield return new WaitForSeconds(holdSprintThreshold);
+        // 수면에 도달하면 회피 불가
+        if (deepSeaAreaController.CurrentZone == SeaZone.Surface)
+        {
+            Debug.Log("이미 수면에 도달했으므로 회피할 수 없습니다!");
+            return;
+        }
 
-        // 지정된 시간(0.25초) 동안 꾹 누르고 있었다면 가속 상태로 전환됨을 마킹
-        _isSprintPressed = true;
-        _hasSprintTriggered = true;
-        Debug.Log("가속 이동 시작!");
+        TryExecuteDash();
     }
 
     /// <summary>
@@ -289,8 +293,10 @@ public class DeepSeaPlayerMove : MonoBehaviour
         // 회피 방향 결정
         if (_moveDir3D.sqrMagnitude > 0.01f) // 이동 중 -> 그대로 이동 방향 사용
             _dashDirection = _moveDir3D;
-        else // 정지 -> 뒤 방향
-            _dashDirection = -transform.forward;
+        else // 정지 -> 카메라 정면 방향
+        {
+            _dashDirection = _mainCamTransform.forward;
+        }
 
         // 버블 연출을 실제 회피 방향으로 회전 후 재생
         // cameraDashBubbleFX.transform.rotation = Quaternion.LookRotation(_dashDirection);
@@ -458,16 +464,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
             else targetXRot = 90f;   // 아래로만
         }
 
-        // // y축 회전 값 계산 (아래를 볼 때 180도, 아니면 0도)
-        // if (_verticalInput < 0f)
-        // {
-        //     targetYRot = 180f;
-        // }
-        // else
-        // {
-        //     targetYRot = 0f;
-        // }
-
         // z축 회전 값 계산
         if (_moveInput.x < -0.1f) targetZRot = 45f;
         else if (_moveInput.x > 0.1f) targetZRot = -45f;
@@ -486,58 +482,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
             targetLocalRotation,
             Time.deltaTime * meshRotationSpeed
         );
-
-        // if (_verticalInput < 0f)
-        // {
-        //     // Y축 회전을 180도로 설정 (X, Z축은 기존 회전 유지)
-        //     cameraPosHead.localRotation = Quaternion.Euler(
-        //         cameraPosHead.localRotation.eulerAngles.x,
-        //         180f,
-        //         cameraPosHead.localRotation.eulerAngles.z
-        //     );
-        // }
-        // else
-        // {
-        //     // Y축 회전을 0도로 설정 (X, Z축은 기존 회전 유지)
-        //     cameraPosHead.localRotation = Quaternion.Euler(
-        //         cameraPosHead.localRotation.eulerAngles.x,
-        //         0f,
-        //         cameraPosHead.localRotation.eulerAngles.z
-        //     );
-        // }
-
-        // // 위/아래 키를 눌른 그 순간에는 즉시 -70도로 고정 (애니메이션 튀는 현상 차단)
-        // if (_ascendAction.WasPressedThisFrame() || _descendAction.WasPressedThisFrame())
-        // {
-        //     modelTransform.localRotation = targetLocalRotation;
-        // }
-        // else
-        // {
-        //     // 키를 뗐거나 이미 누르고 있는 상태에서는 0도 또는 목표 회전으로 부드럽게(Slerp) 보간
-        //     modelTransform.localRotation = Quaternion.Slerp(
-        //         modelTransform.localRotation,
-        //         targetLocalRotation,
-        //         Time.deltaTime * meshRotationSpeed
-        //     );
-        // }
-
-        // // modelTransform.localRotation = targetLocalRotation;
-
-        // // // [핵심 해결책] 위/아래 키를 '처음 누른 프레임'이라면 보간(Slerp) 없이 즉시 회전 적용!
-        // // // 애니메이션이 Idle -> Swim으로 바뀌면서 발생하는 역방향 튀는 현상을 완전 차단합니다.
-        // // if (_ascendAction.WasPressedThisFrame() || _descendAction.WasPressedThisFrame())
-        // // {
-        // //     modelTransform.localRotation = targetLocalRotation;
-        // // }
-        // // else
-        // // {
-        // //     // 이동 중이거나 가만히 있을 때는 기존처럼 부드럽게 보간
-        // //     modelTransform.localRotation = Quaternion.Slerp(
-        // //         modelTransform.localRotation,
-        // //         targetLocalRotation,
-        // //         Time.deltaTime * meshRotationSpeed
-        // //     );
-        // // }
     }
 
     #endregion
