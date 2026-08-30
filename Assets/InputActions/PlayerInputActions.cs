@@ -794,6 +794,198 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""DeepSea"",
+            ""id"": ""afd70a4e-7a4b-46ee-af9b-3a8c427d677a"",
+            ""actions"": [
+                {
+                    ""name"": ""Move"",
+                    ""type"": ""Value"",
+                    ""id"": ""4e25c3ac-18af-446d-96f3-b3651d04671c"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Look"",
+                    ""type"": ""Value"",
+                    ""id"": ""d0f17971-faf3-4bb0-8691-f88954228e8c"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Sprint"",
+                    ""type"": ""Button"",
+                    ""id"": ""7f357aa4-a416-4bf4-969f-2107f7072ee4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Ascend"",
+                    ""type"": ""Button"",
+                    ""id"": ""8d55a28b-a8f5-4609-8703-cd27ebf230b5"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""2849844b-5126-4961-9503-f2faf5447774"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Descend"",
+                    ""type"": ""Button"",
+                    ""id"": ""33617019-3eb8-4568-a375-087068a45212"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Dodge"",
+                    ""type"": ""Button"",
+                    ""id"": ""d6f6ae89-2527-4e8e-82a5-c4d2861a7321"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""605ebd73-8e9d-4e99-a574-1a6e5f9b75cf"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Look"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""cbcdf4b2-56fa-4ec6-9eed-3c3838cffd78"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""83fe9ca3-ebff-4122-8b13-ede3cc4eb935"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""c280f612-b3c0-46fa-adfc-67d4c888ae97"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""03cc6d09-2602-43a2-8c01-cd85d87dbb46"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""18769558-1060-449c-96a4-57ed1520b2e9"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""75b452b6-989d-4a15-b58e-be2ac2a88fcf"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""ToggleMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""57119da8-a85a-4c4f-b148-009e01b21c9e"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""de5d1a6a-e473-4ec6-ac7c-79b1403f918f"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Ascend"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bfeb8183-a9e5-4e38-bb10-1f8ce50bed74"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Descend"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2a5c4fd-0051-4a97-b077-678a436bbbd5"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Dodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -848,6 +1040,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Permanent = asset.FindActionMap("Permanent", throwIfNotFound: true);
         m_Permanent_ToggleInGameMenu = m_Permanent.FindAction("ToggleInGameMenu", throwIfNotFound: true);
         m_Permanent_SlotKeyPress = m_Permanent.FindAction("SlotKeyPress", throwIfNotFound: true);
+        // DeepSea
+        m_DeepSea = asset.FindActionMap("DeepSea", throwIfNotFound: true);
+        m_DeepSea_Move = m_DeepSea.FindAction("Move", throwIfNotFound: true);
+        m_DeepSea_Look = m_DeepSea.FindAction("Look", throwIfNotFound: true);
+        m_DeepSea_Sprint = m_DeepSea.FindAction("Sprint", throwIfNotFound: true);
+        m_DeepSea_Ascend = m_DeepSea.FindAction("Ascend", throwIfNotFound: true);
+        m_DeepSea_ToggleMenu = m_DeepSea.FindAction("ToggleMenu", throwIfNotFound: true);
+        m_DeepSea_Descend = m_DeepSea.FindAction("Descend", throwIfNotFound: true);
+        m_DeepSea_Dodge = m_DeepSea.FindAction("Dodge", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -855,6 +1056,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         UnityEngine.Debug.Assert(!m_Player.enabled, "This will cause a leak and performance issues, PlayerInputActions.Player.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Puzzle.enabled, "This will cause a leak and performance issues, PlayerInputActions.Puzzle.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Permanent.enabled, "This will cause a leak and performance issues, PlayerInputActions.Permanent.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_DeepSea.enabled, "This will cause a leak and performance issues, PlayerInputActions.DeepSea.Disable() has not been called.");
     }
 
     /// <summary>
@@ -1478,6 +1680,168 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="PermanentActions" /> instance referencing this action map.
     /// </summary>
     public PermanentActions @Permanent => new PermanentActions(this);
+
+    // DeepSea
+    private readonly InputActionMap m_DeepSea;
+    private List<IDeepSeaActions> m_DeepSeaActionsCallbackInterfaces = new List<IDeepSeaActions>();
+    private readonly InputAction m_DeepSea_Move;
+    private readonly InputAction m_DeepSea_Look;
+    private readonly InputAction m_DeepSea_Sprint;
+    private readonly InputAction m_DeepSea_Ascend;
+    private readonly InputAction m_DeepSea_ToggleMenu;
+    private readonly InputAction m_DeepSea_Descend;
+    private readonly InputAction m_DeepSea_Dodge;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "DeepSea".
+    /// </summary>
+    public struct DeepSeaActions
+    {
+        private @PlayerInputActions m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public DeepSeaActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Move".
+        /// </summary>
+        public InputAction @Move => m_Wrapper.m_DeepSea_Move;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Look".
+        /// </summary>
+        public InputAction @Look => m_Wrapper.m_DeepSea_Look;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Sprint".
+        /// </summary>
+        public InputAction @Sprint => m_Wrapper.m_DeepSea_Sprint;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Ascend".
+        /// </summary>
+        public InputAction @Ascend => m_Wrapper.m_DeepSea_Ascend;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/ToggleMenu".
+        /// </summary>
+        public InputAction @ToggleMenu => m_Wrapper.m_DeepSea_ToggleMenu;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Descend".
+        /// </summary>
+        public InputAction @Descend => m_Wrapper.m_DeepSea_Descend;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Dodge".
+        /// </summary>
+        public InputAction @Dodge => m_Wrapper.m_DeepSea_Dodge;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_DeepSea; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="DeepSeaActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(DeepSeaActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="DeepSeaActions" />
+        public void AddCallbacks(IDeepSeaActions instance)
+        {
+            if (instance == null || m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Add(instance);
+            @Move.started += instance.OnMove;
+            @Move.performed += instance.OnMove;
+            @Move.canceled += instance.OnMove;
+            @Look.started += instance.OnLook;
+            @Look.performed += instance.OnLook;
+            @Look.canceled += instance.OnLook;
+            @Sprint.started += instance.OnSprint;
+            @Sprint.performed += instance.OnSprint;
+            @Sprint.canceled += instance.OnSprint;
+            @Ascend.started += instance.OnAscend;
+            @Ascend.performed += instance.OnAscend;
+            @Ascend.canceled += instance.OnAscend;
+            @ToggleMenu.started += instance.OnToggleMenu;
+            @ToggleMenu.performed += instance.OnToggleMenu;
+            @ToggleMenu.canceled += instance.OnToggleMenu;
+            @Descend.started += instance.OnDescend;
+            @Descend.performed += instance.OnDescend;
+            @Descend.canceled += instance.OnDescend;
+            @Dodge.started += instance.OnDodge;
+            @Dodge.performed += instance.OnDodge;
+            @Dodge.canceled += instance.OnDodge;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="DeepSeaActions" />
+        private void UnregisterCallbacks(IDeepSeaActions instance)
+        {
+            @Move.started -= instance.OnMove;
+            @Move.performed -= instance.OnMove;
+            @Move.canceled -= instance.OnMove;
+            @Look.started -= instance.OnLook;
+            @Look.performed -= instance.OnLook;
+            @Look.canceled -= instance.OnLook;
+            @Sprint.started -= instance.OnSprint;
+            @Sprint.performed -= instance.OnSprint;
+            @Sprint.canceled -= instance.OnSprint;
+            @Ascend.started -= instance.OnAscend;
+            @Ascend.performed -= instance.OnAscend;
+            @Ascend.canceled -= instance.OnAscend;
+            @ToggleMenu.started -= instance.OnToggleMenu;
+            @ToggleMenu.performed -= instance.OnToggleMenu;
+            @ToggleMenu.canceled -= instance.OnToggleMenu;
+            @Descend.started -= instance.OnDescend;
+            @Descend.performed -= instance.OnDescend;
+            @Descend.canceled -= instance.OnDescend;
+            @Dodge.started -= instance.OnDodge;
+            @Dodge.performed -= instance.OnDodge;
+            @Dodge.canceled -= instance.OnDodge;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="DeepSeaActions.UnregisterCallbacks(IDeepSeaActions)" />.
+        /// </summary>
+        /// <seealso cref="DeepSeaActions.UnregisterCallbacks(IDeepSeaActions)" />
+        public void RemoveCallbacks(IDeepSeaActions instance)
+        {
+            if (m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="DeepSeaActions.AddCallbacks(IDeepSeaActions)" />
+        /// <seealso cref="DeepSeaActions.RemoveCallbacks(IDeepSeaActions)" />
+        /// <seealso cref="DeepSeaActions.UnregisterCallbacks(IDeepSeaActions)" />
+        public void SetCallbacks(IDeepSeaActions instance)
+        {
+            foreach (var item in m_Wrapper.m_DeepSeaActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="DeepSeaActions" /> instance referencing this action map.
+    /// </summary>
+    public DeepSeaActions @DeepSea => new DeepSeaActions(this);
     private int m_PCSchemeIndex = -1;
     /// <summary>
     /// Provides access to the input control scheme.
@@ -1703,5 +2067,62 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSlotKeyPress(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "DeepSea" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="DeepSeaActions.AddCallbacks(IDeepSeaActions)" />
+    /// <seealso cref="DeepSeaActions.RemoveCallbacks(IDeepSeaActions)" />
+    public interface IDeepSeaActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLook(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Sprint" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSprint(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Ascend" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAscend(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleMenu(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Descend" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDescend(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Dodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDodge(InputAction.CallbackContext context);
     }
 }
