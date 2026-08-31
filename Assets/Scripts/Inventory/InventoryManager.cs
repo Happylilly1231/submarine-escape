@@ -490,7 +490,10 @@ public class InventoryManager : MonoBehaviour
                 _isViewingUI = !_isViewingUI;
                 break;
             case EItemType.Wearable:
-                //FindAnyObjectByType<WearableItem>()?.Use(selectedSlot.Item);
+                if (currentEquippedItem.TryGetComponent<WearableItem>(out var wearable))
+                {
+                    wearable.Use(selectedSlot.Item);
+                }
                 break;
         }
 

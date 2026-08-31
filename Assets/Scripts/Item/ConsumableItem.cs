@@ -5,10 +5,12 @@ using UnityEngine;
 public class ConsumableItem : MonoBehaviour
 {
     private PlayerStat _playerStat;
+    private PlayerTemperature _playerTemperature;
 
     void Awake()
     {
         _playerStat = FindObjectOfType<PlayerStat>();
+        _playerTemperature = FindObjectOfType<PlayerTemperature>();
     }
 
     /// <summary>
@@ -24,10 +26,10 @@ public class ConsumableItem : MonoBehaviour
             case "Locker Key":
                 Debug.Log("사물함 열쇠 사용 - 특정 사물함 잠금 해제");
                 return false;
-            case "Flashlight Battery":
-                // 손전등 배터리 사용 로직
-                Debug.Log("손전등 배터리 교체 - 전력 100% 충전");
-                return true;
+            // case "Flashlight Battery":
+            //     // 손전등 배터리 사용 로직
+            //     Debug.Log("손전등 배터리 교체 - 전력 100% 충전");
+            //     return true;
             case "EnergyBar":
                 // 에너지바 사용 로직
                 Debug.Log("에너지바 - 5초 동안 이동 속도 20% 상승");
@@ -44,9 +46,9 @@ public class ConsumableItem : MonoBehaviour
                     Debug.Log("HP가 이미 최대로 사용할 수 없음");
                     return false;
                 }
-            case "Thermal Syringe":
-                // 열 주사기 사용 로직
-                Debug.Log("급속 체온 회복 주사기 - 심해에서 30초 동안 체온 저하 무효화");
+            case "Oxygen Tank":
+                // 산소 탱크 사용 로직
+                Debug.Log("산소 탱크 - 산소 100% 충전");
                 return true;
         }
         return false;
