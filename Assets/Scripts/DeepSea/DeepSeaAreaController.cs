@@ -9,6 +9,7 @@ public class DeepSeaAreaController : MonoBehaviour
     [SerializeField] private Transform playerTransform;
     [SerializeField] private AudioReverbFilter audioReverbFilter;
     [SerializeField] private AudioLowPassFilter lowPassFilter;
+    private AudioSource _audioSource;
 
     [Header("=== 1. Boundary Settings (XZ Circle) ===")]
     [SerializeField] private Vector3 mapCenter = Vector3.zero; // 원형 맵의 중심점
@@ -42,6 +43,11 @@ public class DeepSeaAreaController : MonoBehaviour
     private SeaZone _currentZone = SeaZone.DeepSea;
     public SeaZone CurrentZone => _currentZone;
 
+    private void Awake()
+    {
+        _audioSource = GetComponent<AudioSource>();
+    }
+
     private void Start()
     {
         if (playerTransform == null)
@@ -69,6 +75,11 @@ public class DeepSeaAreaController : MonoBehaviour
 
         ClampPlayerPosition();
         CheckDepthAndSwitchEnvironment();
+    }
+
+    private void OnDisable()
+    {
+        _audioSource.Stop();
     }
 
     // 초기화 및 실시간 영역 체크용 메소드

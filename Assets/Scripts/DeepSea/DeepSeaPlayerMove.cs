@@ -1,7 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
 public class DeepSeaPlayerMove : MonoBehaviour
@@ -13,15 +18,18 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private CapsuleCollider capsuleCollider; // 콜라이더 (모델)
     [SerializeField] private DeepSeaAreaController deepSeaAreaController; // 심해 구역 컨트롤러 (수면 높이 값 필요해서)
     [SerializeField] private ParticleSystem cameraDashBubbleFX; // 버블 파티클
-    [SerializeField] private Transform cameraPosHead; // 머리 카메라 위치
+    [SerializeField] private DeepSeaCameraController deepSeaCameraController;
+    [SerializeField] private Volume damagedVolume;
 
     [Header("이동")]
     [SerializeField] private float normalSpeed = 6f; // 기본 이동 속도
     [SerializeField] private float sprintSpeed = 9.5f; // 가속 이동 속도
     [SerializeField] private float slowSpeed = 4.2f; // 느려질 때 속도
-    private float meshRotationSpeed = 8f; // 메쉬(모델) 회전 속도
+    [SerializeField] private float dragDownSpeed = 4f; // 끌려 내려갈 때 속도
+    [SerializeField] private float meshRotationSpeed = 4f; // 메쉬(모델) 회전 속도
     private Vector3 _moveDir2D; // 2차원(X, Z) 이동 방향
     private Vector3 _moveDir3D; // 3차원(X, Y, Z) 이동 방향
+    private float _xRotation = 0f; // 카메라 상하 회전값 (Pitch)
 
     [Header("회피")]
     [SerializeField] private float dashForce = 12f; // 회피 속도
@@ -32,22 +40,37 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [Header("산소")]
     [SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
     [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
+    [SerializeField] private float abnormalOxygenCostPerSec = 5f; // 비정상 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
+
+    [SerializeField] private GameObject dragDownUI;
+    [SerializeField] private Image leftTimeImage;
+    [SerializeField] private TextMeshProUGUI spaceCountText;
 
     // 입력
     private PlayerInput _playerInput;
     private InputAction _moveAction;
     private InputAction _lookAction;
     private InputAction _sprintAction;
-    private InputAction _dodgeAction;
     private InputAction _ascendAction;
-    private InputAction _descendAction;
     private Vector2 _moveInput; // 2차원 이동 입력
     private float _verticalInput = 0f; // 상하 이동 입력
 
     // 애니메이션
     private readonly int _isCrawlSwimmingHash = Animator.StringToHash("IsCrawlSwimming");
     private readonly int _swimSpeedHash = Animator.StringToHash("SwimSpeed");
+
+    // 붙잡힘
+    private bool _isGrabbed = false;
+    private float _qteTimeLimit = 3f; // QTE 제한 시간
+    private int _requiredSpaceCount = 10; // 필요한 Space 연타 횟수
+    private int _currentSpaceCount = 0; // 현재 스페이스 개수
+    private float _qteTimer = 0f; // 현재 QTE 타이머
+    public event Action OnGrabQTESuccess; // 잡혔을 때 탈출 QTE 성공 이벤트
+    public event Action OnGrabQTEFailed; // 잡혔을 때 탈출 QTE 실패 이벤트
+
+    // 대미지
+    private bool _isKnockedBack = false; // 넉백 상태 플래그
 
     // 기타
     private Rigidbody _rb;
@@ -68,6 +91,12 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public float MouseY { get; private set; } // 마우스 상하 값
     public bool IsDashing { get; private set; } = false; // 회피 중인지 여부
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
+    public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
+
+    public bool CanVerticalMove { get; set; } = true;
+    public bool CanMove { get; set; } = true;
+
+    public float CurrentSpeedMultiplier { get; private set; } = 1f;
 
     /// <summary>
     /// 게임 표기용 현재 수심 (1/2배 적용된 Y좌표 - 수심 350 ~ 0m(수면))
@@ -89,6 +118,10 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     #endregion
 
+    // 이벤트
+    public event Action OnReachedFinalPatternDepth; // 최종 패턴 시작 수심에 도달했을 시
+
+
 
     #region 생명주기
 
@@ -99,33 +132,53 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
         // 입력 관련 변수 가져오기
         _playerInput = GetComponent<PlayerInput>();
-        _moveAction = _playerInput.actions.FindAction("DeepSea/Move");
-        _lookAction = _playerInput.actions.FindAction("DeepSea/Look");
+        _moveAction = _playerInput.actions.FindAction("DeepSea_Move");
+        _lookAction = _playerInput.actions.FindAction("DeepSea_Look");
         _sprintAction = _playerInput.actions.FindAction("DeepSea/Sprint");
-        _dodgeAction = _playerInput.actions.FindAction("DeepSea/Dodge");
         _ascendAction = _playerInput.actions.FindAction("DeepSea/Ascend");
-        _descendAction = _playerInput.actions.FindAction("DeepSea/Descend");
     }
 
     private void OnEnable()
     {
         // Shift 키 입력 이벤트 구독
-        _sprintAction.started += OnShiftStarted;
-        _sprintAction.canceled += OnShiftCanceled;
-        _dodgeAction.performed += OnDashPerformed;
+        _sprintAction.performed += OnSprintActionPerformed;
+        _sprintAction.canceled += OnSprintActionCanceled;
     }
 
     private void OnDisable()
     {
         // Shift 키 입력 이벤트 구독 해제
-        _sprintAction.started -= OnShiftStarted;
-        _sprintAction.canceled -= OnShiftCanceled;
-        _dodgeAction.performed -= OnDashPerformed;
+        _sprintAction.performed -= OnSprintActionPerformed;
+        _sprintAction.canceled -= OnSprintActionCanceled;
     }
 
     private void Update()
     {
         if (GameManager.instance.IsPausing) return;
+
+        // 산소 소모
+        if (IsSprinting)
+        {
+            ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
+        }
+        else if (IsOxgenNonSafe)
+        {
+            ConsumeOxygen(abnormalOxygenCostPerSec * Time.fixedDeltaTime);
+        }
+        else
+        {
+            // 평소에도 지속해서 기본 산소 감소
+            ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime);
+        }
+
+        // 괴물에게 잡힌 상태일 때 -> QTE 입력만 받음 & 이동 불가
+        if (_isGrabbed)
+        {
+            HandleGrabQTE();
+            return;
+        }
+
+        if (_isKnockedBack) return; // 넉백 중에는 회전 및 조작 입력 무시
 
         ReadInputs(); // 입력 가져오기
         Rotate(); // 좌우 회전
@@ -136,6 +189,16 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void FixedUpdate()
     {
         if (GameManager.instance.IsPausing) return;
+
+        // 잡혔을 때 -> 괴물과 똑같은 속도로 아래로 이동
+        if (_isGrabbed)
+        {
+            Vector3 nextPos = _rb.position + Vector3.down * dragDownSpeed * Time.fixedDeltaTime;
+            _rb.MovePosition(nextPos);
+            return;
+        }
+
+        if (_isKnockedBack) return; // 넉백 중에는 Rigidbody 물리 이동 중단
 
         Move(); // Rigidbody를 이용한 이동
     }
@@ -176,50 +239,46 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// </summary>
     private void ReadInputs()
     {
-        _moveInput = _moveAction.ReadValue<Vector2>();
+        if (!CanMove)
+            _moveInput = Vector2.zero;
+        else
+            _moveInput = _moveAction.ReadValue<Vector2>();
 
         // 상승/하강 현재 프레임에 눌려있는지 여부
         bool ascendNow = _ascendAction.IsPressed();
-        bool descendNow = _descendAction.IsPressed();
 
         // 수면 위인지 체크
         bool isAtSurface = transform.position.y >= deepSeaAreaController.SurfaceY;
 
-        if (isAtSurface) // 수면 위 -> 상하 이동 불가
+        if (!CanVerticalMove || !CanMove || isAtSurface) // 상하 이동 불가 or 수면 위 -> 상하 이동 불가
         {
             _verticalInput = 0f;
         }
         else // 수면 아래
         {
-            // 1. 둘 다 누르고 있을 때: 기존에 잡혀있던 입력(_verticalInput)을 계속 유지 (나중에 누른 키 무시)
-            if (ascendNow && descendNow)
-            {
-                // 만약 아무것도 안 누른 상태에서 두 키가 완전히 동시 입력되었다면 상승 기본값 적용
-                if (_verticalInput == 0f)
-                    _verticalInput = 1f;
-            }
-            // 2. 상승 키만 누르고 있거나, (둘 다 누르다가 하강 키를 떼서 상승 키만 남았을 때)
-            else if (ascendNow)
+            if (ascendNow)
             {
                 _verticalInput = 1f;
             }
-            // 3. 하강 키만 누르고 있거나, (둘 다 누르다가 상승 키를 떼서 하강 키만 남았을 때)
-            else if (descendNow)
-            {
-                _verticalInput = -1f;
-            }
-            // 4. 아무것도 안 누르고 있을 때
             else
             {
                 _verticalInput = 0f;
             }
         }
 
-        // 시야 입력 처리
-        Vector2 lookInput = _lookAction.ReadValue<Vector2>();
-        float sensitivity = GameManager.instance.MouseSensitivity;
-        MouseX = lookInput.x * sensitivity;
-        MouseY = lookInput.y * sensitivity;
+        if (!CanMove)
+        {
+            MouseX = 0f;
+            MouseY = 0f;
+        }
+        else
+        {
+            // 시야 입력 처리
+            Vector2 lookInput = _lookAction.ReadValue<Vector2>();
+            float sensitivity = GameManager.instance.MouseSensitivity;
+            MouseX = lookInput.x * sensitivity;
+            MouseY = lookInput.y * sensitivity;
+        }
     }
 
     #endregion
@@ -227,37 +286,39 @@ public class DeepSeaPlayerMove : MonoBehaviour
     #region Shift - 회피/가속
 
     /// <summary>
-    /// Shift를 누르는 순간 실행
+    /// Tap(0.25초 전 뗌) 또는 Hold(0.25초 꾹 누름) 조건이 달성되었을 때 실행
     /// </summary>
-    /// <param name="context"></param>
-    private void OnShiftStarted(InputAction.CallbackContext context)
+    private void OnSprintActionPerformed(InputAction.CallbackContext context)
     {
-        _isSprintPressed = true;
-    }
-
-    /// <summary>
-    /// Shift를 떼는 순간 실행
-    /// </summary>
-    /// <param name="context"></param>
-    private void OnShiftCanceled(InputAction.CallbackContext context)
-    {
-        _isSprintPressed = false;
-    }
-
-    /// <summary>
-    /// Q키 -> 회피
-    /// </summary>
-    /// <param name="context"></param>
-    private void OnDashPerformed(InputAction.CallbackContext context)
-    {
-        // 수면에 도달하면 회피 불가
-        if (deepSeaAreaController.CurrentZone == SeaZone.Surface)
+        // Case 1: 0.25초가 되기 전에 손을 떼서 'Tap(회피)'이 발동한 경우
+        if (context.interaction is UnityEngine.InputSystem.Interactions.TapInteraction)
         {
-            Debug.Log("이미 수면에 도달했으므로 회피할 수 없습니다!");
-            return;
+            // 수면에 도달하면 회피 불가 (기존 예외 처리 그대로 유지)
+            if (deepSeaAreaController.CurrentZone == SeaZone.Surface)
+            {
+                Debug.Log("이미 수면에 도달했으므로 회피할 수 없습니다!");
+                return;
+            }
+
+            TryExecuteDash(); // 회피 함수 실행
         }
 
-        TryExecuteDash();
+        // Case 2: 손을 떼지 않고 0.25초를 채워서 'Hold(가속)'가 발동한 경우
+        else if (context.interaction is UnityEngine.InputSystem.Interactions.HoldInteraction)
+        {
+            _isSprintPressed = true; // 가속 이동 활성화 플래그 ON
+            Debug.Log("0.25초 경과: 가속 이동 시작!");
+        }
+    }
+
+    /// <summary>
+    /// 유저가 키에서 손을 떼는 순간 실행
+    /// </summary>
+    private void OnSprintActionCanceled(InputAction.CallbackContext context)
+    {
+        // Hold(가속) 상태에서 손을 떼었거나, 애매한 타이밍(0.25초 경계선)에 떼어졌을 때 안전하게 가속 OFF
+        _isSprintPressed = false;
+        Debug.Log("Shift 키 입력 종료: 가속 이동 중지");
     }
 
     /// <summary>
@@ -365,19 +426,22 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// </summary>
     private void Move()
     {
-        // // 카메라 방향 가져오기
-        // Vector3 camForward = Vector3.ProjectOnPlane(_mainCam.forward, Vector3.up).normalized; // 상하 성분 제거 (그냥 앞뒤좌우 이동할 때는 카메라 정면 방향에 따라 상하 이동이 불가해야 하므로)
-        // Vector3 camRight = _mainCam.right;
+        // 3차원 이동 방향
+        if (_verticalInput == 1f)
+            _moveDir3D = (transform.forward * _moveInput.y + transform.right * _moveInput.x).normalized; // 트랜스폼 기준
+        else
+            _moveDir3D = (_mainCamTransform.forward * _moveInput.y + _mainCamTransform.right * _moveInput.x).normalized; // 카메라 정면 방향
 
-        // 2차원 이동 방향 - 카메라 정면 방향 기준 앞뒤좌우 (상하 X)
-        _moveDir2D = (transform.forward * _moveInput.y + transform.right * _moveInput.x).normalized;
+        // 2차원 방향
+        _moveDir2D = _moveDir3D;
+        _moveDir2D.y = 0f;
+        _moveDir2D = _moveDir2D.normalized;
 
-        // 3차원 이동 방향 - 2차원 이동 방향 + 수직 이동 방향
-        _moveDir3D = _moveDir2D;
-        _moveDir3D.y = _verticalInput;
-        if (_moveDir3D.sqrMagnitude > 0.01f)
+        // 상승 중일 때 무조건 상승하게 만듦
+        if (_verticalInput == 1f)
         {
-            _moveDir3D.Normalize();
+            _moveDir3D.y = 1f;
+            _moveDir3D = _moveDir3D.normalized;
         }
 
         // 현재 가속 이동 중인지 여부 갱신
@@ -393,18 +457,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
         else
         {
             float currentSpeed = IsSprinting ? sprintSpeed : normalSpeed;
+            currentSpeed *= CurrentSpeedMultiplier;
             targetVelocity = _moveDir3D * currentSpeed;
-        }
-
-        // 산소 소모
-        if (IsSprinting)
-        {
-            ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
-        }
-        else
-        {
-            // 평소에도 지속해서 기본 산소 감소
-            ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime);
         }
 
         // MovePosition으로 변경 (현재 위치 + (속도 * 시간 delta))
@@ -426,19 +480,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
         // 가속 이동, 회피 여부에 따라 애니메이션 Multiplier 변수값 지정
         float speedMultiplier = IsSprinting ? 1.5f : (IsDashing ? 2.0f : 1.0f);
+        speedMultiplier *= CurrentSpeedMultiplier;
         animator.SetFloat(_swimSpeedHash, speedMultiplier);
-
-        // // 콜라이더 변경
-        // if (isSwimming)
-        // {
-        //     capsuleCollider.direction = 2; // Z-Axis (수영 상태)
-        //     capsuleCollider.center = _swimmingCenter;
-        // }
-        // else
-        // {
-        //     capsuleCollider.direction = 1; // Y-Axis (서있는 상태)
-        //     capsuleCollider.center = _standingCenter;
-        // }
     }
 
     /// <summary>
@@ -451,17 +494,23 @@ public class DeepSeaPlayerMove : MonoBehaviour
         float targetZRot = 0f;
 
         // x축 회전 값 계산
-        if (_verticalInput > 0f) // 위
+        if (Mathf.Abs(_moveInput.x) < 0.1f)
         {
-            if (_moveInput.y > 0.1f) targetXRot = 30f;  // 위 + 앞
-            else if (_moveInput.y < -0.1f) targetXRot = -30f; // 위 + 뒤
-            else targetXRot = 0f;  // 위로만
-        }
-        else if (_verticalInput < 0f) // 아래
-        {
-            if (_moveInput.y > 0.1f) targetXRot = 120f;   // 아래 + 앞
-            else if (_moveInput.y < -0.1f) targetXRot = 120f;  // 아래 + 뒤
-            else targetXRot = 90f;   // 아래로만
+            if (_verticalInput == 1f)
+            {
+                if (_moveInput.y > 0.1f) // 앞으로 가고 있으면
+                {
+                    targetXRot = 30f;
+                }
+            }
+            else if (_moveDir3D.sqrMagnitude > 0.01f)
+            {
+                // targetXRot = _mainCamTransform.eulerAngles.x;
+
+                _xRotation -= MouseY;
+                _xRotation = Mathf.Clamp(_xRotation, deepSeaCameraController.MinPitch, deepSeaCameraController.MaxPitch);
+                targetXRot = _xRotation;
+            }
         }
 
         // z축 회전 값 계산
@@ -485,4 +534,108 @@ public class DeepSeaPlayerMove : MonoBehaviour
     }
 
     #endregion
+
+    #region 붙잡힘 (탈출 QTE)
+
+    /// <summary>
+    /// 괴물이 플레이어를 붙잡았을 때 호출 -> 탈출 위한 QTE 시작
+    /// </summary>
+    public void StartGrabQTE()
+    {
+        _isGrabbed = true;
+        _currentSpaceCount = 0;
+        _qteTimer = 0f;
+
+        dragDownUI.SetActive(true); // UI 활성화
+        leftTimeImage.fillAmount = 1f;
+        spaceCountText.text = "0";
+    }
+
+    /// <summary>
+    /// 붙잡혔을 때 탈출하는 QTE 입력 받기
+    /// </summary>
+    private void HandleGrabQTE()
+    {
+        // 타이머 증가
+        _qteTimer += Time.deltaTime;
+        leftTimeImage.fillAmount = Mathf.Clamp01((_qteTimeLimit - _qteTimer) / _qteTimeLimit);
+
+        // Space 키 입력 감지
+        if (_ascendAction != null && _ascendAction.WasPressedThisFrame())
+        {
+            _currentSpaceCount++; // 눌렀으므로 카운트 증가
+            spaceCountText.text = $"{_currentSpaceCount}";
+            Debug.Log("스페이스 횟수: " + _currentSpaceCount + " / 남은 시간: " + (_qteTimeLimit - _qteTimer));
+
+            // 제한 시간 내 목표 횟수 달성 -> 성공
+            if (_currentSpaceCount >= _requiredSpaceCount)
+            {
+                _isGrabbed = false; // 붙잡힘 상태 해제
+                deepSeaCameraController.SetInputEnabled(true);
+                dragDownUI.SetActive(false); // UI 비활성화
+                OnGrabQTESuccess?.Invoke(); // 괴물에게 QTE 성공 알림
+                return;
+            }
+        }
+
+        // 제한 시간 초과 -> 실패
+        if (_qteTimer >= _qteTimeLimit)
+        {
+            deepSeaCameraController.SetInputEnabled(true);
+            dragDownUI.SetActive(false); // UI 비활성화
+
+            // 붙잡힘 상태 해제하지 않음
+            OnGrabQTEFailed?.Invoke(); // 괴물에게 QTE 실패 알림
+        }
+    }
+
+    #endregion
+
+    #region 대미지 받았을 때
+
+    public void TakeDamage(float amount)
+    {
+        Debug.Log("대미지 입음!");
+        ConsumeOxygen(amount);
+        DOTween.To(() => damagedVolume.weight, x => damagedVolume.weight = x, 1f, 0.5f)
+            .OnComplete(() =>
+            {
+                DOTween.To(() => damagedVolume.weight, x => damagedVolume.weight = x, 0f, 0.5f);
+            });
+    }
+
+    public void ApplyKnockback(Vector3 hitDirection, float distance = 2.5f, float duration = 0.25f)
+    {
+        _isKnockedBack = true;
+
+        transform.DOKill();
+
+        // 밀려날 목표 위치 계산
+        Vector3 targetPos = transform.position + (hitDirection.normalized * distance);
+
+        // DOTween을 사용한 수중 넉백 (OutCubic으로 밀리다가 스르륵 멈춤)
+        transform.DOMove(targetPos, duration)
+            .SetEase(Ease.OutBack, overshoot: 1.2f)
+            .OnComplete(() => _isKnockedBack = false) // 넉백 종료 시 조작 복구
+            .OnKill(() => _isKnockedBack = false);
+    }
+
+    public void TriggerHitStop(float duration)
+    {
+        StartCoroutine(HitStopCoroutine(duration));
+    }
+
+    private IEnumerator HitStopCoroutine(float duration)
+    {
+        Time.timeScale = 0.0f;
+        yield return new WaitForSecondsRealtime(duration); // Realtime 사용 필수
+        Time.timeScale = 1.0f;
+    }
+
+    #endregion
+
+    public void SetSpeedMultiplier(float value)
+    {
+        CurrentSpeedMultiplier = value;
+    }
 }

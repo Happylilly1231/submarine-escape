@@ -23,6 +23,11 @@ public class StateMachine<T>
         _currentState?.Update(_owner);
     }
 
+    public void FixedUpdate()
+    {
+        _currentState?.FixedUpdate(_owner);
+    }
+
     // 현재 상태 종료 함수(-> 상태 머신을 2개 사용하기 때문에 다른 상태머신으로 ChangeState할 때 현재 상태머신을 그냥 종료하기 위해 필요)
     public void ExitState()
     {
