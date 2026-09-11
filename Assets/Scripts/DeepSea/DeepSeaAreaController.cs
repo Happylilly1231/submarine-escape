@@ -179,23 +179,26 @@ public class DeepSeaAreaController : MonoBehaviour
             }
         }
 
-        // 수면 도달 시 부유물 파티클 비활성화
-        if (floatingParticles != null)
+        // 수면 도달 시
+        if (zone == SeaZone.Surface)
         {
-            if (zone == SeaZone.Surface)
-            {
-                floatingParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
-            else
-            {
-                // 다시 바다 속으로 들어오면 재생
-                var emission = floatingParticles.emission;
-                emission.enabled = true;
-
-                if (!floatingParticles.isPlaying)
-                    floatingParticles.Play();
-            }
+            if (floatingParticles != null)
+                floatingParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); // 부유물 파티클 중지
+            RenderSettings.fog = false; // 안개 제거
+            Camera.main.GetComponent<DeepSeaCameraController>().cameraLight.enabled = false; // 조명 끄기
         }
+        // else
+        // {
+        //     if (floatingParticles != null)
+        //     {
+        //         // 다시 바다 속으로 들어오면 재생
+        //         var emission = floatingParticles.emission;
+        //         emission.enabled = true;
+
+        //         if (!floatingParticles.isPlaying)
+        //             floatingParticles.Play();
+        //     }
+        // }
     }
 
     private void OnDrawGizmosSelected()

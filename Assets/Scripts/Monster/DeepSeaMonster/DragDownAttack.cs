@@ -11,7 +11,7 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
     public override float DamageAmount => 20f;
     public override float MoveTimeout => AttackDistance / MoveSpeed;
     public override float AttackDistance => 30f;
-    public override string AnimationName => "attack5";
+    public override string AnimationTriggerName => "attack5";
 
     public Vector3 moveDir;
 
@@ -24,7 +24,7 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
     {
         moveTimer = 0f;
 
-        monster.DeepSeaPlayerMove.SetSpeedMultiplier(0.3f);
+        monster.DeepSeaPlayerMove.SetSpeedMultiplier(0.1f);
     }
 
     public override bool UpdateMovement()
@@ -45,9 +45,6 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
         {
             // 이동 방향을 향하는 목표 회전값 계산
             Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-
-            // 즉시 돌리고 싶다면:
-            // rb.MoveRotation(targetRotation);
 
             float rotateSpeed = 10f; // 회전 속도 변수
             Quaternion nextRotation = Quaternion.Slerp(rb.rotation, targetRotation, Time.fixedDeltaTime * rotateSpeed);

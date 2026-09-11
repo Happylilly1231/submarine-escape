@@ -15,7 +15,7 @@ public abstract class DeepSeaMonsterAttackBase
     public abstract float MoveTimeout { get; }
     public abstract float AttackDistance { get; }
     public abstract float DamageAmount { get; }
-    public abstract string AnimationName { get; }
+    public abstract string AnimationTriggerName { get; }
 
     /// <summary>
     /// 생성자

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 
@@ -15,16 +16,20 @@ namespace DeepSeaMonsterStates
         {
             _monster = owner;
 
+            owner.deepSeaPlayerMove.CanMove = false; // 플레이어 이동 정지
+            owner.deepSeaPlayerMove.ResetModelRotation();
+
             owner.transform.position = owner.playerGrabPos.position;
+            owner.transform.LookAt(owner.playerGrabPos.position + Vector3.up * 5f);
+
+            owner.CameraController.SetInputEnabled(false); // 카메라 조작 불가능
+            owner.StartCoroutine(owner.CameraController.Routine_LookAtPosition(owner.transform.position, 0.5f));
 
             owner.DeepSeaPlayerMove.OnGrabQTESuccess += OnPlayerQTESuccess;
             owner.DeepSeaPlayerMove.OnGrabQTEFailed += OnPlayerQTEFailed;
 
             // 플레이어를 붙잡힘 상태로 만듦 -> 플레이어에서 QTE 로직 처리
             owner.DeepSeaPlayerMove.StartGrabQTE();
-
-            owner.CameraController.SetInputEnabled(false);
-            owner.CameraController.RotateToTargetPos(owner.transform.position, 0.5f);
         }
 
         public void Update(DeepSeaMonsterController owner)
@@ -40,6 +45,8 @@ namespace DeepSeaMonsterStates
 
         public void Exit(DeepSeaMonsterController owner)
         {
+            owner.deepSeaPlayerMove.CanMove = true; // 플레이어 이동 가능
+            owner.CameraController.SetInputEnabled(true); // 카메라 조작 가능
             owner.DeepSeaPlayerMove.OnGrabQTESuccess -= OnPlayerQTESuccess;
             owner.DeepSeaPlayerMove.OnGrabQTEFailed -= OnPlayerQTEFailed;
         }

@@ -16,7 +16,7 @@ public class DeepSeaMonsterController : MonoBehaviour
     public DeepSeaCameraController CameraController => deepSeaCameraController;
     [SerializeField] private Transform playerTransform;
     public Transform PlayerTransform => playerTransform;
-    [SerializeField] private DeepSeaPlayerMove deepSeaPlayerMove;
+    public DeepSeaPlayerMove deepSeaPlayerMove;
     public Transform playerGrabPos;
     public LayerMask obstacleLayerMask;
     public GameObject monsterGeo; // 몬스터 외형 모습

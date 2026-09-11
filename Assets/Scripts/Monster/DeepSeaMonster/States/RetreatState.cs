@@ -9,7 +9,7 @@ namespace DeepSeaMonsterStates
     {
         private Vector3 _retreatDirection;
         private float _retreatTimer;
-        private float _retreatSpeed = 10f;
+        private float _retreatSpeed = 30f;
         private float _rotateSpeed = 10f; // 회전 속도
 
         public void Enter(DeepSeaMonsterController owner)

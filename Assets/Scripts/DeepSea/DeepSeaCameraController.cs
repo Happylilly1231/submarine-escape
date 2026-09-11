@@ -56,33 +56,33 @@ public class DeepSeaCameraController : MonoBehaviour
         transform.rotation = Quaternion.Euler(_xRotation, targetYaw, 0f);
     }
 
-    /// <summary>
-    /// FOV 반동을 포함한 카메라 셰이크
-    /// </summary>
-    public void ShakeCameraWithFOV(float duration = 0.25f, float strength = 0.4f, float fovImpact = 6f)
-    {
-        KillActiveTween();
-        SetInputEnabled(false);
+    // /// <summary>
+    // /// FOV 반동을 포함한 카메라 셰이크
+    // /// </summary>
+    // public void ShakeCameraWithFOV(float duration = 0.25f, float strength = 0.4f, float fovImpact = 6f)
+    // {
+    //     KillActiveTween();
+    //     SetInputEnabled(false);
 
-        if (mainCamera == null) mainCamera = Camera.main;
-        float defaultFov = mainCamera.fieldOfView;
+    //     if (mainCamera == null) mainCamera = Camera.main;
+    //     float defaultFov = mainCamera.fieldOfView;
 
-        // 1. 위치 셰이크
-        _shakeTween = transform.DOShakePosition(duration, strength, vibrato: 20, randomness: 90f)
-            .SetUpdate(true)
-            .OnComplete(() => SetInputEnabled(true))
-            .OnKill(() => SetInputEnabled(true));
+    //     // 1. 위치 셰이크
+    //     _shakeTween = transform.DOShakePosition(duration, strength, vibrato: 20, randomness: 90f)
+    //         .SetUpdate(true)
+    //         .OnComplete(() => SetInputEnabled(true))
+    //         .OnKill(() => SetInputEnabled(true));
 
-        // 2. FOV 순간 팽창 후 복귀 (충격 시 순간 줌아웃 -> 복귀)
-        _fovTween = mainCamera.DOFieldOfView(defaultFov + fovImpact, 0.05f)
-            .SetUpdate(true)
-            .OnComplete(() =>
-            {
-                mainCamera.DOFieldOfView(defaultFov, duration - 0.05f)
-                    .SetEase(Ease.OutQuad)
-                    .SetUpdate(true);
-            });
-    }
+    //     // 2. FOV 순간 팽창 후 복귀 (충격 시 순간 줌아웃 -> 복귀)
+    //     _fovTween = mainCamera.DOFieldOfView(defaultFov + fovImpact, 0.05f)
+    //         .SetUpdate(true)
+    //         .OnComplete(() =>
+    //         {
+    //             mainCamera.DOFieldOfView(defaultFov, duration - 0.05f)
+    //                 .SetEase(Ease.OutQuad)
+    //                 .SetUpdate(true);
+    //         });
+    // }
 
     /// <summary>
     /// 특정 World 위치(Vector3)를 부드럽게 바라봅니다.
@@ -198,6 +198,7 @@ public class DeepSeaCameraController : MonoBehaviour
 
         // 내부 X축 회전 변수 동기화 및 제한 적용
         _xRotation = Mathf.Clamp(targetPitch, minPitch, maxPitch);
+        playerMove.XRotation = _xRotation;
 
         // 3. 카메라 회전 즉시 적용
         float targetYaw = playerMove.transform.eulerAngles.y;
@@ -248,6 +249,7 @@ public class DeepSeaCameraController : MonoBehaviour
 
             // 카메라 X축(Pitch) 부드러운 회전 및 내부 변수 동기화
             _xRotation = Mathf.Lerp(startPitch, targetPitch, t);
+            playerMove.XRotation = _xRotation;
 
             yield return null;
         }

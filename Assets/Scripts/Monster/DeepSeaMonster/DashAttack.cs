@@ -11,7 +11,7 @@ public class DashAttack : DeepSeaMonsterAttackBase
     public override float DamageAmount => 20f;
     public override float MoveTimeout => moveTimeout;
     public override float AttackDistance => 40f;
-    public override string AnimationName => "attack2";
+    public override string AnimationTriggerName => "attack2";
 
     public Vector3 moveDir;
     public float slowMoveTime = 1f;
@@ -30,7 +30,7 @@ public class DashAttack : DeepSeaMonsterAttackBase
         // 스폰되자마자 괴물을 바라보도록 카메라 회전 (회전하는 동안만 고정이고, 이후 조작 자유)
         monster.CameraController.RotateToTargetPos(monster.transform.position, 1f);
 
-        monster.DeepSeaPlayerMove.SetSpeedMultiplier(0.3f);
+        monster.DeepSeaPlayerMove.SetSpeedMultiplier(0.1f);
 
         // // 스폰 당시 플레이어 위치로 직선 이동할 수 있도록, 스폰하자마자 이동 방향 확정
         // moveDir = (playerTransform.position - monster.transform.position).normalized;

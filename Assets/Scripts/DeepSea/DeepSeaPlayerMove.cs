@@ -29,7 +29,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private float meshRotationSpeed = 4f; // 메쉬(모델) 회전 속도
     private Vector3 _moveDir2D; // 2차원(X, Z) 이동 방향
     private Vector3 _moveDir3D; // 3차원(X, Y, Z) 이동 방향
-    private float _xRotation = 0f; // 카메라 상하 회전값 (Pitch)
+    public float XRotation { get; set; } = 0f; // 카메라 상하 회전값 (Pitch)
 
     [Header("회피")]
     [SerializeField] private float dashForce = 12f; // 회피 속도
@@ -93,7 +93,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
     public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
 
-    public bool CanVerticalMove { get; set; } = true;
     public bool CanMove { get; set; } = true;
 
     public float CurrentSpeedMultiplier { get; private set; } = 1f;
@@ -117,11 +116,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
     }
 
     #endregion
-
-    // 이벤트
-    public event Action OnReachedFinalPatternDepth; // 최종 패턴 시작 수심에 도달했을 시
-
-
 
     #region 생명주기
 
@@ -182,7 +176,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
         ReadInputs(); // 입력 가져오기
         Rotate(); // 좌우 회전
-        UpdateAnimationAndCollider(); // 애니메이션 & 콜라이더 업데이트
+        UpdateAnimation(); // 애니메이션 & 콜라이더 업데이트
         UpdateModelRotation(); // 모델 회전 업데이트
     }
 
@@ -217,7 +211,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
         if (CurrentOxygen == 0f)
         {
             Debug.Log("=== Game Over ===");
-            // GameManager.instance.GameOver(EEndingType.MonsterDeath); // 임시로 괴물한테 죽음 엔딩으로 해놓음
+            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 임시로 괴물한테 죽음 엔딩으로 해놓음
         }
     }
 
@@ -239,46 +233,36 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// </summary>
     private void ReadInputs()
     {
+        // 이동 불가 -> 입력 다 0으로 만듦
         if (!CanMove)
+        {
             _moveInput = Vector2.zero;
-        else
-            _moveInput = _moveAction.ReadValue<Vector2>();
+            _verticalInput = 0f;
+            MouseX = 0f;
+            MouseY = 0f;
+            return;
+        }
 
-        // 상승/하강 현재 프레임에 눌려있는지 여부
-        bool ascendNow = _ascendAction.IsPressed();
+        // WASD
+        _moveInput = _moveAction.ReadValue<Vector2>();
 
-        // 수면 위인지 체크
-        bool isAtSurface = transform.position.y >= deepSeaAreaController.SurfaceY;
-
-        if (!CanVerticalMove || !CanMove || isAtSurface) // 상하 이동 불가 or 수면 위 -> 상하 이동 불가
+        if (deepSeaAreaController.CurrentZone == SeaZone.Surface) // 수면 위 -> 상하 이동 불가
         {
             _verticalInput = 0f;
         }
         else // 수면 아래
         {
-            if (ascendNow)
-            {
+            if (_ascendAction.IsPressed()) // 상승 키 눌렀을 때는 무조건 상승
                 _verticalInput = 1f;
-            }
             else
-            {
                 _verticalInput = 0f;
-            }
         }
 
-        if (!CanMove)
-        {
-            MouseX = 0f;
-            MouseY = 0f;
-        }
-        else
-        {
-            // 시야 입력 처리
-            Vector2 lookInput = _lookAction.ReadValue<Vector2>();
-            float sensitivity = GameManager.instance.MouseSensitivity;
-            MouseX = lookInput.x * sensitivity;
-            MouseY = lookInput.y * sensitivity;
-        }
+        // 시야 입력 처리
+        Vector2 lookInput = _lookAction.ReadValue<Vector2>();
+        float sensitivity = GameManager.instance.MouseSensitivity;
+        MouseX = lookInput.x * sensitivity;
+        MouseY = lookInput.y * sensitivity;
     }
 
     #endregion
@@ -359,8 +343,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
             _dashDirection = _mainCamTransform.forward;
         }
 
-        // 버블 연출을 실제 회피 방향으로 회전 후 재생
-        // cameraDashBubbleFX.transform.rotation = Quaternion.LookRotation(_dashDirection);
+        // 버블 파티클 재생
         cameraDashBubbleFX.Play();
 
         // FOV 연출
@@ -427,22 +410,27 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void Move()
     {
         // 3차원 이동 방향
-        if (_verticalInput == 1f)
+        if (_verticalInput == 1f) // 상승 키 -> 트랜스폼 기준, 무조건 상승
+        {
             _moveDir3D = (transform.forward * _moveInput.y + transform.right * _moveInput.x).normalized; // 트랜스폼 기준
-        else
+            _moveDir3D.y = 1f;
+            _moveDir3D = _moveDir3D.normalized;
+        }
+        else if (deepSeaAreaController.CurrentZone == SeaZone.Surface) // 수면 위-> 트랜스폼 기준, 무조건 상하 이동 금지
+        {
+            _moveDir3D = (transform.forward * _moveInput.y + transform.right * _moveInput.x).normalized; // 트랜스폼 기준
+            _moveDir3D.y = 0f;
+            _moveDir3D = _moveDir3D.normalized;
+        }
+        else // 그 외 -> 카메라 정면 방향
+        {
             _moveDir3D = (_mainCamTransform.forward * _moveInput.y + _mainCamTransform.right * _moveInput.x).normalized; // 카메라 정면 방향
+        }
 
         // 2차원 방향
         _moveDir2D = _moveDir3D;
         _moveDir2D.y = 0f;
         _moveDir2D = _moveDir2D.normalized;
-
-        // 상승 중일 때 무조건 상승하게 만듦
-        if (_verticalInput == 1f)
-        {
-            _moveDir3D.y = 1f;
-            _moveDir3D = _moveDir3D.normalized;
-        }
 
         // 현재 가속 이동 중인지 여부 갱신
         IsSprinting = _isSprintPressed && CurrentOxygen > 0f && _moveDir3D.sqrMagnitude > 0.01f;
@@ -473,7 +461,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     /// <summary>
     /// 애니메이션 & 콜라이더 갱신
     /// </summary>
-    private void UpdateAnimationAndCollider()
+    private void UpdateAnimation()
     {
         bool isCrawlSwimming = _moveDir3D.sqrMagnitude >= 0.01f;
         animator.SetBool(_isCrawlSwimmingHash, isCrawlSwimming);
@@ -505,11 +493,12 @@ public class DeepSeaPlayerMove : MonoBehaviour
             }
             else if (_moveDir3D.sqrMagnitude > 0.01f)
             {
-                // targetXRot = _mainCamTransform.eulerAngles.x;
+                XRotation -= MouseY;
+                XRotation = Mathf.Clamp(XRotation, deepSeaCameraController.MinPitch, deepSeaCameraController.MaxPitch);
+                // targetXRot = _xRotation;
 
-                _xRotation -= MouseY;
-                _xRotation = Mathf.Clamp(_xRotation, deepSeaCameraController.MinPitch, deepSeaCameraController.MaxPitch);
-                targetXRot = _xRotation;
+                // [핵심] 모델 메쉬가 뒤로 넘어가지 않도록 targetXRot 전달 시에만 각도를 제한합니다.
+                targetXRot = Mathf.Clamp(XRotation, -40f, 40f);
             }
         }
 
@@ -531,6 +520,21 @@ public class DeepSeaPlayerMove : MonoBehaviour
             targetLocalRotation,
             Time.deltaTime * meshRotationSpeed
         );
+    }
+
+    /// <summary>
+    /// 특정 공격/잡기 연출 시 모델의 기울임(Pitch/Roll)을 제자리로 즉시 리셋
+    /// </summary>
+    public void ResetModelRotation()
+    {
+        // 1. 누적된 X축 회전값 초기화
+        XRotation = 0f;
+
+        // 3. Slerp를 거치지 않고 즉시 로컬 회전을 정자세로 고정
+        if (modelTransform != null)
+        {
+            modelTransform.localRotation = Quaternion.identity;
+        }
     }
 
     #endregion

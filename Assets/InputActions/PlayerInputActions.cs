@@ -823,7 +823,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""7f357aa4-a416-4bf4-969f-2107f7072ee4"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": ""Tap(duration=0.25),Hold(duration=0.25)"",
+                    ""interactions"": ""Tap(duration=0.3),Hold(duration=0.3)"",
                     ""initialStateCheck"": false
                 },
                 {

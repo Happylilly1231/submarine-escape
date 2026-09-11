@@ -32,7 +32,7 @@ public class FinalPatternManager : MonoBehaviour
 
     [Header("패턴 설정")]
     private int _maxRepetitions = 5;       // 총 성공해야 하는 횟수
-    private float _approachDuration = 0.5f;     // 괴물이 다가오는 시간
+    private float _approachDuration = 1f;     // 괴물이 다가오는 시간
     private float currentSlowTimeScale;    // 슬로우 모션 배속
 
     [Header("오디오")]
@@ -43,7 +43,7 @@ public class FinalPatternManager : MonoBehaviour
     private int currentSuccessCount = 0;
     private bool isFiredInTime = false;
     private bool isSuccessInZone = false;
-    private float _startDepth = 270f; // 패턴 시작 수심 (90m)
+    private float _startDepth = 90f; // 패턴 시작 수심 (90m)
     private bool isPatternRunning = false;
     private bool _isClear = false;
 
@@ -210,7 +210,7 @@ public class FinalPatternManager : MonoBehaviour
                         isSlowApplied = true;
 
                         float tProgress = (float)currentSuccessCount / Mathf.Max(1, _maxRepetitions - 1);
-                        currentSlowTimeScale = Mathf.Lerp(0.1f, 0.2f, tProgress);
+                        currentSlowTimeScale = Mathf.Lerp(0.08f, 0.18f, tProgress);
 
                         Time.timeScale = currentSlowTimeScale;
                         Time.fixedDeltaTime = 0.02f * Time.timeScale;
@@ -313,7 +313,7 @@ public class FinalPatternManager : MonoBehaviour
     /// </summary>
     private IEnumerator Routine_ExecuteGameOver()
     {
-        AudioManager.Instance.PlayGlobalOneShot(startSound);
+        // AudioManager.Instance.PlayGlobalOneShot(startSound);
 
         panicCrosshair.ToggleCrosshair(false);
 
