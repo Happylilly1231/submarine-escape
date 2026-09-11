@@ -800,7 +800,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             ""id"": ""afd70a4e-7a4b-46ee-af9b-3a8c427d677a"",
             ""actions"": [
                 {
-                    ""name"": ""Move"",
+                    ""name"": ""DeepSea_Move"",
                     ""type"": ""Value"",
                     ""id"": ""4e25c3ac-18af-446d-96f3-b3651d04671c"",
                     ""expectedControlType"": ""Vector2"",
@@ -809,7 +809,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Look"",
+                    ""name"": ""DeepSea_Look"",
                     ""type"": ""Value"",
                     ""id"": ""d0f17971-faf3-4bb0-8691-f88954228e8c"",
                     ""expectedControlType"": ""Vector2"",
@@ -823,7 +823,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""id"": ""7f357aa4-a416-4bf4-969f-2107f7072ee4"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
+                    ""interactions"": ""Tap(duration=0.3),Hold(duration=0.3)"",
                     ""initialStateCheck"": false
                 },
                 {
@@ -836,7 +836,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""ToggleMenu"",
+                    ""name"": ""DeepSea_ToggleMenu"",
                     ""type"": ""Button"",
                     ""id"": ""2849844b-5126-4961-9503-f2faf5447774"",
                     ""expectedControlType"": """",
@@ -845,18 +845,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Descend"",
+                    ""name"": ""LeftClick"",
                     ""type"": ""Button"",
-                    ""id"": ""33617019-3eb8-4568-a375-087068a45212"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Dodge"",
-                    ""type"": ""Button"",
-                    ""id"": ""d6f6ae89-2527-4e8e-82a5-c4d2861a7321"",
+                    ""id"": ""b1a83e63-ccd0-47c9-991d-6db7b3192c80"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -871,7 +862,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";PC"",
-                    ""action"": ""Look"",
+                    ""action"": ""DeepSea_Look"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -882,7 +873,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""DeepSea_Move"",
                     ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
@@ -893,7 +884,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""DeepSea_Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -904,7 +895,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""DeepSea_Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -915,7 +906,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""DeepSea_Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -926,7 +917,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""DeepSea_Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -937,7 +928,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";PC"",
-                    ""action"": ""ToggleMenu"",
+                    ""action"": ""DeepSea_ToggleMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -965,23 +956,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""bfeb8183-a9e5-4e38-bb10-1f8ce50bed74"",
-                    ""path"": ""<Keyboard>/c"",
+                    ""id"": ""231ec933-f5a0-4a51-82ea-327758a02d10"",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";PC"",
-                    ""action"": ""Descend"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""b2a5c4fd-0051-4a97-b077-678a436bbbd5"",
-                    ""path"": ""<Keyboard>/q"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";PC"",
-                    ""action"": ""Dodge"",
+                    ""action"": ""LeftClick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1042,13 +1022,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Permanent_SlotKeyPress = m_Permanent.FindAction("SlotKeyPress", throwIfNotFound: true);
         // DeepSea
         m_DeepSea = asset.FindActionMap("DeepSea", throwIfNotFound: true);
-        m_DeepSea_Move = m_DeepSea.FindAction("Move", throwIfNotFound: true);
-        m_DeepSea_Look = m_DeepSea.FindAction("Look", throwIfNotFound: true);
+        m_DeepSea_DeepSea_Move = m_DeepSea.FindAction("DeepSea_Move", throwIfNotFound: true);
+        m_DeepSea_DeepSea_Look = m_DeepSea.FindAction("DeepSea_Look", throwIfNotFound: true);
         m_DeepSea_Sprint = m_DeepSea.FindAction("Sprint", throwIfNotFound: true);
         m_DeepSea_Ascend = m_DeepSea.FindAction("Ascend", throwIfNotFound: true);
-        m_DeepSea_ToggleMenu = m_DeepSea.FindAction("ToggleMenu", throwIfNotFound: true);
-        m_DeepSea_Descend = m_DeepSea.FindAction("Descend", throwIfNotFound: true);
-        m_DeepSea_Dodge = m_DeepSea.FindAction("Dodge", throwIfNotFound: true);
+        m_DeepSea_DeepSea_ToggleMenu = m_DeepSea.FindAction("DeepSea_ToggleMenu", throwIfNotFound: true);
+        m_DeepSea_LeftClick = m_DeepSea.FindAction("LeftClick", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -1684,13 +1663,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     // DeepSea
     private readonly InputActionMap m_DeepSea;
     private List<IDeepSeaActions> m_DeepSeaActionsCallbackInterfaces = new List<IDeepSeaActions>();
-    private readonly InputAction m_DeepSea_Move;
-    private readonly InputAction m_DeepSea_Look;
+    private readonly InputAction m_DeepSea_DeepSea_Move;
+    private readonly InputAction m_DeepSea_DeepSea_Look;
     private readonly InputAction m_DeepSea_Sprint;
     private readonly InputAction m_DeepSea_Ascend;
-    private readonly InputAction m_DeepSea_ToggleMenu;
-    private readonly InputAction m_DeepSea_Descend;
-    private readonly InputAction m_DeepSea_Dodge;
+    private readonly InputAction m_DeepSea_DeepSea_ToggleMenu;
+    private readonly InputAction m_DeepSea_LeftClick;
     /// <summary>
     /// Provides access to input actions defined in input action map "DeepSea".
     /// </summary>
@@ -1703,13 +1681,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public DeepSeaActions(@PlayerInputActions wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "DeepSea/Move".
+        /// Provides access to the underlying input action "DeepSea/DeepSea_Move".
         /// </summary>
-        public InputAction @Move => m_Wrapper.m_DeepSea_Move;
+        public InputAction @DeepSea_Move => m_Wrapper.m_DeepSea_DeepSea_Move;
         /// <summary>
-        /// Provides access to the underlying input action "DeepSea/Look".
+        /// Provides access to the underlying input action "DeepSea/DeepSea_Look".
         /// </summary>
-        public InputAction @Look => m_Wrapper.m_DeepSea_Look;
+        public InputAction @DeepSea_Look => m_Wrapper.m_DeepSea_DeepSea_Look;
         /// <summary>
         /// Provides access to the underlying input action "DeepSea/Sprint".
         /// </summary>
@@ -1719,17 +1697,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Ascend => m_Wrapper.m_DeepSea_Ascend;
         /// <summary>
-        /// Provides access to the underlying input action "DeepSea/ToggleMenu".
+        /// Provides access to the underlying input action "DeepSea/DeepSea_ToggleMenu".
         /// </summary>
-        public InputAction @ToggleMenu => m_Wrapper.m_DeepSea_ToggleMenu;
+        public InputAction @DeepSea_ToggleMenu => m_Wrapper.m_DeepSea_DeepSea_ToggleMenu;
         /// <summary>
-        /// Provides access to the underlying input action "DeepSea/Descend".
+        /// Provides access to the underlying input action "DeepSea/LeftClick".
         /// </summary>
-        public InputAction @Descend => m_Wrapper.m_DeepSea_Descend;
-        /// <summary>
-        /// Provides access to the underlying input action "DeepSea/Dodge".
-        /// </summary>
-        public InputAction @Dodge => m_Wrapper.m_DeepSea_Dodge;
+        public InputAction @LeftClick => m_Wrapper.m_DeepSea_LeftClick;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1756,27 +1730,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_DeepSeaActionsCallbackInterfaces.Add(instance);
-            @Move.started += instance.OnMove;
-            @Move.performed += instance.OnMove;
-            @Move.canceled += instance.OnMove;
-            @Look.started += instance.OnLook;
-            @Look.performed += instance.OnLook;
-            @Look.canceled += instance.OnLook;
+            @DeepSea_Move.started += instance.OnDeepSea_Move;
+            @DeepSea_Move.performed += instance.OnDeepSea_Move;
+            @DeepSea_Move.canceled += instance.OnDeepSea_Move;
+            @DeepSea_Look.started += instance.OnDeepSea_Look;
+            @DeepSea_Look.performed += instance.OnDeepSea_Look;
+            @DeepSea_Look.canceled += instance.OnDeepSea_Look;
             @Sprint.started += instance.OnSprint;
             @Sprint.performed += instance.OnSprint;
             @Sprint.canceled += instance.OnSprint;
             @Ascend.started += instance.OnAscend;
             @Ascend.performed += instance.OnAscend;
             @Ascend.canceled += instance.OnAscend;
-            @ToggleMenu.started += instance.OnToggleMenu;
-            @ToggleMenu.performed += instance.OnToggleMenu;
-            @ToggleMenu.canceled += instance.OnToggleMenu;
-            @Descend.started += instance.OnDescend;
-            @Descend.performed += instance.OnDescend;
-            @Descend.canceled += instance.OnDescend;
-            @Dodge.started += instance.OnDodge;
-            @Dodge.performed += instance.OnDodge;
-            @Dodge.canceled += instance.OnDodge;
+            @DeepSea_ToggleMenu.started += instance.OnDeepSea_ToggleMenu;
+            @DeepSea_ToggleMenu.performed += instance.OnDeepSea_ToggleMenu;
+            @DeepSea_ToggleMenu.canceled += instance.OnDeepSea_ToggleMenu;
+            @LeftClick.started += instance.OnLeftClick;
+            @LeftClick.performed += instance.OnLeftClick;
+            @LeftClick.canceled += instance.OnLeftClick;
         }
 
         /// <summary>
@@ -1788,27 +1759,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="DeepSeaActions" />
         private void UnregisterCallbacks(IDeepSeaActions instance)
         {
-            @Move.started -= instance.OnMove;
-            @Move.performed -= instance.OnMove;
-            @Move.canceled -= instance.OnMove;
-            @Look.started -= instance.OnLook;
-            @Look.performed -= instance.OnLook;
-            @Look.canceled -= instance.OnLook;
+            @DeepSea_Move.started -= instance.OnDeepSea_Move;
+            @DeepSea_Move.performed -= instance.OnDeepSea_Move;
+            @DeepSea_Move.canceled -= instance.OnDeepSea_Move;
+            @DeepSea_Look.started -= instance.OnDeepSea_Look;
+            @DeepSea_Look.performed -= instance.OnDeepSea_Look;
+            @DeepSea_Look.canceled -= instance.OnDeepSea_Look;
             @Sprint.started -= instance.OnSprint;
             @Sprint.performed -= instance.OnSprint;
             @Sprint.canceled -= instance.OnSprint;
             @Ascend.started -= instance.OnAscend;
             @Ascend.performed -= instance.OnAscend;
             @Ascend.canceled -= instance.OnAscend;
-            @ToggleMenu.started -= instance.OnToggleMenu;
-            @ToggleMenu.performed -= instance.OnToggleMenu;
-            @ToggleMenu.canceled -= instance.OnToggleMenu;
-            @Descend.started -= instance.OnDescend;
-            @Descend.performed -= instance.OnDescend;
-            @Descend.canceled -= instance.OnDescend;
-            @Dodge.started -= instance.OnDodge;
-            @Dodge.performed -= instance.OnDodge;
-            @Dodge.canceled -= instance.OnDodge;
+            @DeepSea_ToggleMenu.started -= instance.OnDeepSea_ToggleMenu;
+            @DeepSea_ToggleMenu.performed -= instance.OnDeepSea_ToggleMenu;
+            @DeepSea_ToggleMenu.canceled -= instance.OnDeepSea_ToggleMenu;
+            @LeftClick.started -= instance.OnLeftClick;
+            @LeftClick.performed -= instance.OnLeftClick;
+            @LeftClick.canceled -= instance.OnLeftClick;
         }
 
         /// <summary>
@@ -2076,19 +2044,19 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     public interface IDeepSeaActions
     {
         /// <summary>
-        /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "DeepSea_Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnMove(InputAction.CallbackContext context);
+        void OnDeepSea_Move(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "DeepSea_Look" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnLook(InputAction.CallbackContext context);
+        void OnDeepSea_Look(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Sprint" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -2104,25 +2072,18 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAscend(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "ToggleMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "DeepSea_ToggleMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnToggleMenu(InputAction.CallbackContext context);
+        void OnDeepSea_ToggleMenu(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Descend" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "LeftClick" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnDescend(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Dodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnDodge(InputAction.CallbackContext context);
+        void OnLeftClick(InputAction.CallbackContext context);
     }
 }

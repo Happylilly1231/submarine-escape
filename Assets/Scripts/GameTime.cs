@@ -50,7 +50,8 @@ public class GameTime : MonoBehaviour
         TimeSinceStart += Time.deltaTime;
         TimeSpan timeSpan = TimeSpan.FromSeconds(TimeSinceStart);
         string timerText = string.Format("{0:D2}:{1:D2}", timeSpan.Minutes, timeSpan.Seconds);
-        timeText.text = timerText;
+        if (timeText != null)
+            timeText.text = timerText;
 
         // 예약된 목록 중 시간이 된 액션을 실행
         for (int i = reservations.Count - 1; i >= 0; i--)

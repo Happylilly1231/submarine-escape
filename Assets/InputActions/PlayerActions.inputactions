@@ -714,7 +714,7 @@
             "id": "afd70a4e-7a4b-46ee-af9b-3a8c427d677a",
             "actions": [
                 {
-                    "name": "Move",
+                    "name": "DeepSea_Move",
                     "type": "Value",
                     "id": "4e25c3ac-18af-446d-96f3-b3651d04671c",
                     "expectedControlType": "Vector2",
@@ -723,7 +723,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Look",
+                    "name": "DeepSea_Look",
                     "type": "Value",
                     "id": "d0f17971-faf3-4bb0-8691-f88954228e8c",
                     "expectedControlType": "Vector2",
@@ -737,7 +737,7 @@
                     "id": "7f357aa4-a416-4bf4-969f-2107f7072ee4",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": "",
+                    "interactions": "Tap(duration=0.3),Hold(duration=0.3)",
                     "initialStateCheck": false
                 },
                 {
@@ -750,7 +750,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ToggleMenu",
+                    "name": "DeepSea_ToggleMenu",
                     "type": "Button",
                     "id": "2849844b-5126-4961-9503-f2faf5447774",
                     "expectedControlType": "",
@@ -759,18 +759,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Descend",
+                    "name": "LeftClick",
                     "type": "Button",
-                    "id": "33617019-3eb8-4568-a375-087068a45212",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Dodge",
-                    "type": "Button",
-                    "id": "d6f6ae89-2527-4e8e-82a5-c4d2861a7321",
+                    "id": "b1a83e63-ccd0-47c9-991d-6db7b3192c80",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -785,7 +776,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
-                    "action": "Look",
+                    "action": "DeepSea_Look",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -796,7 +787,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "DeepSea_Move",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
@@ -807,7 +798,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "DeepSea_Move",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -818,7 +809,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "DeepSea_Move",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -829,7 +820,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "DeepSea_Move",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -840,7 +831,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "DeepSea_Move",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -851,7 +842,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
-                    "action": "ToggleMenu",
+                    "action": "DeepSea_ToggleMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -879,23 +870,12 @@
                 },
                 {
                     "name": "",
-                    "id": "bfeb8183-a9e5-4e38-bb10-1f8ce50bed74",
-                    "path": "<Keyboard>/c",
+                    "id": "231ec933-f5a0-4a51-82ea-327758a02d10",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
-                    "action": "Descend",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b2a5c4fd-0051-4a97-b077-678a436bbbd5",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";PC",
-                    "action": "Dodge",
+                    "action": "LeftClick",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

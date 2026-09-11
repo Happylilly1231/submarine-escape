@@ -72,7 +72,7 @@ public class FocusManager : MonoBehaviour
             ResetFocusState(GameFocusState.UIScene);
         else if (scene.name == "EndingFrameScene") // 임시!!!
             ResetFocusState(GameFocusState.ESCMenu);
-        else if (scene.name == "DeepSeaScene")
+        else if (scene.name == "DeepSeaScene" || scene.name == "DeepSeaMonsterScene") // 테스트용
             ResetFocusState(GameFocusState.DeepSea);
         else
             ResetFocusState(GameFocusState.None);
@@ -263,9 +263,11 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.ESCMenu:
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
                 if (oldState == GameFocusState.DeepSea)
-                    PlayerManager.Instance.playerInput.actions["DeepSea/ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
+                    PlayerManager.Instance.playerInput.actions["DeepSea_ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
                 else
+                {
                     PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable(); // ESC 메뉴 토글 액션 활성화
+                }
                 PlayerManager.Instance.playerInput.actions["ToggleDebug"]?.Enable(); // 디버그 토글 액션 활성화 (나중에 제거 필요) (해당 액션이 있을 때만)
                 break;
 
