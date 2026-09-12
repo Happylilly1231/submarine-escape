@@ -12,39 +12,39 @@ public class DeepSeaMonsterController : MonoBehaviour
 {
     private StateMachine<DeepSeaMonsterController> _fsm; // 상태 머신
 
+    [SerializeField] private MonsterHitBox hitBox;
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
     public DeepSeaCameraController CameraController => deepSeaCameraController;
     [SerializeField] private Transform playerTransform;
     public Transform PlayerTransform => playerTransform;
-    public DeepSeaPlayerMove deepSeaPlayerMove;
+    [SerializeField] private DeepSeaPlayerMove deepSeaPlayerMove;
+    public DeepSeaPlayerMove DeepSeaPlayerMove => deepSeaPlayerMove;
     public Transform playerGrabPos;
     public LayerMask obstacleLayerMask;
     public GameObject monsterGeo; // 몬스터 외형 모습
 
     private Rigidbody _rb;
     public Rigidbody Rb => _rb;
-    public DeepSeaPlayerMove DeepSeaPlayerMove => deepSeaPlayerMove;
     public Animator animator;
-
-    private float _attackForce = 10f;
-
     private float _fsmEndDepth = 95f; // FSM 종료 수심 
-    public bool IsEnded { get; private set; } = false; // FSM 종료 여부
-
-    public bool IsPlayerTriggered { get; private set; } = false;
-    public float MonsterRadius { get; private set; } = 5f;
 
     public List<DeepSeaMonsterAttackBase> AllPatternList { get; private set; } = new List<DeepSeaMonsterAttackBase>();
     public DeepSeaMonsterAttackBase currentPattern = null;
     private Dictionary<DeepSeaMonsterAttackBase, int> _patternCounts = new Dictionary<DeepSeaMonsterAttackBase, int>();
 
+    public bool IsEnded { get; private set; } = false; // FSM 종료 여부
+    public bool IsPlayerTriggered { get; private set; } = false;
+    public float MonsterRadius { get; private set; } = 5f;
+    public int TorpedoHitCount { get; private set; } = 0; // 어뢰 발사 맞은 횟수
+    public float CurrentDamageScale { get; private set; } = 1f; // 현재 대미지 배율
+    public float RespawnWaitingTime { get; private set; } = 15f; // 재스폰 대기 시간
+
     public AudioSource audioSource;
     public AudioClip spawnSound;
 
-
     private void Awake()
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         _fsm = new StateMachine<DeepSeaMonsterController>(this);
         _rb = GetComponent<Rigidbody>();
@@ -52,7 +52,7 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     private void Start()
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         AllPatternList.Add(new DashAttack(this));
         AllPatternList.Add(new ScratchAttack(this));
@@ -63,12 +63,17 @@ public class DeepSeaMonsterController : MonoBehaviour
             _patternCounts[pattern] = 0;
         }
 
+        // SetTorpedoHitCountAndApplyEffect(3);
+
         _fsm.ChangeState(new SpawnState());
     }
 
     private void Update()
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
+
+        _rb.velocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
 
         if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
         {
@@ -80,21 +85,21 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         _fsm.FixedUpdate();
     }
 
     private void OnDisable()
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         _fsm.ExitState(); // 비활성화(파괴 직전)될 때 -> 무조건 상태 종료
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         if (!IsPlayerTriggered && other.gameObject.CompareTag("Player"))
         {
@@ -105,7 +110,7 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (playerTransform == null) return;
+        if (deepSeaPlayerMove == null) return;
 
         if (IsPlayerTriggered && other.gameObject.CompareTag("Player"))
         {
@@ -147,34 +152,76 @@ public class DeepSeaMonsterController : MonoBehaviour
     /// </summary>
     public void OnTorpedoHit()
     {
-        // 공격력 3 감소
-        _attackForce -= 3f;
-        Debug.Log("공격력이 3 감소합니다. 현재 공격력: " + _attackForce);
+        TorpedoHitCount++;
+        Debug.Log("심해 괴물이 어뢰에 맞음! 현재 맞은 횟수: " + TorpedoHitCount);
     }
 
     /// <summary>
-    /// 공격 애니메이션에서 공격이 플레이어에게 실제로 닿을 때 호출되는 이벤트
+    /// 어뢰 발사 개수 설정 및 효과 적용 (본씬 데이터 로드 및 세이브 파일 불러올 시 사용)
     /// </summary>
-    public void OnAttack()
+    public void SetTorpedoHitCountAndApplyEffect(int count)
     {
-        if (IsPlayerTriggered)
+        TorpedoHitCount = count;
+
+        if (TorpedoHitCount >= 1)
         {
-            Debug.Log("공격 성공 판정");
-            currentPattern.OnAttackSuccess();
+            CurrentDamageScale = 0.5f; // 대미지 1/2배
         }
-        else
+
+        if (TorpedoHitCount >= 2)
         {
-            Debug.Log("공격 실패 판정");
-            currentPattern.OnAttackMiss();
+            RespawnWaitingTime = 20f; // 재스폰 대기 시간 5초 증가 -> 괴물 출현 횟수 감소
+        }
+
+        if (TorpedoHitCount == 3)
+        {
+            deepSeaPlayerMove.TargetSpaceCount = 5; // 끌어내리기 탈출 스페이스 횟수 10 -> 5로 감소
+
+            // 최종 패턴 슬로우 배속 0.04f 줄여줌
+            FinalPatternManager finalPatternManager = FindAnyObjectByType<FinalPatternManager>();
+            finalPatternManager.FirstSlowTimeScale -= 0.04f; // 0.08f -> 0.04f
+            finalPatternManager.FinalSlowTimeScale -= 0.04f; // 0.18f -> 0.14f
         }
     }
+
+    // 애니메이션 이벤트 1 (공격 내지르는 순간)
+    public void OnAttackStart()
+    {
+        hitBox.EnableHitbox(
+            onSuccess: () => currentPattern.OnAttackSuccess(), // 적중 시
+            onMiss: () => currentPattern.OnAttackMiss()       // 빗나갔을 때
+        );
+    }
+
+    // 애니메이션 이벤트 2 (공격 휘두르기가 끝나는 순간)
+    public void OnAttackEnd()
+    {
+        hitBox.DisableHitbox();
+    }
+
+    // /// <summary>
+    // /// 공격 애니메이션에서 공격이 플레이어에게 실제로 닿을 때 호출되는 이벤트
+    // /// </summary>
+    // public void OnAttack()
+    // {
+    //     if (IsPlayerTriggered)
+    //     {
+    //         Debug.Log("공격 성공 판정");
+    //         currentPattern.OnAttackSuccess();
+    //     }
+    //     else
+    //     {
+    //         Debug.Log("공격 실패 판정");
+    //         currentPattern.OnAttackMiss();
+    //     }
+    // }
 
     /// <summary>
     /// 플레이어에게 대미지 (산소 감소)
     /// </summary>
     public void DamagePlayer(float amount)
     {
-        deepSeaPlayerMove.TakeDamage(amount);
+        deepSeaPlayerMove.TakeDamage(amount * CurrentDamageScale); // 현재 대미지 배율 적용하여 대미지 줌
 
         // 1. 공격 방향 계산 (괴물 위치 -> 플레이어 위치 방향 vector)
         Vector3 hitDirection = (deepSeaPlayerMove.transform.position - transform.position).normalized;

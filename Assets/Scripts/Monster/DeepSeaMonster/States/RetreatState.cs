@@ -14,6 +14,8 @@ namespace DeepSeaMonsterStates
 
         public void Enter(DeepSeaMonsterController owner)
         {
+            owner.DeepSeaPlayerMove.SetSpeedMultiplier(1f);
+
             _retreatTimer = 0f;
 
             owner.audioSource.DOFade(0.3f, 1.5f);

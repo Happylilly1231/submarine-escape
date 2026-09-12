@@ -12,11 +12,27 @@ public class DeepSeaMonsterAnimationEvents : MonoBehaviour
         _controller = GetComponentInParent<DeepSeaMonsterController>();
     }
 
-    public void OnAttack()
+    public void OnAttackStart()
     {
         if (_controller != null && _controller.enabled)
         {
-            _controller.OnAttack();
+            _controller.OnAttackStart();
         }
     }
+
+    public void OnAttackEnd()
+    {
+        if (_controller != null && _controller.enabled)
+        {
+            _controller.OnAttackEnd();
+        }
+    }
+
+    // public void OnAttack()
+    // {
+    //     if (_controller != null && _controller.enabled)
+    //     {
+    //         _controller.OnAttack();
+    //     }
+    // }
 }

@@ -25,6 +25,9 @@ namespace DeepSeaMonsterStates
                 // 3. 패턴 연출 초기화 (사운드/애니메이션 등)
                 owner.currentPattern.OnSpawned();
 
+                // 플레이어 거의 못 움직이는 수준으로 만들기
+                owner.DeepSeaPlayerMove.SetSpeedMultiplier(0.1f);
+
                 // 등장 소리 재생
                 owner.audioSource.volume = 1f;
                 owner.audioSource.PlayOneShot(owner.spawnSound);

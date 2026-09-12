@@ -34,6 +34,8 @@ public class FinalPatternManager : MonoBehaviour
     private int _maxRepetitions = 5;       // 총 성공해야 하는 횟수
     private float _approachDuration = 1f;     // 괴물이 다가오는 시간
     private float currentSlowTimeScale;    // 슬로우 모션 배속
+    public float FirstSlowTimeScale { get; set; } = 0.08f;    // 맨 처음 가장 느린(작은) 슬로우 모션 배속
+    public float FinalSlowTimeScale { get; set; } = 0.18f;    // 맨 마지막 가장 빠른(큰) 슬로우 모션 배속
 
     [Header("오디오")]
     private AudioSource _audioSource;
@@ -71,7 +73,8 @@ public class FinalPatternManager : MonoBehaviour
         // if (AudioManager.Instance != null)
         //     AudioManager.Instance.StopSFX();
 
-        _audioSource.Stop();
+        if (_audioSource != null)
+            _audioSource.Stop();
     }
 
     private void HandleFireTriggered(bool inTargetZone)
@@ -210,7 +213,7 @@ public class FinalPatternManager : MonoBehaviour
                         isSlowApplied = true;
 
                         float tProgress = (float)currentSuccessCount / Mathf.Max(1, _maxRepetitions - 1);
-                        currentSlowTimeScale = Mathf.Lerp(0.08f, 0.18f, tProgress);
+                        currentSlowTimeScale = Mathf.Lerp(FirstSlowTimeScale, FinalSlowTimeScale, tProgress);
 
                         Time.timeScale = currentSlowTimeScale;
                         Time.fixedDeltaTime = 0.02f * Time.timeScale;

@@ -22,11 +22,11 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private Volume damagedVolume;
 
     [Header("이동")]
-    [SerializeField] private float normalSpeed = 6f; // 기본 이동 속도
-    [SerializeField] private float sprintSpeed = 9.5f; // 가속 이동 속도
+    [SerializeField] private float normalSpeed = 5f; // 기본 이동 속도
+    [SerializeField] private float sprintSpeed = 7f; // 가속 이동 속도
     [SerializeField] private float slowSpeed = 4.2f; // 느려질 때 속도
     [SerializeField] private float dragDownSpeed = 4f; // 끌려 내려갈 때 속도
-    [SerializeField] private float meshRotationSpeed = 4f; // 메쉬(모델) 회전 속도
+    [SerializeField] private float meshRotationSpeed = 8f; // 메쉬(모델) 회전 속도
     private Vector3 _moveDir2D; // 2차원(X, Z) 이동 방향
     private Vector3 _moveDir3D; // 3차원(X, Y, Z) 이동 방향
     public float XRotation { get; set; } = 0f; // 카메라 상하 회전값 (Pitch)
@@ -46,6 +46,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private GameObject dragDownUI;
     [SerializeField] private Image leftTimeImage;
     [SerializeField] private TextMeshProUGUI spaceCountText;
+    [SerializeField] private TextMeshProUGUI targetSpaceCountText;
 
     // 입력
     private PlayerInput _playerInput;
@@ -63,7 +64,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     // 붙잡힘
     private bool _isGrabbed = false;
     private float _qteTimeLimit = 3f; // QTE 제한 시간
-    private int _requiredSpaceCount = 10; // 필요한 Space 연타 횟수
+    public int TargetSpaceCount { get; set; } = 10; // 필요한 Space 연타 횟수
     private int _currentSpaceCount = 0; // 현재 스페이스 개수
     private float _qteTimer = 0f; // 현재 QTE 타이머
     public event Action OnGrabQTESuccess; // 잡혔을 때 탈출 QTE 성공 이벤트
@@ -553,6 +554,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
         dragDownUI.SetActive(true); // UI 활성화
         leftTimeImage.fillAmount = 1f;
         spaceCountText.text = "0";
+        targetSpaceCountText.text = TargetSpaceCount.ToString();
     }
 
     /// <summary>
@@ -572,7 +574,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
             Debug.Log("스페이스 횟수: " + _currentSpaceCount + " / 남은 시간: " + (_qteTimeLimit - _qteTimer));
 
             // 제한 시간 내 목표 횟수 달성 -> 성공
-            if (_currentSpaceCount >= _requiredSpaceCount)
+            if (_currentSpaceCount >= TargetSpaceCount)
             {
                 _isGrabbed = false; // 붙잡힘 상태 해제
                 deepSeaCameraController.SetInputEnabled(true);

@@ -57,8 +57,15 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.6810431
-        functionName: OnAttack
+      - time: 0.59996206
+        functionName: OnAttackStart
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.71189183
+        functionName: OnAttackEnd
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
