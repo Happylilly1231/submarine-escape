@@ -16,11 +16,25 @@ namespace DeepSeaMonsterStates
         {
             _monster = owner;
 
-            owner.deepSeaPlayerMove.CanMove = false; // 플레이어 이동 정지
-            owner.deepSeaPlayerMove.ResetModelRotation();
+            owner.DeepSeaPlayerMove.CanMove = false; // 플레이어 이동 정지
+            owner.DeepSeaPlayerMove.ResetModelRotation();
 
             owner.transform.position = owner.playerGrabPos.position;
-            owner.transform.LookAt(owner.playerGrabPos.position + Vector3.up * 5f);
+            Debug.Log(owner.playerGrabPos.position);
+
+            // // 1. 괴물 위치에서 수직 위쪽 방향
+            // Vector3 targetPosition = owner.transform.position + Vector3.up * 5f;
+
+            // // 2. Y축 기준: 괴물이 플레이어를 바라보는 수평 방향 계산 (Y축 높이 차이는 제거)
+            // Vector3 dirToPlayer = (owner.PlayerTransform.position - owner.transform.position);
+            // dirToPlayer.y = 0; // 수평 방향만 추출
+            // dirToPlayer.Normalize();
+
+            // // 3. 위를 쳐다보되(targetPosition), 머리/등 방향은 플레이어를 마주보는 방향(-dirToPlayer)으로 설정
+            // if (dirToPlayer != Vector3.zero)
+            // {
+            //     owner.transform.LookAt(targetPosition, -dirToPlayer);
+            // }
 
             owner.CameraController.SetInputEnabled(false); // 카메라 조작 불가능
             owner.StartCoroutine(owner.CameraController.Routine_LookAtPosition(owner.transform.position, 0.5f));
@@ -34,7 +48,7 @@ namespace DeepSeaMonsterStates
 
         public void Update(DeepSeaMonsterController owner)
         {
-
+            Debug.Log(owner.playerGrabPos.position);
         }
 
         public void FixedUpdate(DeepSeaMonsterController owner)
@@ -45,7 +59,7 @@ namespace DeepSeaMonsterStates
 
         public void Exit(DeepSeaMonsterController owner)
         {
-            owner.deepSeaPlayerMove.CanMove = true; // 플레이어 이동 가능
+            owner.DeepSeaPlayerMove.CanMove = true; // 플레이어 이동 가능
             owner.CameraController.SetInputEnabled(true); // 카메라 조작 가능
             owner.DeepSeaPlayerMove.OnGrabQTESuccess -= OnPlayerQTESuccess;
             owner.DeepSeaPlayerMove.OnGrabQTEFailed -= OnPlayerQTEFailed;

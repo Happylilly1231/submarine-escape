@@ -27,9 +27,6 @@ public class ScratchAttack : DeepSeaMonsterAttackBase
 
         // 스폰되자마자 괴물을 바라보도록 카메라 회전 (회전하는 동안만 고정이고, 이후 조작 자유)
         monster.CameraController.RotateToTargetPos(monster.transform.position, 1f);
-
-        monster.DeepSeaPlayerMove.SetSpeedMultiplier(0.1f);
-
         // // 스폰 당시 플레이어 위치로 직선 이동할 수 있도록, 스폰하자마자 이동 방향 확정
         // moveDir = (playerTransform.position - monster.transform.position).normalized;
     }
@@ -79,7 +76,6 @@ public class ScratchAttack : DeepSeaMonsterAttackBase
     public override void OnAttackSuccess()
     {
         Debug.Log("할퀴기 공격 성공!");
-        monster.DeepSeaPlayerMove.SetSpeedMultiplier(1f);
         monster.DamagePlayer(DamageAmount); // 대미지
         monster.ChangeState(new RetreatState()); // 퇴각 상태로 전환
     }
@@ -87,7 +83,6 @@ public class ScratchAttack : DeepSeaMonsterAttackBase
     public override void OnAttackMiss()
     {
         Debug.Log("할퀴기 공격 실패...");
-        monster.DeepSeaPlayerMove.SetSpeedMultiplier(1f);
         monster.ChangeState(new RetreatState()); // 퇴각 상태로 전환
     }
 }

@@ -8,7 +8,6 @@ namespace DeepSeaMonsterStates
     public class HiddenState : IState<DeepSeaMonsterController>
     {
         private float _timer;
-        private float waitingTime = 15f;
 
         public void Enter(DeepSeaMonsterController owner)
         {
@@ -29,7 +28,7 @@ namespace DeepSeaMonsterStates
             _timer += Time.deltaTime;
 
             // 기다리는 시간(쿨타임) 지나면 -> 스폰 상태로 전환
-            if (_timer >= waitingTime)
+            if (_timer >= owner.RespawnWaitingTime)
             {
                 owner.ChangeState(new SpawnState());
                 return;
