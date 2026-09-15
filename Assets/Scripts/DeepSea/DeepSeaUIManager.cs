@@ -43,7 +43,10 @@ public class DeepSeaUIManager : MonoBehaviour
     [SerializeField] private GameObject[] pages; // 가이드 페이지(조작법, 플레이어 상태, 아이템)
     [SerializeField] private Button[] pageControls; // 페이지 조작 버튼(이전, 다음, 닫기)
 
+    public bool IsActiveGuide { get; private set; } = false;
+
     private int inactivePageIdx; // 비활성화된 페이지
+    private DeepSeaMonsterController _deepSeaMonsterController;
 
 
     private void Awake()
@@ -56,6 +59,8 @@ public class DeepSeaUIManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        _deepSeaMonsterController = FindObjectOfType<DeepSeaMonsterController>();
     }
 
     private void Start()
@@ -85,6 +90,8 @@ public class DeepSeaUIManager : MonoBehaviour
     /// </summary>
     public void SetDeepSeaGuide()
     {
+        IsActiveGuide = true;
+
         // 헬멧 hud 비활성화 및 가이드 ui 활성화
         helmetHUD.SetActive(false);
         guideUI.SetActive(true);
@@ -142,9 +149,12 @@ public class DeepSeaUIManager : MonoBehaviour
 
         SetItemSlotUI();
 
-        helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
+        //helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
 
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
+
+        _deepSeaMonsterController.IsFSMPause = false; // 심해 몬스터 이동 시작
+        IsActiveGuide = false;
     }
 
     /// <summary>

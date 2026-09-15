@@ -157,7 +157,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void Update()
     {
         if (GameManager.instance.IsPausing) return;
-        if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene
+            || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
         // 산소 소모
         if (IsSprinting)
@@ -193,7 +194,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void FixedUpdate()
     {
         if (GameManager.instance.IsPausing) return;
-        if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene
+            || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
         // 잡혔을 때 -> 괴물과 똑같은 속도로 아래로 이동
         if (_isGrabbed)

@@ -39,6 +39,8 @@ public class DeepSeaMonsterController : MonoBehaviour
     public float CurrentDamageScale { get; private set; } = 1f; // 현재 대미지 배율
     public float RespawnWaitingTime { get; private set; } = 15f; // 재스폰 대기 시간
 
+    public bool IsFSMPause = false;
+
     public AudioSource audioSource;
     public AudioClip spawnSound;
 
@@ -75,6 +77,8 @@ public class DeepSeaMonsterController : MonoBehaviour
         _rb.velocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
 
+        if (IsFSMPause) return;
+
         if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
         {
             IsEnded = true;
@@ -86,6 +90,8 @@ public class DeepSeaMonsterController : MonoBehaviour
     private void FixedUpdate()
     {
         if (deepSeaPlayerMove == null) return;
+
+        if (IsFSMPause) return;
 
         _fsm.FixedUpdate();
     }

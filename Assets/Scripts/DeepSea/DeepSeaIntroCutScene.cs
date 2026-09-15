@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Localization.Plugins.XLIFF.V20;
 using UnityEngine;
 
 public class DeepSeaIntroCutScene : MonoBehaviour
@@ -20,14 +21,25 @@ public class DeepSeaIntroCutScene : MonoBehaviour
 
     [Header("Sound")]
     [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip impactSound;
+    [SerializeField] private AudioClip explosion;
+    [SerializeField] private AudioClip groaning;
+    [SerializeField] private AudioClip falling;
 
     public bool IsCutScene { get; private set; } = false;
+
+    private DeepSeaMonsterController _deepSeaMonsterController;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        _deepSeaMonsterController = FindObjectOfType<DeepSeaMonsterController>();
+    }
+
+    private void Start()
+    {
+        StartCutScene();
     }
 
     public void StartCutScene()
@@ -46,6 +58,7 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         Debug.Log("심해 인트로 컷씬 시작");
 
         IsCutScene = true;
+        _deepSeaMonsterController.IsFSMPause = true;
 
         // =====================================
         // 2. 플레이어 이동
@@ -63,24 +76,13 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         Debug.Log("플레이어 이동 완료");
 
         // =====================================
-        // 3. 잠시 정적
+        // 3. 잠수함을 바라봄
         // =====================================
 
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(LookDown());
 
         // =====================================
-        // 4. 큰 소리
-        // =====================================
-
-        if (audioSource != null && impactSound != null)
-        {
-            audioSource.PlayOneShot(impactSound);
-        }
-
-        Debug.Log("큰 소리 발생");
-
-        // =====================================
-        // 6. 잠수함 추락하면서 플레이어 아래 바라봄
+        // 6. 잠수함 추락하면서 아래 바라봄
         // =====================================
 
         yield return StartCoroutine(FallSubmarineAndLookDown());
@@ -239,6 +241,8 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         float moveDuration = 5f;
         float elapsedTime = 0f;
 
+        bool explosionPlayed = false;
+
         while (elapsedTime < moveDuration)
         {
             elapsedTime += Time.deltaTime;
@@ -252,6 +256,16 @@ public class DeepSeaIntroCutScene : MonoBehaviour
                     t
                 );
 
+            if (!explosionPlayed && elapsedTime >= 3f)
+            {
+                if (audioSource != null && explosion != null)
+                {
+                    Debug.Log("폭발음 재생!");
+                    audioSource.PlayOneShot(explosion);
+                    explosionPlayed = true;
+                }
+            }
+
             yield return null;
         }
 
@@ -260,24 +274,64 @@ public class DeepSeaIntroCutScene : MonoBehaviour
     }
 
     /// <summary>
+    /// 아래를 바라봄
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator LookDown()
+    {
+        Quaternion startRotation = cameraController.transform.rotation;
+
+        Quaternion targetRotation = startRotation * Quaternion.Euler(40f, 80f, 0f);
+
+        float elapsedTime = 0f;
+        float duration = 2f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+
+            float t = Mathf.Clamp01(elapsedTime / duration);
+
+            Quaternion currentRotation = Quaternion.Slerp(startRotation, targetRotation, t);
+
+            player.rotation = currentRotation;
+
+            cameraController.SetCutSceneRotation(currentRotation);
+
+            yield return null;
+        }
+
+        cameraController.SetCutSceneRotation(targetRotation);
+    }
+
+    /// <summary>
     /// 잠수함이 아래로 추락
     /// </summary>
     private IEnumerator FallSubmarineAndLookDown()
     {
+        // =====================================
+        // 잠수함이 아래로 기울어짐
+        // =====================================
+
+        if (audioSource != null && groaning != null)
+        {
+            audioSource.clip = groaning;
+            audioSource.time = 18f;
+        }
+
         // 잠수함
         Quaternion startSubmarineRotation = submarine.rotation;
+        Vector3 startSubmarinePosition = submarine.position;
 
         Quaternion targetSubmarineRotation =
             startSubmarineRotation * Quaternion.Euler(30f, 0f, 0f);
-
-        // 플레이어
-        Quaternion startPlayerRotation = player.rotation;
-
-        Quaternion targetPlayerRotation =
-            startPlayerRotation * Quaternion.Euler(40f, 80f, 0f);
+        Vector3 targetSubmarinePosition =
+            startSubmarinePosition + submarine.forward * 10f;
 
         float elapsedTime = 0f;
-        float tiltDuration = 2f;
+        float tiltDuration = 5f;
+
+        audioSource.Play();
 
         while (elapsedTime < tiltDuration)
         {
@@ -285,39 +339,49 @@ public class DeepSeaIntroCutScene : MonoBehaviour
 
             float t = Mathf.Clamp01(elapsedTime / tiltDuration);
 
+            // 잠수함 회전
             submarine.rotation =
-                Quaternion.Slerp(startSubmarineRotation, targetSubmarineRotation, t);
+                        Quaternion.Slerp(startSubmarineRotation, targetSubmarineRotation, t);
 
-            Quaternion currentRotation =
-                                Quaternion.Slerp(startPlayerRotation, targetPlayerRotation, t);
-
-            // 플레이어 몸 회전
-            player.rotation = currentRotation;
-
-            // 카메라도 같은 방향을 바라보도록 설정
-            cameraController.SetCutSceneRotation(currentRotation);
+            // 잠수함 앞으로 이동
+            submarine.position =
+                Vector3.Lerp(startSubmarinePosition, targetSubmarinePosition, t);
 
             yield return null;
         }
 
-        submarine.rotation = targetSubmarineRotation;
-        player.rotation = targetPlayerRotation;
-        cameraController.SetCutSceneRotation(targetPlayerRotation);
+        audioSource.Stop();
 
-        // 아래로 추락
-        Vector3 startPosition = submarine.position;
+        submarine.rotation = targetSubmarineRotation;
+        submarine.position = targetSubmarinePosition;
+
+        // =====================================
+        // 잠수함: 아래로 추락
+        // 플레이어: 떨어지는 잠수함을 따라 같이 고개가 내려감
+        // =====================================
+
+        if (audioSource != null && groaning != null)
+        {
+            audioSource.clip = falling;
+        }
+
+        // 잠수함
+        startSubmarinePosition = submarine.position;
         Vector3 fallPosition = submarineFallPoint.position;
 
         startSubmarineRotation = submarine.rotation;
         targetSubmarineRotation =
             startSubmarineRotation * Quaternion.Euler(40f, 0f, 0f);
 
-        startPlayerRotation = player.rotation;
-        targetPlayerRotation =
-            startPlayerRotation * Quaternion.Euler(20f, 0f, 0f);
+        // 플레이어
+        Quaternion startPlayerRotation = player.rotation;
+        Quaternion targetPlayerRotation =
+            startPlayerRotation * Quaternion.Euler(10f, 0f, 0f);
 
         elapsedTime = 0f;
-        float fallDuration = 3f;
+        float fallDuration = 2f;
+
+        audioSource.Play();
 
         while (elapsedTime < fallDuration)
         {
@@ -329,7 +393,7 @@ public class DeepSeaIntroCutScene : MonoBehaviour
             float fallT = t * t;
 
             submarine.position =
-                Vector3.Lerp(startPosition, fallPosition, fallT);
+                Vector3.Lerp(startSubmarinePosition, fallPosition, fallT);
             submarine.rotation =
                 Quaternion.Slerp(startSubmarineRotation, targetSubmarineRotation, t);
 
@@ -357,7 +421,7 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         Quaternion targetRotation = startRotation * Quaternion.Euler(-50f, 0f, 0f);
 
         float elapsedTime = 0f;
-        float duration = 3f;
+        float duration = 2f;
 
         while (elapsedTime < duration)
         {

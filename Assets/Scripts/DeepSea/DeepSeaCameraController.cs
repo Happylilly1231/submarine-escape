@@ -24,7 +24,6 @@ public class DeepSeaCameraController : MonoBehaviour
     private Sequence _rotationSequence; // DOTween 시퀀스 저장용
     private Tween _shakeTween; // 카메라 셰이크 트윈 저장용
 
-    private bool isCutScene = false; // 컷씬 중 카메라 제어 여부
     private Quaternion cutSceneTargetRotation;
     private Tween _fovTween;
 

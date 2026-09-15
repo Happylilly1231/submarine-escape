@@ -41,7 +41,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
         _itemEquipController = GetComponent<ItemEquipController>();
 
         PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
-        ApplyData(playerItemStates);
+        //ApplyData(playerItemStates);
 
         // 초기 인벤토리 상태 설정
         if (HasOxygenCapsule) playerInventory.Add(oxygenCapsuleItem);
