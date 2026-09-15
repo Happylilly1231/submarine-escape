@@ -149,7 +149,7 @@ public class DeepSeaUIManager : MonoBehaviour
 
         SetItemSlotUI();
 
-        //helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
+        helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
 
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
 
