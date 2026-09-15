@@ -14,6 +14,7 @@ public enum GameFocusState
     Diary,           // 다이어리 포커스
     UIScene,        // UI만 있고, 플레이어 없는 씬 - EndingScene 전용 포커스
     DeepSea,        // 심해 전용
+    DeepSeaUI,      // 심해 UI 전용
 }
 
 public class FocusManager : MonoBehaviour
@@ -72,7 +73,7 @@ public class FocusManager : MonoBehaviour
             ResetFocusState(GameFocusState.UIScene);
         else if (scene.name == "EndingFrameScene") // 임시!!!
             ResetFocusState(GameFocusState.ESCMenu);
-        else if (scene.name == "DeepSeaScene")
+        else if (scene.name == "DeepSeaItemScene")
             ResetFocusState(GameFocusState.DeepSea);
         else
             ResetFocusState(GameFocusState.None);
@@ -210,9 +211,12 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.DeepSea: // 심해
-                // PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
-                // SetCenterUIActive(true); // 가운데 UI 요소 켜기
+                PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
+                break;
+            case GameFocusState.DeepSeaUI: // 심해 ui
+                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
         }
 
@@ -281,6 +285,9 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.DeepSea:
                 InputManager.instance.SwitchActionMapWithPermanent("DeepSea"); // 심해 전용 액션 맵으로 변환
                 break;
+            case GameFocusState.DeepSeaUI:
+                InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
+                break;
         }
     }
 
@@ -290,6 +297,7 @@ public class FocusManager : MonoBehaviour
     /// <param name="isActive">지우기 여부</param>
     private void SetCenterUIActive(bool isActive)
     {
+        if (!PlayerManager.Instance.playerInteractor) return;
         if (isActive)
         {
             PlayerManager.Instance.playerInteractor.SetActiveAimUI(true); // 조준점 켜기

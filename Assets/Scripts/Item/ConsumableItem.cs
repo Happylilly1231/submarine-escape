@@ -5,12 +5,10 @@ using UnityEngine;
 public class ConsumableItem : MonoBehaviour
 {
     private PlayerStat _playerStat;
-    private PlayerTemperature _playerTemperature;
 
     void Awake()
     {
         _playerStat = FindObjectOfType<PlayerStat>();
-        _playerTemperature = FindObjectOfType<PlayerTemperature>();
     }
 
     /// <summary>
@@ -46,10 +44,6 @@ public class ConsumableItem : MonoBehaviour
                     Debug.Log("HP가 이미 최대로 사용할 수 없음");
                     return false;
                 }
-            case "Oxygen Tank":
-                // 산소 탱크 사용 로직
-                Debug.Log("산소 탱크 - 산소 100% 충전");
-                return true;
         }
         return false;
     }

@@ -7,6 +7,7 @@ public class PlayerManager : MonoBehaviour
 {
     public PlayerInput playerInput;
     public PlayerCameraController playerCameraController;
+    public DeepSeaCameraController deepSeaCameraController;
     public PlayerMove playerMove;
     public PlayerInteractor playerInteractor;
     [SerializeField] private GameObject playerGeo;
@@ -48,8 +49,9 @@ public class PlayerManager : MonoBehaviour
     /// <param name="canMove">가능 여부</param>
     public void SetPlayerCanMove(bool canMove)
     {
-        playerCameraController.enabled = canMove;
-        playerMove.SetMoveable(canMove);
+        if (playerCameraController) playerCameraController.enabled = canMove;
+        if (deepSeaCameraController) deepSeaCameraController.enabled = canMove;
+        playerMove?.SetMoveable(canMove);
     }
 
     /// <summary>

@@ -61,7 +61,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 83b636b9da3a78f458800a17c62f56a1,
         type: 3}
       propertyPath: m_Name
-      value: OxygenTank
+      value: OxygenCapsule
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -78,7 +78,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 83b636b9da3a78f458800a17c62f56a1,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 735403825623240516}
+      addedObject: {fileID: 7494766797882609010}
   m_SourcePrefab: {fileID: 100100000, guid: 83b636b9da3a78f458800a17c62f56a1, type: 3}
 --- !u!1 &7619141212712981184 stripped
 GameObject:
@@ -120,9 +120,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   item: {fileID: 11400000, guid: 91d85b19e4e26b1418523da485d9164b, type: 2}
-  uniqueID: OxygenTank
+  uniqueID: OxygenCapsule
   isDropped: 0
---- !u!114 &735403825623240516
+--- !u!114 &7494766797882609010
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,6 +131,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7619141212712981184}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ad4087fc3e6c544daf70c1b7036ec82, type: 3}
+  m_Script: {fileID: 11500000, guid: 1cd2b6b1640d5e449940391b83eaf12b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

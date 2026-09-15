@@ -34,6 +34,9 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
+    [Header("체온")]
+    [SerializeField] private float thermalProtectorDuration = 90f; // 열 보호 장치 지속 시간(초)
+
     // 입력
     private PlayerInput _playerInput;
     private InputAction _moveAction;
@@ -60,6 +63,10 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     public float MaxOxygen { get; private set; } = 100f; // 최대 산소량
     public float CurrentOxygen { get; private set; } = 100f; // 현재 산소량
+    public float SurvivalTime = 300f; // 생존 시간(초)
+    public float ThermalProtectorDuration => thermalProtectorDuration;
+    public float MaxTemperature { get; private set; } = 100f; // 최대 체온
+    public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
     public Vector3 MoveDir2D => _moveDir2D; // 2차원(X, Z) 이동 방향
     public Vector3 MoveDir3D => _moveDir3D; // 3차원(X, Y, Z) 이동 방향
     public Vector2 MoveInput => _moveInput; // 2차원 이동 입력
@@ -126,16 +133,19 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void Update()
     {
         if (GameManager.instance.IsPausing) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
 
         ReadInputs(); // 입력 가져오기
         Rotate(); // 좌우 회전
         UpdateAnimationAndCollider(); // 애니메이션 & 콜라이더 업데이트
         UpdateModelRotation(); // 모델 회전 업데이트
+        UpdateTemperature(); // 체온 업데이트
     }
 
     private void FixedUpdate()
     {
         if (GameManager.instance.IsPausing) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
 
         Move(); // Rigidbody를 이용한 이동
     }
@@ -484,5 +494,39 @@ public class DeepSeaPlayerMove : MonoBehaviour
         );
     }
 
+    #endregion
+
+    #region 체온
+    /// <summary>
+    /// 체온 업데이트
+    /// <para> - 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X </para>
+    /// <para> - 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소 </para>
+    /// </summary>
+    private void UpdateTemperature()
+    {
+        float temperatureLossPerSec = MaxTemperature / SurvivalTime; // 체온 감소율 계산
+
+        // 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X
+        if (DeepSeaInventoryManager.Instance.HasThermalProtector && DeepSeaInventoryManager.Instance.IsThermalProtectorActive)
+        {
+            // 열 보호 장치 지속 시간 감소
+            thermalProtectorDuration -= Time.deltaTime;
+            if (thermalProtectorDuration <= 0f)
+            {
+                DeepSeaInventoryManager.Instance.IsThermalProtectorActive = false;
+                Debug.Log("열 보호 장치 지속 시간 종료 - 체온 감소 시작");
+            }
+        }
+        else // 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소
+        {
+            CurrentTemperature -= temperatureLossPerSec * Time.deltaTime;
+            if (CurrentTemperature <= 0f)
+            {
+                CurrentTemperature = 0f;
+                Debug.Log("체온 0도 도달 - 저체온증으로 사망");
+                // GameManager.instance.GameOver(EEndingType.Hypothermia); // 저체온증으로 사망
+            }
+        }
+    }
     #endregion
 }

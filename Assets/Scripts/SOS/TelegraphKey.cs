@@ -603,6 +603,7 @@ public class TelegraphKey : PuzzleController, IInteractable
         if (morseCode == "...ㅡㅡㅡ...") // SOS -> 응답 시퀀스 시작
         {
             Debug.Log("SOS 신호 성공! 본부 잠수함 응답 시퀀스 시작.");
+            DeepSeaBridge.Instance.SetContactedHQ(true);
             yield return StartCoroutine(SuccessResponse());
             // 모스부호 입력 막은 걸 풀어주지 않음 (이제 더 이상 입력할 일이 없으므로)
         }

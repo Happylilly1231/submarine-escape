@@ -16,14 +16,23 @@ public class DeepSeaCameraController : MonoBehaviour
     private float _xRotation = 0f; // 카메라 상하 회전값 (Pitch)
     private float _previousModelXAngle = 0f; // 이전 프레임의 모델 X축 각도 저장용
 
+    private bool isCutScene = false; // 컷씬 중 카메라 제어 여부
+    private Quaternion cutSceneTargetRotation;
+
     private void LateUpdate()
     {
         if (GameManager.instance.IsPausing) return;
 
-        HandleCameraRotation();
-
         // 카메라 위치는 플레이어 머리(cameraPos) 위치 고정
         transform.position = cameraPos.position;
+
+        if (DeepSeaIntroCutScene.Instance.IsCutScene)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, cutSceneTargetRotation, Time.deltaTime * cameraRotationSpeed);
+            return;
+        }
+
+        HandleCameraRotation();
     }
 
     private void HandleCameraRotation()
@@ -59,5 +68,32 @@ public class DeepSeaCameraController : MonoBehaviour
 
         // 5. 회전 적용
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * cameraRotationSpeed);
+    }
+
+    /// <summary>
+    /// 컷씬 중 카메라가 바라볼 방향 설정
+    /// </summary>
+    /// <param name="targetRotation"></param>
+    public void SetCutSceneRotation(Quaternion targetRotation)
+    {
+        cutSceneTargetRotation = targetRotation;
+    }
+
+    /// <summary>
+    /// 컷씬 카메라 제어 종료
+    /// </summary>
+    public void EndCutScene()
+    {
+        // 현재 카메라 방향을 기준으로 기존 카메라 회전값을 다시 맞춤
+        Vector3 euler = transform.eulerAngles;
+        _xRotation = euler.x;
+
+        if (_xRotation > 180f) _xRotation -= 360f;
+
+        _xRotation = Mathf.Clamp(_xRotation, minPitch, maxPitch);
+
+        _previousModelXAngle = playerMove.ModelTransform.localEulerAngles.x;
+
+        if (_previousModelXAngle > 180f) _previousModelXAngle -= 360f;
     }
 }
