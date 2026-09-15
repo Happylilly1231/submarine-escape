@@ -8,7 +8,7 @@ public enum EItemType
     Toggle, // 켜고 끄는 아이템 (손전등)
     Consumable, // 소비형 아이템 (의료용 키트, 손전등 배터리 등)
     Puzzle, // 퍼즐 아이템 (키패드 배터리, 망치 등)
-    Wearable, // 착용형 아이템 (잠수복, 열보호 장치)
+    DeepSea, // 심해 아이템 (잠수복, 열보호 장치, 산소 캡슐, 헬기 좌표 입력 손목시계)
     UI,    // UI 아이템 (맵, 매뉴얼)
     Sample  // 심해 생물 샘플
 }

@@ -23,6 +23,8 @@ public class DeepSeaCameraController : MonoBehaviour
     private bool _canControlInput = true;
     private Sequence _rotationSequence; // DOTween 시퀀스 저장용
     private Tween _shakeTween; // 카메라 셰이크 트윈 저장용
+
+    private Quaternion cutSceneTargetRotation;
     private Tween _fovTween;
 
     private void Awake()
@@ -44,6 +46,12 @@ public class DeepSeaCameraController : MonoBehaviour
 
         // 카메라 위치는 플레이어 머리(cameraPos) 위치 고정
         transform.position = cameraPos.position;
+
+        if (DeepSeaIntroCutScene.Instance.IsCutScene)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, cutSceneTargetRotation, Time.deltaTime * 12f);
+            return;
+        }
 
         if (_canControlInput)
         {
@@ -253,5 +261,28 @@ public class DeepSeaCameraController : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    /// <summary>
+    /// 컷씬 중 카메라가 바라볼 방향 설정
+    /// </summary>
+    /// <param name="targetRotation"></param>
+    public void SetCutSceneRotation(Quaternion targetRotation)
+    {
+        cutSceneTargetRotation = targetRotation;
+    }
+
+    /// <summary>
+    /// 컷씬 카메라 제어 종료
+    /// </summary>
+    public void EndCutScene()
+    {
+        // 현재 카메라 방향을 기준으로 기존 카메라 회전값을 다시 맞춤
+        Vector3 euler = transform.eulerAngles;
+        _xRotation = euler.x;
+
+        if (_xRotation > 180f) _xRotation -= 360f;
+
+        _xRotation = Mathf.Clamp(_xRotation, minPitch, maxPitch);
     }
 }

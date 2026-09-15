@@ -852,6 +852,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SlotKeyPress"",
+                    ""type"": ""Button"",
+                    ""id"": ""c9f687c4-4ac3-4495-bfae-91ec8106bdc9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseItem"",
+                    ""type"": ""Button"",
+                    ""id"": ""b84b449c-fd24-4c84-b8c2-1aa51f4348bb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -964,6 +982,50 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""LeftClick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6cbcf141-ded9-4a4c-9243-a183deb276a5"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""SlotKeyPress"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fc546f9e-a253-4454-b9b7-5eb061999227"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""SlotKeyPress"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""32f90d31-ba4e-42ec-9955-09026552fdf9"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""SlotKeyPress"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5624153c-19ef-4cd6-9875-466ab6cd0a4a"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""UseItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -1028,6 +1090,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_DeepSea_Ascend = m_DeepSea.FindAction("Ascend", throwIfNotFound: true);
         m_DeepSea_DeepSea_ToggleMenu = m_DeepSea.FindAction("DeepSea_ToggleMenu", throwIfNotFound: true);
         m_DeepSea_LeftClick = m_DeepSea.FindAction("LeftClick", throwIfNotFound: true);
+        m_DeepSea_SlotKeyPress = m_DeepSea.FindAction("SlotKeyPress", throwIfNotFound: true);
+        m_DeepSea_UseItem = m_DeepSea.FindAction("UseItem", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -1669,6 +1733,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_DeepSea_Ascend;
     private readonly InputAction m_DeepSea_DeepSea_ToggleMenu;
     private readonly InputAction m_DeepSea_LeftClick;
+    private readonly InputAction m_DeepSea_SlotKeyPress;
+    private readonly InputAction m_DeepSea_UseItem;
     /// <summary>
     /// Provides access to input actions defined in input action map "DeepSea".
     /// </summary>
@@ -1704,6 +1770,14 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "DeepSea/LeftClick".
         /// </summary>
         public InputAction @LeftClick => m_Wrapper.m_DeepSea_LeftClick;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/SlotKeyPress".
+        /// </summary>
+        public InputAction @SlotKeyPress => m_Wrapper.m_DeepSea_SlotKeyPress;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/UseItem".
+        /// </summary>
+        public InputAction @UseItem => m_Wrapper.m_DeepSea_UseItem;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1748,6 +1822,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @LeftClick.started += instance.OnLeftClick;
             @LeftClick.performed += instance.OnLeftClick;
             @LeftClick.canceled += instance.OnLeftClick;
+            @SlotKeyPress.started += instance.OnSlotKeyPress;
+            @SlotKeyPress.performed += instance.OnSlotKeyPress;
+            @SlotKeyPress.canceled += instance.OnSlotKeyPress;
+            @UseItem.started += instance.OnUseItem;
+            @UseItem.performed += instance.OnUseItem;
+            @UseItem.canceled += instance.OnUseItem;
         }
 
         /// <summary>
@@ -1777,6 +1857,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @LeftClick.started -= instance.OnLeftClick;
             @LeftClick.performed -= instance.OnLeftClick;
             @LeftClick.canceled -= instance.OnLeftClick;
+            @SlotKeyPress.started -= instance.OnSlotKeyPress;
+            @SlotKeyPress.performed -= instance.OnSlotKeyPress;
+            @SlotKeyPress.canceled -= instance.OnSlotKeyPress;
+            @UseItem.started -= instance.OnUseItem;
+            @UseItem.performed -= instance.OnUseItem;
+            @UseItem.canceled -= instance.OnUseItem;
         }
 
         /// <summary>
@@ -2085,5 +2171,19 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnLeftClick(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SlotKeyPress" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSlotKeyPress(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseItem" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseItem(InputAction.CallbackContext context);
     }
 }

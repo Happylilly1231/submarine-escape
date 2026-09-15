@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 public class SeaWaterValve : InteractableBase
 {
@@ -29,7 +30,7 @@ public class SeaWaterValve : InteractableBase
 
     private bool _isUnderwater = false;
 
-    private EqualizingQTE equalizingQTE;
+    private EqualizingQTE _equalizingQTE;
 
     [Header("Sound")]
     private AudioSource _audioSource;
@@ -39,7 +40,7 @@ public class SeaWaterValve : InteractableBase
     private void Start()
     {
         _audioSource = GetComponent<AudioSource>();
-        equalizingQTE = GetComponent<EqualizingQTE>();
+        _equalizingQTE = GetComponent<EqualizingQTE>();
 
         hatchLightObj.SetActive(false);
     }
@@ -113,7 +114,7 @@ public class SeaWaterValve : InteractableBase
                 {
                     // 탈출 QTE 성공 후 탈출 연출 재생
                     //Escape();
-                    equalizingQTE?.StartQTE();
+                    _equalizingQTE?.StartQTE();
                 }
                 else
                 {
@@ -191,8 +192,43 @@ public class SeaWaterValve : InteractableBase
         // 완료되면 -> 탈출 성공
         seq.OnComplete(() =>
         {
+            bool isDivingSuitEquipped = false;
+            bool hasOxygenCapsule = false;
+            bool hasThermalProtector = false;
+            bool hasHelicopterLocator = false;
+
+            foreach (InventorySlot slot in _inventoryManager.InventorySlots)
+            {
+                if (slot.Item)
+                {
+                    switch (slot.Item.ItemName)
+                    {
+                        case "DivingSuit":
+                            isDivingSuitEquipped = true;
+                            break;
+                        case "Thermal Protector":
+                            hasThermalProtector = true;
+                            break;
+                        case "Oxygen Capsule":
+                            hasOxygenCapsule = true;
+                            break;
+                        case "Helicopter Locator":
+                            hasHelicopterLocator = true;
+                            break;
+                    }
+                }
+            }
+            PlayerItemStates playerItemStates = new PlayerItemStates
+            {
+                IsDivingsuitEquipped = isDivingSuitEquipped,
+                HasThermalProtector = hasThermalProtector,
+                HasOxygenCapsule = hasOxygenCapsule,
+                HasHelicopterLocator = hasHelicopterLocator
+            };
+            DeepSeaBridge.Instance.SetPlayerItemStates(playerItemStates);
             _audioSource.Stop();
-            GameManager.instance.GameClear(); // 탈출 성공
+            SceneManager.LoadScene("DeepSeaItemScene");
+            //GameManager.instance.GameClear(); // 탈출 성공
         });
     }
 

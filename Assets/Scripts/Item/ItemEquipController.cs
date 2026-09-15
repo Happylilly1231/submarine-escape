@@ -26,7 +26,7 @@ public class ItemEquipController : MonoBehaviour
 
         _heldItemData = item;
         _heldItemObject = Instantiate(item.ItemPrefab, itemViewRoot);
-        StatableItemManager.Instance.RestoreItemState(_heldItemObject, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
+        StatableItemManager.Instance?.RestoreItemState(_heldItemObject, itemInstanceNum); // 해당 아이템 오브젝트(인스턴스)의 저장된 상태가 있다면, 저장된 상태로 복원
 
         _heldItemObject.transform.localPosition = item.GripPositionOffset;
         _heldItemObject.transform.localRotation = Quaternion.Euler(item.GripRotationOffset);
@@ -40,7 +40,7 @@ public class ItemEquipController : MonoBehaviour
 
         _heldItemObject.transform.SetParent(itemViewRoot);
 
-        rightHandIK.weight = 1f;
+        if (rightHandIK) rightHandIK.weight = 1f;
     }
 
     /// <summary>
@@ -68,6 +68,6 @@ public class ItemEquipController : MonoBehaviour
             _heldItemData = null;
         }
 
-        rightHandIK.weight = 0f;
+        if (rightHandIK) rightHandIK.weight = 0f;
     }
 }

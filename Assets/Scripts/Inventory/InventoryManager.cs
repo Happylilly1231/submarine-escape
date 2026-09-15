@@ -285,7 +285,7 @@ public class InventoryManager : MonoBehaviour
                             AppendAction(sb, "Action/Item/Read", "E");
                     }
                     break;
-                case EItemType.Wearable:
+                case EItemType.DeepSea:
                     if (FocusManager.Instance.CurrentPuzzleController == null)
                         AppendAction(sb, "Action/Item/Equip", "E");
                     break;
@@ -494,8 +494,11 @@ public class InventoryManager : MonoBehaviour
 
                 _isViewingUI = !_isViewingUI;
                 break;
-            case EItemType.Wearable:
-                //FindAnyObjectByType<WearableItem>()?.Use(selectedSlot.Item);
+            case EItemType.DeepSea:
+                if (currentEquippedItem.TryGetComponent<DeepSeaItemInSubmarine>(out var wearable))
+                {
+                    wearable.Use(selectedSlot.Item);
+                }
                 break;
         }
 

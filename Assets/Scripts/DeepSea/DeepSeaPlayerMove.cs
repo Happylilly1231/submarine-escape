@@ -43,6 +43,9 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private float abnormalOxygenCostPerSec = 5f; // 비정상 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
+    [Header("체온")]
+    [SerializeField] private float thermalProtectorDuration = 90f; // 열 보호 장치 지속 시간(초)
+
     [SerializeField] private GameObject dragDownUI;
     [SerializeField] private Image leftTimeImage;
     [SerializeField] private TextMeshProUGUI spaceCountText;
@@ -84,6 +87,10 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     public float MaxOxygen { get; private set; } = 100f; // 최대 산소량
     public float CurrentOxygen { get; private set; } = 100f; // 현재 산소량
+    public float SurvivalTime = 300f; // 생존 시간(초)
+    public float ThermalProtectorDuration => thermalProtectorDuration;
+    public float MaxTemperature { get; private set; } = 100f; // 최대 체온
+    public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
     public Vector3 MoveDir2D => _moveDir2D; // 2차원(X, Z) 이동 방향
     public Vector3 MoveDir3D => _moveDir3D; // 3차원(X, Y, Z) 이동 방향
     public Vector2 MoveInput => _moveInput; // 2차원 이동 입력
@@ -150,6 +157,8 @@ public class DeepSeaPlayerMove : MonoBehaviour
     private void Update()
     {
         if (GameManager.instance.IsPausing) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene
+            || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
         // 산소 소모
         if (IsSprinting)
@@ -179,11 +188,14 @@ public class DeepSeaPlayerMove : MonoBehaviour
         Rotate(); // 좌우 회전
         UpdateAnimation(); // 애니메이션 & 콜라이더 업데이트
         UpdateModelRotation(); // 모델 회전 업데이트
+        UpdateTemperature(); // 체온 업데이트
     }
 
     private void FixedUpdate()
     {
         if (GameManager.instance.IsPausing) return;
+        if (DeepSeaIntroCutScene.Instance.IsCutScene
+            || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
         // 잡혔을 때 -> 괴물과 똑같은 속도로 아래로 이동
         if (_isGrabbed)
@@ -644,4 +656,38 @@ public class DeepSeaPlayerMove : MonoBehaviour
     {
         CurrentSpeedMultiplier = value;
     }
+
+    #region 체온
+    /// <summary>
+    /// 체온 업데이트
+    /// <para> - 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X </para>
+    /// <para> - 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소 </para>
+    /// </summary>
+    private void UpdateTemperature()
+    {
+        float temperatureLossPerSec = MaxTemperature / SurvivalTime; // 체온 감소율 계산
+
+        // 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X
+        if (DeepSeaInventoryManager.Instance.HasThermalProtector && DeepSeaInventoryManager.Instance.IsThermalProtectorActive)
+        {
+            // 열 보호 장치 지속 시간 감소
+            thermalProtectorDuration -= Time.deltaTime;
+            if (thermalProtectorDuration <= 0f)
+            {
+                DeepSeaInventoryManager.Instance.IsThermalProtectorActive = false;
+                Debug.Log("열 보호 장치 지속 시간 종료 - 체온 감소 시작");
+            }
+        }
+        else // 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소
+        {
+            CurrentTemperature -= temperatureLossPerSec * Time.deltaTime;
+            if (CurrentTemperature <= 0f)
+            {
+                CurrentTemperature = 0f;
+                Debug.Log("체온 0도 도달 - 저체온증으로 사망");
+                // GameManager.instance.GameOver(EEndingType.Hypothermia); // 저체온증으로 사망
+            }
+        }
+    }
+    #endregion
 }
