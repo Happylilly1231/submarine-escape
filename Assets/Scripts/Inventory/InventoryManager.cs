@@ -475,6 +475,11 @@ public class InventoryManager : MonoBehaviour
                         Diary diary = FindObjectOfType<Diary>();
                         diary?.ViewDiary();
                     }
+                    else if (item.Item.ItemName == "Heli-Coord Device")
+                    {
+                        HeliCoordDevice heliCoordDevice = item.GetComponent<HeliCoordDevice>();
+                        heliCoordDevice?.ViewDevice();
+                    }
                 }
                 if (currentEquippedItem.TryGetComponent<UIItem>(out var uiItem))
                 {
