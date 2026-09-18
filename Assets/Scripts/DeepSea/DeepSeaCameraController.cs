@@ -27,6 +27,8 @@ public class DeepSeaCameraController : MonoBehaviour
     private Quaternion cutSceneTargetRotation;
     private Tween _fovTween;
 
+    public bool IsInCutScene { get; set; } = false;
+
     private void Awake()
     {
         mainCamera = Camera.main;
@@ -47,9 +49,9 @@ public class DeepSeaCameraController : MonoBehaviour
         // 카메라 위치는 플레이어 머리(cameraPos) 위치 고정
         transform.position = cameraPos.position;
 
-        if (DeepSeaIntroCutScene.Instance.IsCutScene)
+        if (IsInCutScene || DeepSeaIntroCutScene.Instance.IsCutScene)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, cutSceneTargetRotation, Time.deltaTime * 12f);
+            transform.rotation = cutSceneTargetRotation; // 이미 코루틴에서 Slerp 계산이 완료된 값을 받음
             return;
         }
 
@@ -277,12 +279,22 @@ public class DeepSeaCameraController : MonoBehaviour
     /// </summary>
     public void EndCutScene()
     {
-        // 현재 카메라 방향을 기준으로 기존 카메라 회전값을 다시 맞춤
-        Vector3 euler = transform.eulerAngles;
-        _xRotation = euler.x;
+        IsInCutScene = false;
 
-        if (_xRotation > 180f) _xRotation -= 360f;
+        // 1. 플레이어 몸통의 기울임(X, Z축)을 완전히 제거하고 수평(Y축 Yaw)만 남김
+        Vector3 currentEuler = playerMove.transform.eulerAngles;
+        playerMove.transform.rotation = Quaternion.Euler(0f, currentEuler.y, 0f);
 
-        _xRotation = Mathf.Clamp(_xRotation, minPitch, maxPitch);
+        // 2. 현재 카메라 회전값을 기준으로 X축 Pitch 계산
+        Vector3 camEuler = transform.eulerAngles;
+        float pitch = camEuler.x;
+        if (pitch > 180f) pitch -= 360f;
+
+        // 3. 카메라 및 플레이어의 내부 Pitch 변수 동기화
+        _xRotation = Mathf.Clamp(pitch, minPitch, maxPitch);
+        playerMove.XRotation = _xRotation;
+
+        // 4. 캐릭터 메쉬 모델 회전값 초기화
+        playerMove.ResetModelRotation();
     }
 }

@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -20,6 +21,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [SerializeField] private ParticleSystem cameraDashBubbleFX; // 버블 파티클
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
     [SerializeField] private Volume damagedVolume;
+    [SerializeField] private Volume dashVolume;
 
     [Header("이동")]
     [SerializeField] private float normalSpeed = 5f; // 기본 이동 속도
@@ -40,12 +42,13 @@ public class DeepSeaPlayerMove : MonoBehaviour
     [Header("산소")]
     [SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
     [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
-    [SerializeField] private float abnormalOxygenCostPerSec = 5f; // 비정상 산소 소모량
+    // [SerializeField] private float abnormalOxygenCostPerSec = 5f; // 비정상 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
     [Header("체온")]
     [SerializeField] private float thermalProtectorDuration = 90f; // 열 보호 장치 지속 시간(초)
 
+    [Header("끌어내려질 때 UI")]
     [SerializeField] private GameObject dragDownUI;
     [SerializeField] private Image leftTimeImage;
     [SerializeField] private TextMeshProUGUI spaceCountText;
@@ -76,6 +79,9 @@ public class DeepSeaPlayerMove : MonoBehaviour
     // 대미지
     private bool _isKnockedBack = false; // 넉백 상태 플래그
 
+    // 연출 관련
+    private bool _isCutsceneMoving = false; // 연출 이동/회전 진행 중 여부
+
     // 기타
     private Rigidbody _rb;
     private Transform _mainCamTransform;
@@ -99,7 +105,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public float MouseY { get; private set; } // 마우스 상하 값
     public bool IsDashing { get; private set; } = false; // 회피 중인지 여부
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
-    public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
+    // public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
 
     public bool CanMove { get; set; } = true;
 
@@ -156,7 +162,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.instance.IsPausing) return;
+        if (GameManager.instance.IsPausing || _isCutsceneMoving) return;
         if (DeepSeaIntroCutScene.Instance.IsCutScene
             || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
@@ -165,10 +171,10 @@ public class DeepSeaPlayerMove : MonoBehaviour
         {
             ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
         }
-        else if (IsOxgenNonSafe)
-        {
-            ConsumeOxygen(abnormalOxygenCostPerSec * Time.fixedDeltaTime);
-        }
+        // else if (IsOxgenNonSafe)
+        // {
+        //     ConsumeOxygen(abnormalOxygenCostPerSec * Time.fixedDeltaTime);
+        // }
         else
         {
             // 평소에도 지속해서 기본 산소 감소
@@ -182,7 +188,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
             return;
         }
 
-        if (_isKnockedBack) return; // 넉백 중에는 회전 및 조작 입력 무시
+        if (_isKnockedBack) return; // 넉백 중이거나 연출 중에는 회전 및 조작 입력 무시
 
         ReadInputs(); // 입력 가져오기
         Rotate(); // 좌우 회전
@@ -193,7 +199,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (GameManager.instance.IsPausing) return;
+        if (GameManager.instance.IsPausing || _isCutsceneMoving) return;
         if (DeepSeaIntroCutScene.Instance.IsCutScene
             || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
@@ -360,7 +366,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
         cameraDashBubbleFX.Play();
 
         // FOV 연출
-        StartCoroutine(DashFOVCoroutine(Camera.main));
+        StartCoroutine(DashChromaticAberrationCoroutine(dashVolume));
 
         // 물리 시간(FixedUpdate) 기준으로 정확히 대기
         float timer = 0f;
@@ -372,6 +378,50 @@ public class DeepSeaPlayerMove : MonoBehaviour
 
         // 회피 종료
         IsDashing = false;
+    }
+
+    /// <summary>
+    /// 회피 시 Chromatic Aberration(색수차) 연출 코루틴
+    /// </summary>
+    /// <param name="dashVolume"></param>
+    private IEnumerator DashChromaticAberrationCoroutine(Volume dashVolume)
+    {
+        if (dashVolume == null || !dashVolume.profile.TryGet(out ChromaticAberration chromaticAberration))
+        {
+            yield break;
+        }
+
+        // 색수차 효과 활성화 및 초기값 보장
+        chromaticAberration.active = true;
+        chromaticAberration.intensity.overrideState = true;
+
+        float startIntensity = 0f;
+        float peakIntensity = 0.5f;
+
+        // 1. 순간 상승
+        float peakDuration = 0.05f;
+        float t = 0f;
+        while (t < peakDuration)
+        {
+            t += Time.deltaTime;
+            chromaticAberration.intensity.value = Mathf.Lerp(startIntensity, peakIntensity, t / peakDuration);
+            yield return null;
+        }
+
+        chromaticAberration.intensity.value = peakIntensity;
+
+        // 2. 복구
+        float recoveryDuration = 0.15f;
+        t = 0f;
+        while (t < recoveryDuration)
+        {
+            t += Time.deltaTime;
+            chromaticAberration.intensity.value = Mathf.Lerp(peakIntensity, startIntensity, t / recoveryDuration);
+            yield return null;
+        }
+
+        // 최종값 복원 및 오버라이드 해제
+        chromaticAberration.intensity.value = startIntensity;
     }
 
     /// <summary>
@@ -515,9 +565,9 @@ public class DeepSeaPlayerMove : MonoBehaviour
             }
         }
 
-        // z축 회전 값 계산
-        if (_moveInput.x < -0.1f) targetZRot = 45f;
-        else if (_moveInput.x > 0.1f) targetZRot = -45f;
+        // // z축 회전 값 계산
+        // if (_moveInput.x < -0.1f) targetZRot = 45f;
+        // else if (_moveInput.x > 0.1f) targetZRot = -45f;
 
         // 모델 회전
         // 오일러 변환을 거치지 않고 X축 및 Z축 회전 쿼터니언을 각각 생성
@@ -689,5 +739,69 @@ public class DeepSeaPlayerMove : MonoBehaviour
             }
         }
     }
+    #endregion
+
+    #region 연출용 함수들
+
+    // 연출용 특정 위치까지 이동하는 함수
+    public void MoveToLocationForCutscene(Vector3 targetPos, float duration, Action onComplete = null)
+    {
+        PrepareCutscene();
+        transform.DOMove(targetPos, duration)
+            .SetEase(Ease.InOutSine)
+            .OnComplete(() => onComplete?.Invoke());
+    }
+
+    // 연출용 특정 회전값으로 회전하는 함수 (카메라 회전까지 같이 함)
+    public void RotateToForCutscene(Quaternion targetRot, float duration, Action onComplete = null)
+    {
+        PrepareCutscene();
+
+        // 시작 및 목표 Euler 각도 추출
+        Vector3 startEuler = transform.eulerAngles;
+        Vector3 targetEuler = targetRot.eulerAngles;
+
+        // 1. 몸통은 Y축(좌우)만 회전
+        Vector3 bodyTargetEuler = new Vector3(0f, targetEuler.y, 0f);
+        transform.DORotate(bodyTargetEuler, duration, RotateMode.FastBeyond360)
+            .SetEase(Ease.InOutSine);
+
+        // 2. 카메라는 X/Y/Z 회전값 전체를 받아 SetCutSceneRotation으로 제어
+        Quaternion startCamRot = deepSeaCameraController.transform.rotation;
+
+        DOVirtual.Float(0f, 1f, duration, t =>
+        {
+            Quaternion currentCamRot = Quaternion.Slerp(startCamRot, targetRot, t);
+            deepSeaCameraController.SetCutSceneRotation(currentCamRot);
+        })
+        .SetEase(Ease.InOutSine)
+        .OnComplete(() => onComplete?.Invoke());
+    }
+
+    // 연출 준비 (시작)
+    private void PrepareCutscene()
+    {
+        CanMove = false;
+        _isCutsceneMoving = true;
+        _rb.velocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+
+        if (animator != null)
+        {
+            animator.SetBool(_isCrawlSwimmingHash, false);
+        }
+    }
+
+    // 연출 종료 및 복구
+    public void ReleaseCutsceneControl()
+    {
+        _isCutsceneMoving = false;
+        CanMove = true;
+
+        // 컷씬 종료 시 카메라 컨트롤러의 회전값 정리 함수 호출
+        deepSeaCameraController.EndCutScene();
+        deepSeaCameraController.SetInputEnabled(true);
+    }
+
     #endregion
 }

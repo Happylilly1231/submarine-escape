@@ -153,8 +153,10 @@ public class DeepSeaUIManager : MonoBehaviour
 
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
 
-        _deepSeaMonsterController.IsFSMPause = false; // 심해 몬스터 이동 시작
         IsActiveGuide = false;
+
+        // _deepSeaMonsterController.StartFSM(); // 심해 몬스터 이동 시작
+        DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
     }
 
     /// <summary>

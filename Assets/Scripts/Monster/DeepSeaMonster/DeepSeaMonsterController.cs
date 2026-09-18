@@ -26,7 +26,7 @@ public class DeepSeaMonsterController : MonoBehaviour
     private Rigidbody _rb;
     public Rigidbody Rb => _rb;
     public Animator animator;
-    private float _fsmEndDepth = 95f; // FSM 종료 수심 
+    private float _fsmEndDepth = 95f; // FSM 종료 수심
 
     public List<DeepSeaMonsterAttackBase> AllPatternList { get; private set; } = new List<DeepSeaMonsterAttackBase>();
     public DeepSeaMonsterAttackBase currentPattern = null;
@@ -44,6 +44,8 @@ public class DeepSeaMonsterController : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip spawnSound;
 
+    public bool IsIntroDashShowed { get; set; } = false; // 컷씬 이후 이어지는 처음 대시 공격을 보여주었는지 여부
+
     private void Awake()
     {
         if (deepSeaPlayerMove == null) return;
@@ -56,28 +58,65 @@ public class DeepSeaMonsterController : MonoBehaviour
     {
         if (deepSeaPlayerMove == null) return;
 
+        if (IsFSMPause)
+            StopFSM(); // FSM 정지
+        else
+            StartFSM(); // FSM 시작
+    }
+
+    /// <summary>
+    /// FSM 시작
+    /// </summary>
+    public void StartFSM()
+    {
+        IsFSMPause = false; // 정지 여부 false로 변경
+
+        // 패턴 비우고 추가
+        AllPatternList.Clear();
         AllPatternList.Add(new DashAttack(this));
         AllPatternList.Add(new ScratchAttack(this));
         AllPatternList.Add(new DragDownAttack(this));
 
+        // 현재 패턴들의 나온 횟수 0으로 초기화
         foreach (var pattern in AllPatternList)
         {
             _patternCounts[pattern] = 0;
         }
 
+        monsterGeo.SetActive(true); // 외관 활성화
+        _rb.isKinematic = false;
+
+        // 어뢰 맞은 횟수 설정 (로드)
         // SetTorpedoHitCountAndApplyEffect(3);
 
+        // 스폰 상태
         _fsm.ChangeState(new SpawnState());
+    }
+
+    /// <summary>
+    /// FSM 정지
+    /// </summary>
+    public void StopFSM()
+    {
+        IsFSMPause = true; // 정지 여부 true로 변경
+
+        _fsm.ExitState(); // 상태 종료
+
+        monsterGeo.SetActive(false); // 외관 비활성화
+        _rb.isKinematic = true;
     }
 
     private void Update()
     {
-        if (deepSeaPlayerMove == null) return;
+        if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         _rb.velocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
 
-        if (IsFSMPause) return;
+        if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
+        {
+            IsEnded = true;
+        }
 
         if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
         {
@@ -89,23 +128,21 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (deepSeaPlayerMove == null) return;
-
-        if (IsFSMPause) return;
+        if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         _fsm.FixedUpdate();
     }
 
     private void OnDisable()
     {
-        if (deepSeaPlayerMove == null) return;
+        if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         _fsm.ExitState(); // 비활성화(파괴 직전)될 때 -> 무조건 상태 종료
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (deepSeaPlayerMove == null) return;
+        if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         if (!IsPlayerTriggered && other.gameObject.CompareTag("Player"))
         {
@@ -116,7 +153,7 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (deepSeaPlayerMove == null) return;
+        if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         if (IsPlayerTriggered && other.gameObject.CompareTag("Player"))
         {
@@ -137,7 +174,7 @@ public class DeepSeaMonsterController : MonoBehaviour
     public void TerminateFSM()
     {
         _fsm.ExitState();
-        enabled = false;
+        enabled = false; // 현재 컨트롤러 컴포넌트 자체를 비활성화
     }
 
     public int GetPatternCount(DeepSeaMonsterAttackBase pattern)
@@ -204,23 +241,6 @@ public class DeepSeaMonsterController : MonoBehaviour
     {
         hitBox.DisableHitbox();
     }
-
-    // /// <summary>
-    // /// 공격 애니메이션에서 공격이 플레이어에게 실제로 닿을 때 호출되는 이벤트
-    // /// </summary>
-    // public void OnAttack()
-    // {
-    //     if (IsPlayerTriggered)
-    //     {
-    //         Debug.Log("공격 성공 판정");
-    //         currentPattern.OnAttackSuccess();
-    //     }
-    //     else
-    //     {
-    //         Debug.Log("공격 실패 판정");
-    //         currentPattern.OnAttackMiss();
-    //     }
-    // }
 
     /// <summary>
     /// 플레이어에게 대미지 (산소 감소)
