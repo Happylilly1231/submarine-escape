@@ -35,6 +35,7 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         else Destroy(gameObject);
 
         _deepSeaMonsterController = FindObjectOfType<DeepSeaMonsterController>();
+        _deepSeaMonsterController.StopFSM();
     }
 
     private void Start()
@@ -58,7 +59,6 @@ public class DeepSeaIntroCutScene : MonoBehaviour
         Debug.Log("심해 인트로 컷씬 시작");
 
         IsCutScene = true;
-        _deepSeaMonsterController.IsFSMPause = true;
 
         // =====================================
         // 2. 플레이어 이동

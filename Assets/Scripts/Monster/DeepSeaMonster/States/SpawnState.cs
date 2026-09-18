@@ -66,49 +66,60 @@ namespace DeepSeaMonsterStates
             selectedPattern = null;
             spawnPos = Vector3.zero;
             spawnRot = Quaternion.identity;
+            var validPatternsMap = new Dictionary<DeepSeaMonsterAttackBase, List<Vector3>>(); // 패턴, 해당 패턴의 가능한 방향들 저장 딕셔너리
+            Vector3 chosenWorldDir; // 정해진 방향
 
-            // <패턴, 가능했던 월드 방향 리스트> 저장용 딕셔너리
-            var validPatternsMap = new Dictionary<DeepSeaMonsterAttackBase, List<Vector3>>();
-
-            // 1. 전체 패턴 순회하며 스폰 가능한 방향 수집
-            foreach (var pattern in monster.AllPatternList)
+            if (!monster.IsIntroDashShowed) // 처음 대시 공격을 보여주지 않았다면 -> 대시 공격 패턴으로 선택
             {
-                List<Vector3> validDirs = GetAvailableDirections(monster, pattern);
-                if (validDirs.Count > 0)
+                monster.IsIntroDashShowed = true;
+                selectedPattern = monster.AllPatternList[0]; // 대시 공격
+                chosenWorldDir = Vector3.forward; // 앞
+            }
+            else // 보여준 뒤라면 -> 가능한 방향의 패턴 선택
+            {
+                // 모든 패턴을 순회하며 가능한 패턴 구하기
+                foreach (var pattern in monster.AllPatternList)
                 {
-                    validPatternsMap.Add(pattern, validDirs);
+                    // 가능한 방향들 구하기
+                    List<Vector3> validDirs = GetAvailableDirections(monster, pattern);
+
+                    // 하나라도 있으면 가능한 패턴 딕셔너리에 가능한 방향들과 함께 집어넣기
+                    if (validDirs.Count > 0)
+                    {
+                        validPatternsMap.Add(pattern, validDirs);
+                    }
                 }
+
+                // 가능한 패턴이 없다면 -> false 리턴
+                if (validPatternsMap.Count == 0) return false;
+
+                // 등장 횟수가 가장 적은 패턴들 추출
+                int minCount = validPatternsMap.Keys.Min(p => monster.GetPatternCount(p));
+                List<DeepSeaMonsterAttackBase> candidates = validPatternsMap.Keys
+                    .Where(p => monster.GetPatternCount(p) == minCount)
+                    .ToList();
+
+                // 추출된 후보 패턴 중 무작위 1개 선택
+                selectedPattern = candidates[Random.Range(0, candidates.Count)];
+                monster.IncreasePatternCount(selectedPattern);
+
+                // 선택된 패턴이 가진 유효한 방향 중 무작위 1개 선택
+                List<Vector3> availableWorldDirs = validPatternsMap[selectedPattern];
+                chosenWorldDir = availableWorldDirs[Random.Range(0, availableWorldDirs.Count)];
             }
 
-            // 스폰 가능한 패턴이 하나도 없음
-            if (validPatternsMap.Count == 0) return false;
-
-            // 2. 등장 횟수가 가장 적은 패턴들 추출
-            int minCount = validPatternsMap.Keys.Min(p => monster.GetPatternCount(p));
-            List<DeepSeaMonsterAttackBase> candidates = validPatternsMap.Keys
-                .Where(p => monster.GetPatternCount(p) == minCount)
-                .ToList();
-
-            // 3. 후보 패턴 중 무작위 1개 선택
-            selectedPattern = candidates[Random.Range(0, candidates.Count)];
-            monster.IncreasePatternCount(selectedPattern);
-
-            // 4. 선택된 패턴이 가진 유효한 방향 중 무작위 1개 선택
-            List<Vector3> availableWorldDirs = validPatternsMap[selectedPattern];
-            Vector3 chosenWorldDir = availableWorldDirs[Random.Range(0, availableWorldDirs.Count)];
-
-            // 5. 최종 스폰 좌표 및 바라보는 회전값 계산
+            // 스폰 좌표 계산 - 플레이어 위치로부터 정해진 방향으로 스폰 거리만큼 떨어진 곳
             Vector3 playerPos = monster.PlayerTransform.position;
             spawnPos = playerPos + (chosenWorldDir * selectedPattern.SpawnDistance);
 
-            // 괴물이 플레이어를 향하도록 회전값 설정
-            Vector3 lookDirection = (playerPos - spawnPos).normalized;
-            if (lookDirection != Vector3.zero)
+            // 괴물이 플레이어를 향하도록 스폰 회전값 설정
+            Vector3 lookDirection = (playerPos - spawnPos).normalized; // 플레이어를 바라보는 방향
+            if (lookDirection != Vector3.zero) // 0이 아닐 때만 LookRotation 실행
             {
                 spawnRot = Quaternion.LookRotation(lookDirection);
             }
 
-            return true;
+            return true; // 가능하므로 true 반환
         }
 
         /// <summary>
