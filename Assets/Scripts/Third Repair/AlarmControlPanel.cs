@@ -7,8 +7,10 @@ using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
-public class AlarmControlPanel : PuzzleController, IInteractable
+public class AlarmControlPanel : PuzzleController, IInteractable, IAbilityInteractable
 {
+    public bool CanDestroy => true;
+
     protected override bool IsHoverRequired => false;
 
     protected override bool IsMouseRequiredAtFirst => true;
@@ -77,6 +79,8 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
     public string GetInteractText()
     {
+        if (PlayerManager.Instance.CheckMonsterTransformation()) return "파괴 가능: 경보 관리 시스템 패널";
+
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 전력 필요
             return LocalizationHelper.GetLocalizedInteractText("Interact/PowerRestorationRequired");
 
@@ -85,12 +89,24 @@ public class AlarmControlPanel : PuzzleController, IInteractable
 
     public void Interact()
     {
+        if (PlayerManager.Instance.CheckMonsterTransformation())
+        {
+            InteractWithAbility();
+            return;
+        }
+
         if (!LightingManager.instance.IsPowerOn) // 전력 없을 때 -> 상호작용 X
             return;
 
         ActivatePuzzle(); // 패널 활성화
     }
     #endregion
+
+    public void InteractWithAbility()
+    {
+        PlayerManager.Instance.playerAbility.TryDestroy(gameObject, "경보 관리 시스템 패널");
+        SubmarineInGameManager.instance.CanAlert = false; // 이제 어떤 상황에서도 경보 울리지 않도록 변경
+    }
 
     #region PuzzleController
     public override void ActivatePuzzle()

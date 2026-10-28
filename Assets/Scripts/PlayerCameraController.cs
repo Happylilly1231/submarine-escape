@@ -6,28 +6,19 @@ using UnityEngine;
 /// <summary>
 /// 카메라가 플레이어 머리 위치를 추적해 이동하고 회전하게 함
 /// </summary>
-public class PlayerCameraController : MonoBehaviour
+public class PlayerCameraController : PlayerCameraControllerBase
 {
     [SerializeField] private PlayerMove playerMove; // 플레이어 이동 스크립트(마우스 좌표 가져와야 함)
     [SerializeField] private Transform playerHead; // 플레이어 머리 위치
-    [SerializeField] private Transform cameraPos; // 카메라 위치
     [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 0.08f, 0.05f); // 눈높이
 
     private float _xRotation = 0f; // 카메라 상하 회전값
+    public float xRotation => _xRotation;
     // private float _yRotation = 0f; // 카메라 좌우 회전값
     public bool IsIntroPlaying = false; // 인트로 시퀀스 재생 여부
 
     // [추가] 외부 연출 제어용 변수
-    private bool _canControlInput = true;
     private Sequence _rotationSequence; // DOTween 시퀀스 저장용
-
-    /// <summary>
-    /// 플레이어 조작 입력 가능 여부 설정
-    /// </summary>
-    public void SetInputEnabled(bool isEnabled)
-    {
-        _canControlInput = isEnabled;
-    }
 
     /// <summary>
     /// 정지 중이 아닐 때 - 마우스 좌표에 따른 카메라 회전 & 플레이어 머리 위치에서 오프셋만큼 떨어진 위치로 이동
@@ -53,21 +44,23 @@ public class PlayerCameraController : MonoBehaviour
             // 카메라 Rotation 적용 (x: 카메라 상하, y: 플레이어 좌우)
             transform.localRotation = Quaternion.Euler(_xRotation, playerMove.transform.eulerAngles.y, 0f);
 
-            // 위치 업데이트
+            // 위치 기본값 결정
+            Vector3 targetPos;
             if (playerMove.IsDodging)
-                transform.position = playerHead.TransformPoint(cameraOffset);
+                targetPos = playerHead.TransformPoint(cameraOffset);
             else
-                transform.position = cameraPos.position;
+                targetPos = cameraPos.position;
 
-            // _xRotation -= playerMove.MouseY; // 상하 회전값
-            // // _yRotation += playerMove.MouseX; // 좌우 회전값
-            // _xRotation = Mathf.Clamp(_xRotation, -90f, 50f); // 시야 상하 회전 범위 제한
-            // transform.localRotation = Quaternion.Euler(_xRotation, playerMove.transform.eulerAngles.y, 0f);
+            // 흔들림 강도가 있으면 퍼린 노이즈 더해서 흔들림 적용
+            if (_shakeIntensity > 0f)
+            {
+                float x = (Mathf.PerlinNoise(Time.time * 25f, 0f) - 0.5f) * _shakeIntensity;
+                float y = (Mathf.PerlinNoise(0f, Time.time * 25f) - 0.5f) * _shakeIntensity;
+                targetPos += new Vector3(x, y, 0f);
+            }
 
-            // if (playerMove.IsDodging)
-            //     transform.position = playerHead.TransformPoint(cameraOffset);
-            // else
-            //     transform.position = cameraPos.position;
+            // 최종 위치 적용
+            transform.position = targetPos;
         }
     }
 
@@ -130,7 +123,7 @@ public class PlayerCameraController : MonoBehaviour
     }
 
     /// <summary>
-    /// 2. DOTween을 이용해 점차 특정 각도로 회전합니다.
+    /// DOTween으로 점차 특정 각도로 회전
     /// </summary>
     /// <param name="targetYAngle">목표 월드 Y축 회전값</param>
     /// <param name="duration">회전 시간(초)</param>

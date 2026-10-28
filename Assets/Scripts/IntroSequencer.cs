@@ -11,11 +11,15 @@ public class IntroSequencer : MonoBehaviour
     [SerializeField] private GameObject interactorUI;
     [SerializeField] private PlayerCameraController playerCameraController;
 
-    private Animator _animator;
+    private Animator _animator; // 레이어 0: 아무것도 없음 / 1: 인트로 / 2: 플레이어
 
     void Awake()
     {
         _animator = GetComponent<Animator>();
+        _animator.SetLayerWeight(1, 1f); // 인트로 레이어 켜기
+
+        if (GameManager.instance.IsAbilityActive)
+            return;
 
         if (playerCameraController != null)
             playerCameraController.IsIntroPlaying = true; // 카메라 컨트롤러에 인트로 시퀀스 재생 중임을 알림
@@ -25,6 +29,14 @@ public class IntroSequencer : MonoBehaviour
     {
         // 게임 초기 설정
         SubmarineInGameManager.instance.InitGame();
+
+        if (GameManager.instance.IsAbilityActive) // 히든 능력 사용 시에 -> 인트로 아예 스킵
+        {
+            _animator.SetLayerWeight(1, 0f); // 인트로 레이어 끄기
+            enabled = false; // 컴포넌트 비활성화
+            Debug.Log("능력이 활성화되어 있으므로 -> 인트로 스킵");
+            return;
+        }
 
         // 세이브 로드 상태라면
         if (SavePointManager.Instance != null && SavePointManager.Instance.IsLoadGameMode)
@@ -55,8 +67,8 @@ public class IntroSequencer : MonoBehaviour
 
         // 애니메이션이 끝날 때까지 대기
         yield return new WaitUntil(() =>
-            _animator.GetCurrentAnimatorStateInfo(0).IsName("Sit To Stand") &&
-            _animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1.0f);
+            _animator.GetCurrentAnimatorStateInfo(1).IsName("Sit To Stand") &&
+            _animator.GetCurrentAnimatorStateInfo(1).normalizedTime >= 1.0f);
 
         yield return new WaitForSeconds(0.5f);
 
@@ -125,8 +137,8 @@ public class IntroSequencer : MonoBehaviour
         _animator.speed = 1f;
 
         // 레이어 교체
-        _animator.SetLayerWeight(0, 0f); // 인트로 레이어 끄기
-        _animator.SetLayerWeight(1, 1f); // 플레이어 레이어 켜기
+        _animator.SetLayerWeight(1, 0f); // 인트로 레이어 끄기
+        _animator.SetLayerWeight(2, 1f); // 플레이어 레이어 켜기
 
         // 게임 재개 및 UI 표시
         FocusManager.Instance.ResetFocusState(GameFocusState.None); // 일반 포커스 상태로 초기화

@@ -39,19 +39,9 @@ public class AlertAreaInfo
 public class SubmarineInGameManager : MonoBehaviour
 {
     // 경보
-    // [SerializeField] private Button alertButton; // 임시 - 경보 버튼
     private bool _isAlerting = false; // 경보 발생 중 여부
     public bool IsAlerting => _isAlerting;
-    // [SerializeField] private Transform escapeRoomPos; // 탈출실 위치
-    // public bool hasEverOpenedEscapeDoor = false; // 탈출실 문이 한 번이라도 열렸는지 여부
-
-    // // 파괴될 장비
-    // [SerializeField] private GameObject[] destroyEquipments; // 파괴되는 장비 배열
-    // public int currentDestroyEquipmentIndex = 0; // 현재 파괴될 장비 인덱스
-    // private GameObject _currentDestroyEquipment; // 현재 파괴될 장비
-    // public GameObject CurrentDestroyEquipment => _currentDestroyEquipment;
-    // private Transform _currentTargetPos; // 현재 목표 위치(탈출실 / 장비의 파괴 위치)
-    // public Transform CurrentTargetPos => _currentTargetPos;
+    public bool CanAlert { get; set; } = true;
 
     // 문
     private Door[] _doors;
@@ -102,7 +92,7 @@ public class SubmarineInGameManager : MonoBehaviour
     [SerializeField] private GameObject inventoryUI;
     [SerializeField] private GameObject interactorUI;
     public GameObject InteractorUI => interactorUI;
-    public bool isInGameMenuActive = false; // 플레이어가 인게임 메뉴를 보고 있는 상태
+    // public bool isInGameMenuActive = false; // 플레이어가 인게임 메뉴를 보고 있는 상태
 
     // 경보
     [SerializeField] private List<AlertAreaInfo> alertAreaInfoList = new List<AlertAreaInfo>();
@@ -251,15 +241,11 @@ public class SubmarineInGameManager : MonoBehaviour
     /// <param name="destroyEquimentIndex">파괴될 장치 인덱스(따로 없으면 -1)</param>
     public void AlertOn(AlertArea alertArea, int destroyEquimentIndex = -1)
     {
+        if (!CanAlert) return; // 경보가 울릴 수 없는 상태(경보 관리 시스템 패널 파괴)면 경보 울리지 않음
+
         // 탈출실 경보가 발생 중이라면 -> 다른 경보는 전부 무효 처리 (어차피 괴물이 탈출실 안으로 들어갈 때 게임 오버됨)
         if (CurrentAlertArea == AlertArea.EscapeRoom)
             return;
-
-        // AlertArea prevAlertArea = CurrentAlertArea;
-        // int prevDestroyEquipmentIndex = CurrentDestroyEquipmentIndex;
-        // GameObject prevDestroyEquipmentObj = CurrentDestroyEquipmentObj;
-        // Transform prevDestroyPos = CurrentDestroyPos;
-        // Transform prevSequenceCameraPos = CurrentSequenceCameraPos;
 
         // 경보 발생 중이었을 때 (탈출실 제외)
         if (_isAlerting)
@@ -287,6 +273,13 @@ public class SubmarineInGameManager : MonoBehaviour
         else
         {
             OnNonMachinerySpaceAlertStarted?.Invoke();
+        }
+
+        // 플레이어가 능력 활성화된 게임 중일 때
+        if (GameManager.instance.IsAbilityActive)
+        {
+            PlayerManager.Instance.playerAbility.TransformToMonster(); // 괴물로 강제 변신
+            PlayerManager.Instance.playerStat.DecreaseSanityRapidly(); // 정신력 매우 빠르게 0으로 감소해서 게임 오버
         }
 
         Debug.Log("경보 발생!");
@@ -344,59 +337,6 @@ public class SubmarineInGameManager : MonoBehaviour
         // alertButton.colors = colorBlock;
     }
 
-    // /// <summary>
-    // /// 경보 발생
-    // /// </summary>
-    // public void AlertOn()
-    // {
-    //     if (hasEverOpenedEscapeDoor) // 탈출실 문이 한 번이라도 열린 경우(이후 어뢰실 장비에서 경보 발생해도 경보 발생 위치는 탈출실 위치로 설정됨(우선순위 더 높음))
-    //     {
-    //         _currentTargetPos = escapeRoomPos; // 현재 목표 위치 -> 탈출실 위치로 설정
-    //     }
-    //     else // 어뢰실 장비에서 경보 발생하는 경우
-    //     {
-    //         // 인덱스 범위 넘는 경우 예외 처리
-    //         if (currentDestroyEquipmentIndex >= destroyEquipments.Length)
-    //         {
-    //             // AlertOff();
-    //             return;
-    //         }
-
-    //         // 현재 파괴 정보 설정
-    //         _currentDestroyEquipment = destroyEquipments[currentDestroyEquipmentIndex]; // 현재 파괴될 장비 설정
-    //         _currentTargetPos = _currentDestroyEquipment.transform.GetChild(0); // 현재 목표 위치 -> 현재 파괴될 장비 위치의 파괴 위치(첫번째 자식)로 변경
-    //     }
-
-    //     // 임시 - 경보 버튼 빨간색으로 변경(후에 지워야 함)
-    //     ColorBlock colorBlock = alertButton.colors;
-    //     colorBlock.normalColor = Color.red;
-    //     alertButton.colors = colorBlock;
-
-    //     _isAlerting = true; // 경보 발생 중으로 설정
-    //     AudioManager.Instance.PlaySoundSafe(_audioSource, alertSound);
-    //     Debug.Log("경보 발생!");
-
-    //     // 경보 발생 시작 이벤트 알림
-    //     OnAlertStarted?.Invoke();
-    // }
-
-    // /// <summary>
-    // /// 경보 해제
-    // /// </summary>
-    // public void AlertOff()
-    // {
-    //     _currentDestroyEquipment = null; // 현재 파괴될 장비 없으므로 null로 초기화
-    //     _currentTargetPos = null; // 현재 목표 위치 null로 초기화
-    //     _isAlerting = false; // 경보 발생 중 아님으로 설정
-    //     Debug.Log("경보 해제");
-    //     _audioSource.Stop();
-
-    //     // 임시 - 경보 버튼 하얀색으로 변경(후에 지워야 함)
-    //     ColorBlock colorBlock = alertButton.colors;
-    //     colorBlock.normalColor = Color.white;
-    //     alertButton.colors = colorBlock;
-    // }
-
     /// <summary>
     /// 인게임 UI(인벤토리, 스탯, 상호작용) 활성화 여부 설정
     /// </summary>
@@ -407,5 +347,9 @@ public class SubmarineInGameManager : MonoBehaviour
         inventoryUI.SetActive(isActive); // 인벤토리 UI 
         statUI.SetActive(isActive); // 스탯 UI
         interactorUI.SetActive(isActive); // 상호작용 UI
+        if (GameManager.instance.IsAbilityActive)
+        {
+            PlayerManager.Instance.playerAbility.abilityUI.SetActive(isActive);
+        }
     }
 }

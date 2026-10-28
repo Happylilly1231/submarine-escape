@@ -32,25 +32,36 @@ public class DeepSeaInventoryManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+
+            PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
+            ApplyData(playerItemStates);
+
+            // 능력 사용 게임일 때 -> 아래 설정 필요 없음
+            if (GameManager.instance.IsAbilityActive)
+                return;
+
+            _itemEquipController = GetComponent<ItemEquipController>();
+
+            // 초기 인벤토리 상태 설정
+            if (HasOxygenCapsule) playerInventory.Add(oxygenCapsuleItem);
+            if (HasThermalProtector) playerInventory.Add(thermalProtectorItem);
+            if (HasHelicopterLocator) playerInventory.Add(helicopterLocatorItem);
         }
         else
         {
             Destroy(gameObject);
         }
-
-        _itemEquipController = GetComponent<ItemEquipController>();
-
-        PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
-        ApplyData(playerItemStates);
-
-        // 초기 인벤토리 상태 설정
-        if (HasOxygenCapsule) playerInventory.Add(oxygenCapsuleItem);
-        if (HasThermalProtector) playerInventory.Add(thermalProtectorItem);
-        if (HasHelicopterLocator) playerInventory.Add(helicopterLocatorItem);
     }
 
     private void Start()
     {
+        // 능력 사용 게임일 때 -> 잠수복 헬멧 오브젝트 비활성화
+        if (GameManager.instance.IsAbilityActive)
+        {
+            divingHelmet.SetActive(false); // 잠수복 헬멧 오브젝트 비활성화
+            return;
+        }
+
         if (player == null)
         {
             player = FindObjectOfType<DeepSeaPlayerMove>();
@@ -98,7 +109,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
     /// <param name="context"></param>
     public void OnSlotKeyPress(InputAction.CallbackContext context)
     {
-        if (!context.performed) return;
+        if (!context.performed || GameManager.instance.IsAbilityActive) return;
 
         int slotIdx = context.control.name[0] - '1';
 
@@ -127,7 +138,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
     /// <param name="context"></param>
     public void OnUseItem(InputAction.CallbackContext context)
     {
-        if (!context.performed) return;
+        if (!context.performed || GameManager.instance.IsAbilityActive) return;
 
         if (currentSlotIndex < 0 || currentSlotIndex >= playerInventory.Count) return;
 

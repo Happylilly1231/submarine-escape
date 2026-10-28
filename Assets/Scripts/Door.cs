@@ -4,8 +4,10 @@ using UnityEngine;
 using DG.Tweening;
 using System.Runtime.Serialization;
 
-public class Door : MonoBehaviour, IInteractable
+public class Door : MonoBehaviour, IInteractable, IAbilityInteractable
 {
+    public bool CanDestroy => true;
+
     [SerializeField] private Transform frontTransform; // 문 앞 트랜스폼
     [SerializeField] private Transform backTransform; // 문 뒤 트랜스폼
     [SerializeField] private Transform centerTransform; // 중앙 트랜스폼
@@ -49,6 +51,7 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (_isMoving) return "";
+        if (PlayerManager.Instance.CheckMonsterTransformation()) return $"파괴 가능: 문";
         if (SubmarineInGameManager.instance && SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace) return ""; // 기계실 경보 발생돼서 기계실에 갇힌 경우에는 문 열 수 없음
         if (isRepairNeed) return LocalizationHelper.GetLocalizedInteractText("Interact/BrokenRepairRequired");
         if (isLocked) return LocalizationHelper.GetLocalizedInteractText("Interact/Locked");
@@ -64,7 +67,15 @@ public class Door : MonoBehaviour, IInteractable
     /// </summary>
     public void Interact()
     {
-        if (_isMoving || isLocked || isAdditionalLocked || isRepairNeed || (SubmarineInGameManager.instance && SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)) return;
+        if (_isMoving) return;
+
+        if (PlayerManager.Instance.CheckMonsterTransformation())
+        {
+            // InteractWithAbility();
+            return;
+        }
+
+        if (isLocked || isAdditionalLocked || isRepairNeed || (SubmarineInGameManager.instance && SubmarineInGameManager.instance.CurrentAlertArea == AlertArea.MachinerySpace)) return;
 
         if (!isOpened)
         {
@@ -79,6 +90,11 @@ public class Door : MonoBehaviour, IInteractable
         }
     }
 
+    public void InteractWithAbility()
+    {
+        PlayerManager.Instance.playerAbility.TryDestroy(transform.parent.gameObject, "문"); // gameobject 대신 부모인 Door Axis Pos를 비활성화하게 함 (문에 자식으로 있지 않고 문 부모 아래에 키패드나 자물쇠 등이 있는 경우가 있어서)
+    }
+
     public bool CanInteractwithSelectedItem(Item item)
     {
         return false;
@@ -87,8 +103,7 @@ public class Door : MonoBehaviour, IInteractable
     private float GetTargetAngleBasedOnPlayer()
     {
         // 플레이어의 현재 위치 가져오기
-        //Vector3 playerPos = SubmarineInGameManager.instance.player.transform.position;
-        Vector3 playerPos = PlayerManager.Instance.playerMove.transform.position;
+        Vector3 playerPos = PlayerManager.Instance.playerMoveBase.transform.position;
 
         // 플레이어와 frontPoint 사이의 거리 vs backPoint 사이의 거리 비교
         float distToFront = Vector3.Distance(playerPos, frontPos);

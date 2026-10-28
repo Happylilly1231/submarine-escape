@@ -16,6 +16,7 @@ public class PowerSwitch : InteractableBase
     [SerializeField] private Material redMaterial;
     [SerializeField] private Material orangeMaterial;
     [SerializeField] private DieselEngine[] dieselEngines;
+    [SerializeField] private EmergencyGenerator emergencyGenerator;
 
     private bool _isPowerOn = false;
     private bool _isFirst = false;
@@ -57,7 +58,7 @@ public class PowerSwitch : InteractableBase
     public override string GetInteractText()
     {
         if (_isPowerOn) return LocalizationHelper.GetLocalizedInteractText("Interact/TurnOffPower", "E");
-        else if (IsAllConditionsMet()) return LocalizationHelper.GetLocalizedInteractText("Interact/RestorePower", "E");
+        else if (IsAllConditionsMet() || emergencyGenerator.IsActivated) return LocalizationHelper.GetLocalizedInteractText("Interact/RestorePower", "E");
         else if (_engineController != null && _engineController.currentRepairCount == -1) return LocalizationHelper.GetLocalizedInteractText("Interact/PermanentFailure"); // 점프스케어로 인한 고장 시 영구적으로 전력 고장
         else if (_engineController != null && _engineController.currentRepairCount >= 3) return LocalizationHelper.GetLocalizedInteractText("Interact/SwitchboardWireConnectionRequired");
         else if (_powerController != null && _powerController.IsComplete) return LocalizationHelper.GetLocalizedInteractText("Interact/EngineRepairRequired");
@@ -70,7 +71,7 @@ public class PowerSwitch : InteractableBase
     public override void Interact()
     {
         if (_isPowerOn) TogglePower(false); // 전력 끄기
-        else if (IsAllConditionsMet()) TogglePower(true); // 전력 키기
+        else if (IsAllConditionsMet() || emergencyGenerator.IsActivated) TogglePower(true); // 전력 키기
     }
 
     public override bool CanInteractwithSelectedItem(Item item)

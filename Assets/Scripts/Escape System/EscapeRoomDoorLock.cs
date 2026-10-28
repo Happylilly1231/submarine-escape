@@ -4,8 +4,10 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class EscapeRoomDoorLock : InteractableBase
+public class EscapeRoomDoorLock : InteractableBase, IAbilityInteractable
 {
+    public bool CanDestroy => true;
+
     [SerializeField] private Item escapeRoomDoorKeyItem; // 탈출실 문 열쇠 아이템
     [SerializeField] private Transform lockPartTransform;
     [SerializeField] private GameObject lockedObj;
@@ -19,6 +21,8 @@ public class EscapeRoomDoorLock : InteractableBase
     /// </summary>
     public override string GetInteractText()
     {
+        if (PlayerManager.Instance.CheckMonsterTransformation()) return $"파괴 가능: 탈출실 문 자물쇠";
+
         if (IsRequiredItemSelected())
             return LocalizationHelper.GetLocalizedInteractText("Interact/Unlock", "E");
         else
@@ -30,10 +34,22 @@ public class EscapeRoomDoorLock : InteractableBase
     /// </summary>
     public override void Interact()
     {
+        if (PlayerManager.Instance.CheckMonsterTransformation())
+        {
+            // InteractWithAbility();
+            return;
+        }
+
         if (IsRequiredItemSelected())
         {
             Unlock(); // 잠금 해제
         }
+    }
+
+    public void InteractWithAbility()
+    {
+        PlayerManager.Instance.playerAbility.TryDestroy(lockedObj, "탈출실 문 자물쇠");
+        escapeRoomDoor.isLocked = false;
     }
 
     public override bool CanInteractwithSelectedItem(Item item)
