@@ -26,6 +26,9 @@ public class GameManager : MonoBehaviour
     // 현재 난이도
     public Difficulty CurrentDifficulty { get; private set; } = Difficulty.Easy;
 
+    // 능력 (히든 엔딩 관련)
+    public bool IsAbilityActive { get; private set; } = false; // 현재 능력 활성화 여부
+
     // 싱글톤 변수
     public static GameManager instance;
 
@@ -38,6 +41,8 @@ public class GameManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // SetAbilityActive(true); // 테스트용
         }
         else
         {
@@ -119,16 +124,51 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 능력 사용 여부 설정
+    /// </summary>
+    /// <param name="difficulty"></param>
+    public void SetAbilityActive(bool active)
+    {
+        Debug.Log("능력 사용 여부: " + active);
+        // IsAbilityActive = active && CheckAbililtyUnlocked(); // 능력 잠금 해제 된 경우에만 사용으로 설정 가능 (나중에 주석 해제해야 하고 아랫줄 지워야 함)
+        IsAbilityActive = active; // 테스트용 (필요한 엔딩 안 봤어도 되게)
+    }
+
+    /// <summary>
+    /// 능력 잠금 해제 여부 검사 (흑화 or 도주 엔딩 클리어 시 능력 잠금 해제)
+    /// </summary>
+    public bool CheckAbililtyUnlocked()
+    {
+        // 흑화 엔딩 검사
+        EndingRecord darkEndingRecord = EndingSaveManager.Instance.GetEndingRecord(EEndingType.EscapeSuccess); // 임시 -> 나중에 흑화 엔딩 타입으로 변경
+        if (darkEndingRecord != null && darkEndingRecord.isUnlocked)
+        {
+            return true;
+        }
+
+        // 도주 엔딩 검사
+        EndingRecord runAwayEndingRecord = EndingSaveManager.Instance.GetEndingRecord(EEndingType.EscapeSuccess); // 임시 -> 나중에 도주 엔딩 타입으로 변경
+        if (runAwayEndingRecord != null && runAwayEndingRecord.isUnlocked)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// 게임 시작
     /// </summary>
     public void StartGame()
     {
-        if (MenuUIController.instance != null && MenuUIController.instance.MenuUI.activeSelf)
+        // SetAbilityActive(true); // 임시로 능력 사용으로 설정 (나중에 인자로 받아서 플레이어 선택에 따라 능력 사용 여부 설정으로 변경!)
+
+        if (MenuUIController.instance != null && MenuUIController.instance.MenuUI.activeSelf) // 메뉴가 켜져 있으면
         {
-            MenuUIController.instance.ToggleMenu();
+            MenuUIController.instance.ToggleMenu(); // 메뉴 끄기
             MenuUIController.instance.SetActiveDebuggingUI(false); // 디버깅 UI 비활성화
         }
-        SceneManager.LoadScene("SubmarineScene");
+        SceneManager.LoadScene("SubmarineScene"); // 본씬으로 이동
     }
 
     /// <summary>

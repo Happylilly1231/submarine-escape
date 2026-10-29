@@ -6,21 +6,17 @@ using UnityEngine;
 /// <summary>
 /// 심해 탈출 씬 전용 카메라 컨트롤러 (DeepSeaPlayerMove 직접 참조)
 /// </summary>
-public class DeepSeaCameraController : MonoBehaviour
+public class DeepSeaCameraController : PlayerCameraControllerBase
 {
     [SerializeField] private DeepSeaPlayerMove playerMove;
-    [SerializeField] private Transform cameraPos;
     [SerializeField] private float minPitch = -80f;
     public float MinPitch => minPitch;
     [SerializeField] private float maxPitch = 70f;
     public float MaxPitch => maxPitch;
     public Light cameraLight; // 카메라 앞을 비추는 손전등 빛
 
-    private Camera mainCamera;
-
     private float _xRotation = 0f; // 카메라 상하 회전값 (Pitch)
 
-    private bool _canControlInput = true;
     private Sequence _rotationSequence; // DOTween 시퀀스 저장용
     private Tween _shakeTween; // 카메라 셰이크 트윈 저장용
 
@@ -28,19 +24,6 @@ public class DeepSeaCameraController : MonoBehaviour
     private Tween _fovTween;
 
     public bool IsInCutScene { get; set; } = false;
-
-    private void Awake()
-    {
-        mainCamera = Camera.main;
-    }
-
-    /// <summary>
-    /// 플레이어 조작 입력 가능 여부 설정
-    /// </summary>
-    public void SetInputEnabled(bool isEnabled)
-    {
-        _canControlInput = isEnabled;
-    }
 
     private void LateUpdate()
     {
@@ -64,6 +47,10 @@ public class DeepSeaCameraController : MonoBehaviour
 
         float targetYaw = cameraPos.eulerAngles.y;
         transform.rotation = Quaternion.Euler(_xRotation, targetYaw, 0f);
+
+        // 괴물일 때는 45도 이상 위로 올려다보면 괴물 외형 비활성화 (카메라에 머리 보이지 않게 하기 위해서)
+        if (GameManager.instance.IsAbilityActive)
+            PlayerManager.Instance.playerAbility.monsterGeo.SetActive(transform.forward.y < 0.7f);
     }
 
     // /// <summary>

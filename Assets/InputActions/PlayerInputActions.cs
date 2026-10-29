@@ -713,6 +713,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Transformation"",
+                    ""type"": ""Button"",
+                    ""id"": ""786241c6-34bb-4b91-b485-67b4a88d1a30"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Attack"",
+                    ""type"": ""Button"",
+                    ""id"": ""51afc3a1-da74-493a-88dd-19753de78b77"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -779,6 +797,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";PC"",
                     ""action"": ""SlotKeyPress"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0869a2f8-feff-4786-9851-58b2ec696d93"",
+                    ""path"": ""<Keyboard>/v"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Transformation"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a8151153-5ec8-48c0-a060-7fb02328b73e"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Attack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -1082,6 +1122,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Permanent = asset.FindActionMap("Permanent", throwIfNotFound: true);
         m_Permanent_ToggleInGameMenu = m_Permanent.FindAction("ToggleInGameMenu", throwIfNotFound: true);
         m_Permanent_SlotKeyPress = m_Permanent.FindAction("SlotKeyPress", throwIfNotFound: true);
+        m_Permanent_Transformation = m_Permanent.FindAction("Transformation", throwIfNotFound: true);
+        m_Permanent_Attack = m_Permanent.FindAction("Attack", throwIfNotFound: true);
         // DeepSea
         m_DeepSea = asset.FindActionMap("DeepSea", throwIfNotFound: true);
         m_DeepSea_DeepSea_Move = m_DeepSea.FindAction("DeepSea_Move", throwIfNotFound: true);
@@ -1622,6 +1664,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private List<IPermanentActions> m_PermanentActionsCallbackInterfaces = new List<IPermanentActions>();
     private readonly InputAction m_Permanent_ToggleInGameMenu;
     private readonly InputAction m_Permanent_SlotKeyPress;
+    private readonly InputAction m_Permanent_Transformation;
+    private readonly InputAction m_Permanent_Attack;
     /// <summary>
     /// Provides access to input actions defined in input action map "Permanent".
     /// </summary>
@@ -1641,6 +1685,14 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Permanent/SlotKeyPress".
         /// </summary>
         public InputAction @SlotKeyPress => m_Wrapper.m_Permanent_SlotKeyPress;
+        /// <summary>
+        /// Provides access to the underlying input action "Permanent/Transformation".
+        /// </summary>
+        public InputAction @Transformation => m_Wrapper.m_Permanent_Transformation;
+        /// <summary>
+        /// Provides access to the underlying input action "Permanent/Attack".
+        /// </summary>
+        public InputAction @Attack => m_Wrapper.m_Permanent_Attack;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1673,6 +1725,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @SlotKeyPress.started += instance.OnSlotKeyPress;
             @SlotKeyPress.performed += instance.OnSlotKeyPress;
             @SlotKeyPress.canceled += instance.OnSlotKeyPress;
+            @Transformation.started += instance.OnTransformation;
+            @Transformation.performed += instance.OnTransformation;
+            @Transformation.canceled += instance.OnTransformation;
+            @Attack.started += instance.OnAttack;
+            @Attack.performed += instance.OnAttack;
+            @Attack.canceled += instance.OnAttack;
         }
 
         /// <summary>
@@ -1690,6 +1748,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @SlotKeyPress.started -= instance.OnSlotKeyPress;
             @SlotKeyPress.performed -= instance.OnSlotKeyPress;
             @SlotKeyPress.canceled -= instance.OnSlotKeyPress;
+            @Transformation.started -= instance.OnTransformation;
+            @Transformation.performed -= instance.OnTransformation;
+            @Transformation.canceled -= instance.OnTransformation;
+            @Attack.started -= instance.OnAttack;
+            @Attack.performed -= instance.OnAttack;
+            @Attack.canceled -= instance.OnAttack;
         }
 
         /// <summary>
@@ -2121,6 +2185,20 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSlotKeyPress(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Transformation" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnTransformation(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Attack" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAttack(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "DeepSea" which allows adding and removing callbacks.

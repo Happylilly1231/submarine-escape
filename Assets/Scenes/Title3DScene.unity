@@ -152,10 +152,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 325088871}
-  playerCameraController: {fileID: 196943372}
-  playerMove: {fileID: 325088873}
-  playerInteractor: {fileID: 325088872}
   playerGeo: {fileID: 325088874}
+  playerAbility: {fileID: 0}
+  playerStat: {fileID: 399473312}
+  playerMoveBase: {fileID: 325088873}
+  playerCameraControllerBase: {fileID: 196943372}
+  playerInteractor: {fileID: 325088872}
 --- !u!4 &83188
 Transform:
   m_ObjectHideFlags: 0
@@ -765,9 +767,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d2c7b058034e5746806bac68d318df6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraPos: {fileID: 325088876}
   playerMove: {fileID: 325088873}
   playerHead: {fileID: 325088875}
-  cameraPos: {fileID: 325088876}
   cameraOffset: {x: 0, y: 0.08, z: 0.05}
   IsIntroPlaying: 0
 --- !u!4 &231251368 stripped
@@ -2356,6 +2358,61 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
         type: 3}
+      propertyPath: m_ActionEvents.Array.size
+      value: 37
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[32].m_ActionId
+      value: c9f687c4-4ac3-4495-bfae-91ec8106bdc9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[33].m_ActionId
+      value: b84b449c-fd24-4c84-b8c2-1aa51f4348bb
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[34].m_ActionId
+      value: 786241c6-34bb-4b91-b485-67b4a88d1a30
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[35].m_ActionId
+      value: 51afc3a1-da74-493a-88dd-19753de78b77
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[36].m_ActionId
+      value: b1a83e63-ccd0-47c9-991d-6db7b3192c80
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[32].m_ActionName
+      value: DeepSea/SlotKeyPress[/Keyboard/1,/Keyboard/2,/Keyboard/3]
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[33].m_ActionName
+      value: DeepSea/UseItem[/Keyboard/e]
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[34].m_ActionName
+      value: Permanent/Transformation[/Keyboard/v]
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[35].m_ActionName
+      value: Permanent/Attack[/Keyboard/r]
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: m_ActionEvents.Array.data[36].m_ActionName
+      value: DeepSea/LeftClick[/Mouse/leftButton]
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586492902558978967, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
       propertyPath: m_ActionEvents.Array.data[8].m_PersistentCalls.m_Calls.Array.size
       value: 0
       objectReference: {fileID: 0}
@@ -2459,6 +2516,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8734016063853228878, guid: 56ae13bcd975bcd448a584c5719f4f71,
+        type: 3}
+      propertyPath: animator
+      value: 
+      objectReference: {fileID: 399473316}
     - target: {fileID: 9006864698413549885, guid: 56ae13bcd975bcd448a584c5719f4f71,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3015,6 +3077,24 @@ MonoBehaviour:
   rayDistance: 3
   playerCamera: {fileID: 196943369}
   interactorText: {fileID: 258433092}
+--- !u!114 &399473312 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3386033674087709287, guid: 56ae13bcd975bcd448a584c5719f4f71,
+    type: 3}
+  m_PrefabInstance: {fileID: 325088870}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 399473296}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc7c5a2067e08654c85527302ebd64e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!95 &399473316 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3035113258560246599, guid: 56ae13bcd975bcd448a584c5719f4f71,
+    type: 3}
+  m_PrefabInstance: {fileID: 325088870}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &415623165
 GameObject:
   m_ObjectHideFlags: 0

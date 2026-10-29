@@ -22,6 +22,7 @@ public class PlayerInteractor : MonoBehaviour
     private LabEquipment _currentEquipment; // 현재 감지된 실험기구
     public LabEquipment CurrentEquipment => _currentEquipment;
     private IInteractable _currentFurniture; // 현재 감지된 가구
+    public IInteractable CurrentFurniture => _currentFurniture;
     private RaycastHit _sphereCastHit; // SphereCast로 감지된 오브젝트 정보
     private bool _canPickUp = false; // 아이템 줍기 가능 여부
     private bool _canInteractable = false; // 가구 상호작용 가능 여부
@@ -44,8 +45,14 @@ public class PlayerInteractor : MonoBehaviour
 
     void Update()
     {
-        if (!IsPuzzleActive || SubmarineInGameManager.instance.isInGameMenuActive)
-            DetectObject();
+        // 정지 중 -> 감지 불가
+        if (GameManager.instance.IsPausing) return;
+
+        if (IsPuzzleActive) return; // 퍼즐 풀고 있을 때 감지 X
+
+        if (PlayerManager.Instance.CheckMonsterTransformation() && PlayerManager.Instance.playerAbility.IsUsingAttackAbility) return; // 능력 있고 괴물인데 차징 중일 때 감지 X
+
+        DetectObject();
     }
 
     /// <summary>
@@ -54,7 +61,8 @@ public class PlayerInteractor : MonoBehaviour
     /// <param name="isActive">활성화 여부</param>
     public void SetActiveInteractorUI(bool isActive)
     {
-        interactorUI.SetActive(isActive);
+        if (interactorUI != null)
+            interactorUI.SetActive(isActive);
     }
 
     /// <summary>
@@ -63,7 +71,8 @@ public class PlayerInteractor : MonoBehaviour
     /// <param name="isActive">활성화 여부</param>
     public void SetActiveAimUI(bool isActive)
     {
-        aimUI.SetActive(isActive);
+        if (aimUI != null)
+            aimUI.SetActive(isActive);
     }
 
     /// <summary>
@@ -116,6 +125,8 @@ public class PlayerInteractor : MonoBehaviour
     public void OnInteractor(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
+
+        if (PlayerManager.Instance.CheckMonsterTransformation() && PlayerManager.Instance.playerAbility.IsUsingAttackAbility) return; // 능력 있고 괴물인데 차징 중일 때 상호작용 X
 
         // 주사기를 손에 든 경우
         if (_heldEquipment != null)
@@ -399,6 +410,14 @@ public class PlayerInteractor : MonoBehaviour
         ClearDetection(); // 추출기 들고 페트리 접시 바라보고 있을 때 추출기 내리면 상호작용 텍스트가 안 사라져서 먼저 초기화하게 해줌
         if (Physics.SphereCast(playerCamera.transform.position, 0.1f, playerCamera.transform.forward, out _sphereCastHit, rayDistance, detectLayerMask))
         {
+            if (PlayerManager.Instance.CheckMonsterTransformation())
+            {
+                if (!_sphereCastHit.transform.TryGetComponent(out IAbilityInteractable abilityInteractable))
+                {
+                    return;
+                }
+            }
+
             // 1. 아이템 감지
             if (_sphereCastHit.transform.TryGetComponent(out ItemPickUp item))
             {
@@ -518,7 +537,7 @@ public class PlayerInteractor : MonoBehaviour
     /// <summary>
     /// 감지된 오브젝트가 없을 때 UI 및 상태 초기화
     /// </summary>
-    private void ClearDetection()
+    public void ClearDetection()
     {
         if (!_canPickUp && !_canInteractable && _currentEquipment == null) return;
 

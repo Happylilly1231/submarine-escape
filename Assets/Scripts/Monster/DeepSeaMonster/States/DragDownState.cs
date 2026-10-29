@@ -16,7 +16,7 @@ namespace DeepSeaMonsterStates
         {
             _monster = owner;
 
-            owner.DeepSeaPlayerMove.CanMove = false; // 플레이어 이동 정지
+            owner.DeepSeaPlayerMove.SetMoveable(false); // 플레이어 이동 정지
             owner.DeepSeaPlayerMove.ResetModelRotation();
 
             owner.transform.position = owner.playerGrabPos.position;
@@ -59,7 +59,7 @@ namespace DeepSeaMonsterStates
 
         public void Exit(DeepSeaMonsterController owner)
         {
-            owner.DeepSeaPlayerMove.CanMove = true; // 플레이어 이동 가능
+            owner.DeepSeaPlayerMove.SetMoveable(true); // 플레이어 이동 가능
             owner.CameraController.SetInputEnabled(true); // 카메라 조작 가능
             owner.DeepSeaPlayerMove.OnGrabQTESuccess -= OnPlayerQTESuccess;
             owner.DeepSeaPlayerMove.OnGrabQTEFailed -= OnPlayerQTEFailed;

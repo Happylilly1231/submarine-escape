@@ -114,12 +114,22 @@ public class SeaWaterValve : InteractableBase
                 {
                     // 탈출 QTE 성공 후 탈출 연출 재생
                     //Escape();
-                    _equalizingQTE?.StartQTE();
+                    _equalizingQTE?.StartQTE(); // 이퀄라이징
                 }
-                else
+                else // 치료제를 투여하지 않아 아직 능력을 보유중일 때
                 {
-                    // 완전 괴물화
-                    playerMutation.SpawnSpike(true);
+                    if (GameManager.instance.IsAbilityActive) // 능력 사용 게임을 하고 있으면
+                    {
+                        PlayerManager.Instance.playerAbility.TransformToMonster(); // 괴물로 강제 변신
+                        SubmarineInGameManager.instance.SetEscaped();
+                        Escape();
+                        Debug.Log("<b>괴물 형태이므로 이퀄라이징 생략. 잠수함 탈출!</b>");
+                    }
+                    else // 일반 게임을 하고 있으면
+                    {
+                        // 완전 괴물화
+                        playerMutation.SpawnSpike(true);
+                    }
                 }
             });
     }

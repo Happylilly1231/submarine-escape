@@ -29,7 +29,12 @@ public class ScenePortal : Door
 
         portalSeq.OnComplete(() =>
         {
-            SceneManager.LoadScene(sceneName); // 씬 전환
+            if (sceneName == "SubmarineScene")
+            {
+                GameManager.instance.StartGame(); // 게임 시작
+            }
+            else
+                SceneManager.LoadScene(sceneName); // 씬 전환
         });
     }
 }

@@ -25,16 +25,15 @@ public class DeepSeaBridge : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // // 테스트용
-            // SetPlayerItemStates(new PlayerItemStates()
-            // {
-            //     IsDivingsuitEquipped = true,
-            //     HasOxygenCapsule = true,
-            //     HasThermalProtector = true,
-            //     HasHelicopterLocator = true
-            // });
-
-            // SetContactedHQ(true);
+            // 테스트용
+            SetPlayerItemStates(new PlayerItemStates()
+            {
+                IsDivingsuitEquipped = true,
+                HasOxygenCapsule = true,
+                HasThermalProtector = true,
+                HasHelicopterLocator = true
+            });
+            SetContactedHQ(true);
         }
         else
         {

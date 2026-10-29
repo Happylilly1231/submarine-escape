@@ -10,13 +10,13 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
-public class DeepSeaPlayerMove : MonoBehaviour
+public class DeepSeaPlayerMove : PlayerMoveBase
 {
     [Header("References")]
     [SerializeField] private Transform modelTransform; // 실제 3D 모델의 트랜스폼
     public Transform ModelTransform => modelTransform;
-    [SerializeField] private Animator animator; // 애니메이터 (모델)
     [SerializeField] private CapsuleCollider capsuleCollider; // 콜라이더 (모델)
+    public CapsuleCollider modelCollider => capsuleCollider;
     [SerializeField] private DeepSeaAreaController deepSeaAreaController; // 심해 구역 컨트롤러 (수면 높이 값 필요해서)
     [SerializeField] private ParticleSystem cameraDashBubbleFX; // 버블 파티클
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
@@ -107,8 +107,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
     // public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
 
-    public bool CanMove { get; set; } = true;
-
     public float CurrentSpeedMultiplier { get; private set; } = 1f;
 
     /// <summary>
@@ -166,19 +164,22 @@ public class DeepSeaPlayerMove : MonoBehaviour
         if (DeepSeaIntroCutScene.Instance.IsCutScene
             || DeepSeaUIManager.Instance.IsActiveGuide) return;
 
-        // 산소 소모
-        if (IsSprinting)
+        // 스탯 업데이트
+        if (!GameManager.instance.IsAbilityActive) // 능력이 없는 일반 게임일 때
         {
-            ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
+            // 산소 업데이트
+            if (IsSprinting)
+                ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
+            else
+                ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime); // 평소에도 지속해서 기본 산소 감소
+
+            // 체온 업데이트
+            UpdateTemperature();
         }
-        // else if (IsOxgenNonSafe)
-        // {
-        //     ConsumeOxygen(abnormalOxygenCostPerSec * Time.fixedDeltaTime);
-        // }
-        else
+        else // 능력 사용 게임일 때
         {
-            // 평소에도 지속해서 기본 산소 감소
-            ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime);
+            // 정신력 업데이트
+            PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(SurvivalTime);
         }
 
         // 괴물에게 잡힌 상태일 때 -> QTE 입력만 받음 & 이동 불가
@@ -194,7 +195,6 @@ public class DeepSeaPlayerMove : MonoBehaviour
         Rotate(); // 좌우 회전
         UpdateAnimation(); // 애니메이션 & 콜라이더 업데이트
         UpdateModelRotation(); // 모델 회전 업데이트
-        UpdateTemperature(); // 체온 업데이트
     }
 
     private void FixedUpdate()
@@ -549,7 +549,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
         {
             if (_verticalInput == 1f)
             {
-                if (_moveInput.y > 0.1f) // 앞으로 가고 있으면
+                if (_moveInput.y > 0.1f && !PlayerManager.Instance.CheckMonsterTransformation()) // 앞으로 가고 있으면 (괴물이 아닐 때만(괴물은 머리 보여서 안됨))
                 {
                     targetXRot = 30f;
                 }
@@ -664,7 +664,13 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public void TakeDamage(float amount)
     {
         Debug.Log("대미지 입음!");
-        ConsumeOxygen(amount);
+
+        if (GameManager.instance.IsAbilityActive) // 능력 사용 게임일 때
+            PlayerManager.Instance.playerStat.Damage(amount); // HP 대미지
+        else // 아니고 일반 게임일 때
+            ConsumeOxygen(amount); // 산소 대미지
+
+        // 대미지 볼륨 효과
         DOTween.To(() => damagedVolume.weight, x => damagedVolume.weight = x, 1f, 0.5f)
             .OnComplete(() =>
             {
@@ -781,7 +787,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     // 연출 준비 (시작)
     private void PrepareCutscene()
     {
-        CanMove = false;
+        SetMoveable(false);
         _isCutsceneMoving = true;
         _rb.velocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
@@ -796,7 +802,7 @@ public class DeepSeaPlayerMove : MonoBehaviour
     public void ReleaseCutsceneControl()
     {
         _isCutsceneMoving = false;
-        CanMove = true;
+        SetMoveable(true);
 
         // 컷씬 종료 시 카메라 컨트롤러의 회전값 정리 함수 호출
         deepSeaCameraController.EndCutScene();
