@@ -80,6 +80,6 @@ public class PlayerManager : MonoBehaviour
     /// <returns></returns>
     public bool CheckMonsterTransformation()
     {
-        return GameManager.instance.IsAbilityActive && playerAbility.IsTransformed; // 먼저 능력 사용 가능 여부를 보고 그 다음에 PlayerAbility 스크립트의 isTransformed 변수를 확인 (능력 사용 불가면 PlayerAbility 스크립트가 꺼져있기 때문)
+        return GameManager.instance.IsAbilityActive && playerAbility != null && playerAbility.IsTransformed; // 먼저 능력 사용 가능 여부를 보고 그 다음에 PlayerAbility 스크립트의 isTransformed 변수를 확인 (능력 사용 불가면 PlayerAbility 스크립트가 꺼져있기 때문)
     }
 }

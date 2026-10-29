@@ -203,6 +203,7 @@ public class DeepSeaUIManager : MonoBehaviour
         // CloseInventoryUI(); // 인벤토리 UI 닫기
         statUI.SetActive(true);
         depthText_Ability.gameObject.SetActive(true);
+        PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
         DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
     }
 

@@ -106,12 +106,13 @@ public class PlayerAbility : MonoBehaviour
 
         monsterAbilityVolume.profile.TryGet(out monsterVolumeColorAdjustments);
 
+        abilityUI.SetActive(false);
+
         // 현재 능력 사용 여부에 따라 이 컴포넌트 활성화 여부 결정
         enabled = GameManager.instance.IsAbilityActive;
         if (!GameManager.instance.IsAbilityActive)
         {
             PlayerManager.Instance.playerStat.SetMonsterStatUI(false); // 기본 스탯 UI로 변경
-            abilityUI.SetActive(false);
             return;
         }
 

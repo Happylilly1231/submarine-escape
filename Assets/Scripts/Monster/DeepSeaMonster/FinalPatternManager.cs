@@ -47,7 +47,7 @@ public class FinalPatternManager : MonoBehaviour
     private int currentSuccessCount = 0; // 현재 패턴 성공 횟수
     private bool isFiredInTime = false; // 발사 가능 시간 안에 발사되었는지 여부
     private bool isSuccessInZone = false; // 성공 영역 안에 발사되었는지 여부
-    private float _startDepth = 270f; // 패턴 시작 수심 (90m) (테스트용: 270)
+    private float _startDepth = 90f; // 패턴 시작 수심 (90m) (테스트용: 270)
     public float startDepth => _startDepth; // 패턴 시작 수심 (90m)
     public bool IsPatternRunning { get; private set; } = false; // 패턴 진행 중 여부
     private bool _isClear = false; // 클리어 여부
