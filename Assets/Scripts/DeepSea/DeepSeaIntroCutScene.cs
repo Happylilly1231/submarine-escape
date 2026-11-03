@@ -446,8 +446,14 @@ public class DeepSeaIntroCutScene : MonoBehaviour
     {
         Debug.Log("심해 인트로 컷씬 종료");
 
-        DeepSeaUIManager.Instance.SetDeepSeaGuide();
+        // 능력 사용 게임일 때는 바로 UI 닫은 걸로 취급
+        if (GameManager.instance.IsAbilityActive)
+        {
+            DeepSeaUIManager.Instance.SetUIWithAbility(); // 능력 있을 때 UI 설정
+            return;
+        }
 
+        DeepSeaUIManager.Instance.SetDeepSeaGuide();
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSeaUI);
     }
 }

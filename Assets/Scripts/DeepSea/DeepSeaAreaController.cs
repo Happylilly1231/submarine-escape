@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -43,9 +44,22 @@ public class DeepSeaAreaController : MonoBehaviour
     private SeaZone _currentZone = SeaZone.DeepSea;
     public SeaZone CurrentZone => _currentZone;
 
+    public event Action<SeaZone> OnCurrentSeaZoneChanged;
+
+    public static DeepSeaAreaController Instance { get; private set; }
+
     private void Awake()
     {
-        _audioSource = GetComponent<AudioSource>();
+        if (Instance == null)
+        {
+            Instance = this;
+
+            _audioSource = GetComponent<AudioSource>();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Start()
@@ -106,6 +120,7 @@ public class DeepSeaAreaController : MonoBehaviour
         if (forceUpdate || newZone != _currentZone)
         {
             _currentZone = newZone;
+            OnCurrentSeaZoneChanged?.Invoke(_currentZone);
             ApplyZoneEnvironment(_currentZone);
         }
     }
@@ -186,6 +201,11 @@ public class DeepSeaAreaController : MonoBehaviour
                 floatingParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); // 부유물 파티클 중지
             RenderSettings.fog = false; // 안개 제거
             Camera.main.GetComponent<DeepSeaCameraController>().cameraLight.enabled = false; // 조명 끄기
+
+            if (PlayerManager.Instance.CheckMonsterTransformation())
+            {
+                PlayerManager.Instance.playerAbility.monsterVolumeColorAdjustments.postExposure.value = 0f;
+            }
         }
         // else
         // {

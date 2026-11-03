@@ -352,7 +352,7 @@ public class RadarDisplay : MonoBehaviour
         while (t < 1f)
         {
             // 정지 중일 때 -> 아무것도 안 함
-            if (GameManager.instance.IsPausing)
+            while (GameManager.instance.IsPausing)
                 yield return null;
 
             t += Time.deltaTime / duration;

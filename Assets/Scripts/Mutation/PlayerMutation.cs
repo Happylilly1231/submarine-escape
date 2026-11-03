@@ -15,8 +15,6 @@ public class PlayerMutation : MonoBehaviour
     [SerializeField] private Image vignetteImg;
     [SerializeField] private Transform monsterHandsTransform; // 괴물 양손 트랜스폼
     [SerializeField] private GameObject itemOverlayCamera; // 아이템 든 거 보여주는 카메라
-    [SerializeField] private Volume injectionVolume; // 치료제 투여할 때 연출에 쓸 볼륨
-    private Vignette _injectionVignette; // 치료제 투여할 때 연출에 쓸 비네트
 
     private float _mutationInterval = 600f; // 10분 = 600초
     public int CurrentStage = 1; // 1 ~ 5단계 (게임 시작 시 1단계)
@@ -37,8 +35,6 @@ public class PlayerMutation : MonoBehaviour
     [SerializeField] private AudioClip spikeHitSound; // 가시로 바닥을 쾅 치는 소리
     [SerializeField] private AudioClip tinnitusSound; // 이명 소리
     [SerializeField] private AudioClip rourSound; // 포효(완전 괴물화) 소리
-    [SerializeField] private AudioClip cureSuccessSound; // 치료 성공 소리
-    [SerializeField] private AudioClip cureFailSound; // 치료 실패 소리(심장 박동)
 
     private void OnEnable()
     {
@@ -60,14 +56,10 @@ public class PlayerMutation : MonoBehaviour
         // 괴물 손 비활성화
         monsterHandsTransform.gameObject.SetActive(false);
 
-        // 괴물화 타이머 이벤트 예약 (인게임 시간에서 괴물화 간격 시간마다 괴물화 단계 진행되도록 해줌)
-        _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, () => SpawnSpike(), true);
-
-        // 치료제 투여 볼륨 관련 초기화
-        injectionVolume.weight = 0f;
-        if (injectionVolume.profile.TryGet<Vignette>(out var vignette))
+        if (!GameManager.instance.IsAbilityActive) // 능력 사용 게임이 아닌 일반 게임일 때만
         {
-            _injectionVignette = vignette;
+            // 괴물화 타이머 이벤트 예약 (인게임 시간에서 괴물화 간격 시간마다 괴물화 단계 진행되도록 해줌)
+            _mutationTimerReservation = GameTime.Instance.ReserveEvent(_mutationInterval, () => SpawnSpike(), true);
         }
     }
 
@@ -301,44 +293,19 @@ public class PlayerMutation : MonoBehaviour
 
         // 포커스
         FocusManager.Instance.PushFocusState(GameFocusState.GameTimePauseSequence); // 게임 시간 정지 포커스 상태로 변경
-        // SubmarineInGameManager.instance.SetFocus(true);
 
-        AudioClip sound;
-
-        // 치료 결과 바로 적용
+        // 치료 결과 데이터 바로 적용 (게임 로직)
         if (isSuccess)
         {
-            // 괴물화 중단 및 초기화
             Debug.Log("<color=green>치료제 투여 성공: 괴물화 진행이 억제<color>");
-
             Cure(); // 괴물화 치료
-
-            _injectionVignette.color.value = Color.green;
-            sound = cureSuccessSound;
-        }
-        else
-        {
-            _injectionVignette.color.value = Color.red;
-            sound = cureFailSound;
         }
 
-        AudioManager.Instance.PlayGlobalOneShot(sound);
-
-        Sequence seq = DOTween.Sequence();
-
-        seq.Append(DOTween.To(() => injectionVolume.weight, x => injectionVolume.weight = x, 1f, 0.2f));
-        // 치료 소리 추가 / 심장 박동(실패) 소리 추가
-
-        // 1초 동안 유지
-        seq.AppendInterval(1f);
-
-        seq.Append(DOTween.To(() => injectionVolume.weight, x => injectionVolume.weight = x, 0f, 1f));
-
-        seq.OnComplete(() =>
+        // [핵심] FXManager에게 '사운드 + 화면 효과' 통합 연출 요청
+        FXManager.instance.ShowInjectionResultEffect(isSuccess, () =>
         {
             // 포커스 해제
             FocusManager.Instance.PopFocusState(); // 이전 포커스 복구
-            // SubmarineInGameManager.instance.SetFocus(false);
 
             if (!isSuccess)
             {
@@ -361,6 +328,11 @@ public class PlayerMutation : MonoBehaviour
     {
         // 괴물화 중단(종료)
         IsCured = true;
+        if (GameManager.instance.IsAbilityActive) // 만약 능력 사용 게임 중이었으면
+        {
+            PlayerManager.Instance.playerAbility.TransformOff(); // 일반 플레이어 모습으로 돌아오기
+            GameManager.instance.SetAbilityActive(false); //  능력 사용 불가(금지) 게임으로 변경
+        }
         GameTime.Instance.CancelEvent(_mutationTimerReservation); // 괴물화 타이머 이벤트 취소(괴물화 종료)
 
         // 현재 진행 중이던 괴물화 효과(생성된 가시, 이명, 비네트) 중단

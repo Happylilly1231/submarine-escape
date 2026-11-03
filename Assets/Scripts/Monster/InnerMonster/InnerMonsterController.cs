@@ -64,6 +64,7 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public LayerMask destroyEquipmentLayer;
     private Transform _monsterModelTransform;
     private CapsuleCollider _collider;
+    public CapsuleCollider Collider => _collider;
     public SeaWaterValve seaWaterValve;
 
 
@@ -155,6 +156,9 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public Door machinerySpaceDoor; // 기계실 문
     public Volume jumpscareVolume; // 점프스케어 볼륨 
 
+    // 피격
+    private float _hp = 100f;
+
     // 이벤트
     public static event Action<InnerMonsterController> OnRageStartAnimationEnded; // 폭주 시작 애니메이션 종료 이벤트
     public static event Action<InnerMonsterController> OnAnimationRageDestroyAttackTouched; // 폭주 파괴 공격 애니메이션 닿는 타이밍 이벤트
@@ -177,6 +181,11 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
     public AudioClip destroyCompleteSound;
     public AudioSource audioSource;
     public AudioSource destroyAudioSource;
+
+    [Header("죽음 관련")]
+    public InnerMonsterSpinalCord spinalCord;
+    public GameObject nonCordColliderObj;
+    public MonsterCorpseClue monsterCorpseClue;
 
     #region Life Cycle
     private void Awake()
@@ -1029,5 +1038,35 @@ public class InnerMonsterController : MonoBehaviour, IStateMachineOwner<InnerMon
         }
         _collider.center = centerPos;
     }
+    #endregion
+
+    #region Attacked
+
+    /// <summary>
+    /// 대미지 받기
+    /// </summary>
+    public void TakeDamage(float amount)
+    {
+        _hp -= amount;
+        Debug.Log("괴물 체력: " + _hp);
+        if (_hp <= 0)
+        {
+            _hp = 0;
+            Die();
+        }
+        else
+        {
+            ChangeState(new StaggerState()); // 휘청임 상태로 전환
+        }
+    }
+
+    /// <summary>
+    /// 죽기
+    /// </summary>
+    private void Die()
+    {
+        ChangeState(new DeadState());
+    }
+
     #endregion
 }

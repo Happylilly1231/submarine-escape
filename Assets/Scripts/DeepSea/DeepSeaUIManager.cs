@@ -14,6 +14,7 @@ public class DeepSeaUIManager : MonoBehaviour
 
     [Header("=== Helmet HUD ===")]
     [SerializeField] private GameObject helmetHUD; // 헬멧 hud
+    [SerializeField] private GameObject statUI; // 스탯 UI (능력 사용 게임이라서 괴물 형태일 때만 헬멧 hud 대신 사용)
 
     [Header("=== Oxygen UI ===")]
     [SerializeField] private Image oxygenBackgroundImg; // 산소 게이지 배경 이미지
@@ -31,7 +32,7 @@ public class DeepSeaUIManager : MonoBehaviour
     [SerializeField] private RectTransform playerPosDot; // 플레이어 위치
     [SerializeField] private TextMeshProUGUI playerPosText; // 플레이어 위치 텍스트
     [SerializeField] private Image helicopterImg; // 헬리콥터 이미지
-
+    [SerializeField] private TextMeshProUGUI depthText_Ability; // 능력 사용 게임일 때 깊이 텍스트
 
     [Header("=== ItemSlot UI ===")]
     [SerializeField] private Image[] itemSlotImgs; // 아이템 슬롯 이미지 배열
@@ -54,13 +55,13 @@ public class DeepSeaUIManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+
+            _deepSeaMonsterController = FindObjectOfType<DeepSeaMonsterController>();
         }
         else
         {
             Destroy(gameObject);
         }
-
-        _deepSeaMonsterController = FindObjectOfType<DeepSeaMonsterController>();
     }
 
     private void Start()
@@ -71,18 +72,46 @@ public class DeepSeaUIManager : MonoBehaviour
             player = FindObjectOfType<DeepSeaPlayerMove>();
         }
 
+        DeepSeaAreaController.Instance.OnCurrentSeaZoneChanged += UpdateUICurrentSeaZone;
+
         helmetHUD.SetActive(false);
         guideUI.SetActive(false);
+        statUI.SetActive(false);
+        depthText_Ability.gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        if (DeepSeaAreaController.Instance != null)
+            DeepSeaAreaController.Instance.OnCurrentSeaZoneChanged -= UpdateUICurrentSeaZone;
     }
 
     private void Update()
     {
         if (player == null) return;
         if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
+        if (GameManager.instance.IsAbilityActive && depthText_Ability.gameObject.activeSelf) // 능력 사용 게임이고 수면 아래일 때 -> 깊이 UI만 업데이트
+        {
+            depthText_Ability.text = $"·{player.DisplayDepth:F0}m·";
+            return;
+        }
 
         UpdateOxygenUI();
         UpdateTemperatureUI();
         UpdatePositionUI();
+    }
+
+    private void UpdateUICurrentSeaZone(SeaZone currentSeaZone)
+    {
+        switch (currentSeaZone)
+        {
+            case SeaZone.ShallowSea:
+                depthText_Ability.color = Color.white;
+                break;
+            case SeaZone.Surface:
+                depthText_Ability.gameObject.SetActive(false);
+                break;
+        }
     }
 
     /// <summary>
@@ -138,7 +167,7 @@ public class DeepSeaUIManager : MonoBehaviour
     /// <para> - 게임 ui 비활성화 및 헬멧 hud 활성화</para>
     /// <para> - </para>
     /// </summary>
-    private void ClosePage()
+    public void ClosePage()
     {
         helmetHUD.SetActive(true);
         guideUI.SetActive(false);
@@ -152,12 +181,42 @@ public class DeepSeaUIManager : MonoBehaviour
         helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
 
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
+        // FocusManager.Instance.PopFocusState();
 
         IsActiveGuide = false;
 
         // _deepSeaMonsterController.StartFSM(); // 심해 몬스터 이동 시작
         DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
     }
+
+    /// <summary>
+    /// 능력 있을 때 UI 설정
+    /// </summary>
+    public void SetUIWithAbility()
+    {
+        // 헬멧 HUD 따로 켜지 않음
+
+        FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
+
+        IsActiveGuide = false;
+
+        // CloseInventoryUI(); // 인벤토리 UI 닫기
+        statUI.SetActive(true);
+        depthText_Ability.gameObject.SetActive(true);
+        PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
+        DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
+    }
+
+    // /// <summary>
+    // /// 인벤토리 UI 닫기
+    // /// </summary>
+    // public void CloseInventoryUI()
+    // {
+    //     foreach (var slotImg in itemSlotImgs)
+    //     {
+    //         slotImg.gameObject.SetActive(false); // 모든 슬롯 비활성화
+    //     }
+    // }
 
     /// <summary>
     /// 산소 UI 업데이트

@@ -26,7 +26,7 @@ public class DeepSeaMonsterController : MonoBehaviour
     private Rigidbody _rb;
     public Rigidbody Rb => _rb;
     public Animator animator;
-    private float _fsmEndDepth = 95f; // FSM 종료 수심
+    private float _fsmEndDepth; // FSM 종료 수심
 
     public List<DeepSeaMonsterAttackBase> AllPatternList { get; private set; } = new List<DeepSeaMonsterAttackBase>();
     public DeepSeaMonsterAttackBase currentPattern = null;
@@ -46,12 +46,17 @@ public class DeepSeaMonsterController : MonoBehaviour
 
     public bool IsIntroDashShowed { get; set; } = false; // 컷씬 이후 이어지는 처음 대시 공격을 보여주었는지 여부
 
+    // 피격
+    private float _hp = 100f;
+
     private void Awake()
     {
         if (deepSeaPlayerMove == null) return;
 
         _fsm = new StateMachine<DeepSeaMonsterController>(this);
         _rb = GetComponent<Rigidbody>();
+
+        _fsmEndDepth = FindAnyObjectByType<FinalPatternManager>().startDepth + 5f;
     }
 
     private void Start()
@@ -118,11 +123,6 @@ public class DeepSeaMonsterController : MonoBehaviour
             IsEnded = true;
         }
 
-        if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
-        {
-            IsEnded = true;
-        }
-
         _fsm.Update();
     }
 
@@ -174,6 +174,7 @@ public class DeepSeaMonsterController : MonoBehaviour
     public void TerminateFSM()
     {
         _fsm.ExitState();
+        monsterGeo.SetActive(false); // 외형 비활성화
         enabled = false; // 현재 컨트롤러 컴포넌트 자체를 비활성화
     }
 
@@ -223,7 +224,7 @@ public class DeepSeaMonsterController : MonoBehaviour
             // 최종 패턴 슬로우 배속 0.04f 줄여줌
             FinalPatternManager finalPatternManager = FindAnyObjectByType<FinalPatternManager>();
             finalPatternManager.FirstSlowTimeScale -= 0.04f; // 0.08f -> 0.04f
-            finalPatternManager.FinalSlowTimeScale -= 0.04f; // 0.18f -> 0.14f
+            finalPatternManager.FinalSlowTimeScale -= 0.04f; // 0.16f -> 0.12f
         }
     }
 
@@ -262,4 +263,35 @@ public class DeepSeaMonsterController : MonoBehaviour
         // // 4. 플레이어 넉백 적용
         // deepSeaPlayerMove.ApplyKnockback(hitDirection, distance: 5f, duration: 0.5f);
     }
+
+    #region Attacked
+
+    /// <summary>
+    /// 대미지 받기
+    /// </summary>
+    public void TakeDamage(float amount)
+    {
+        _hp -= amount;
+        Debug.Log("괴물 체력: " + _hp);
+        if (_hp <= 0)
+        {
+            _hp = 0;
+            Die();
+        }
+        else
+        {
+            ChangeState(new RetreatState()); // 후퇴 상태로 전환
+        }
+    }
+
+    /// <summary>
+    /// 죽기
+    /// </summary>
+    private void Die()
+    {
+        IsEnded = true;
+        ChangeState(new HiddenState()); // 사라진 상태로 전환 (FSM 종료 플래그 켜져있으므로 FSM 종료)
+    }
+
+    #endregion
 }

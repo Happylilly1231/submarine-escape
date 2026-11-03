@@ -73,7 +73,7 @@ public class FocusManager : MonoBehaviour
             ResetFocusState(GameFocusState.UIScene);
         else if (scene.name == "EndingFrameScene") // 임시!!!
             ResetFocusState(GameFocusState.ESCMenu);
-        else if (scene.name == "DeepSeaScene" || scene.name == "DeepSeaItemScene" || scene.name == "DeepSeaMonsterScene") // 테스트용
+        else if (FindAnyObjectByType<DeepSeaPlayerMove>() != null) // 테스트용
             ResetFocusState(GameFocusState.DeepSea);
         else
             ResetFocusState(GameFocusState.None);
@@ -150,13 +150,13 @@ public class FocusManager : MonoBehaviour
         switch (CurrentFocusState)
         {
             case GameFocusState.None:
-                PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(true); // 플레이어 이동/회전 가능
                 SetCenterUIActive(true); // 가운데 UI 요소 켜기
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
                 break;
 
             case GameFocusState.GameTimePauseSequence:
-                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
 
@@ -182,7 +182,7 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.Puzzle:
-                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 if (CurrentPuzzleController != null)
                 {
@@ -197,7 +197,7 @@ public class FocusManager : MonoBehaviour
 
             case GameFocusState.InGameMenu:
             case GameFocusState.Diary:
-                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
                 SetCenterUIActive(false); // 가운데 UI 요소 끄기
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
@@ -211,11 +211,11 @@ public class FocusManager : MonoBehaviour
                 break;
 
             case GameFocusState.DeepSea: // 심해
-                PlayerManager.Instance.SetPlayerCanMove(true); // 플레이어 이동/회전 가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(true); // 플레이어 이동/회전 가능
                 GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
                 break;
             case GameFocusState.DeepSeaUI: // 심해 ui
-                PlayerManager.Instance.SetPlayerCanMove(false); // 플레이어 이동/회전 불가능
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
         }
