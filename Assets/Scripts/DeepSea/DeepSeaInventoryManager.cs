@@ -10,6 +10,8 @@ public class DeepSeaInventoryManager : MonoBehaviour
     [SerializeField] private DeepSeaPlayerMove player; // 플레이어 레퍼런스
     [SerializeField] private GameObject divingHelmet; // 잠수복 헬멧 오브젝트
 
+    [SerializeField] private EndingChoices endingChoices; // EndingChoices 스크립트
+
     [Header("=== Item References ===")]
     public Item oxygenCapsuleItem; // 산소 캡슐 아이템
     public Item thermalProtectorItem; // 열 보호 장치 아이템
@@ -20,7 +22,6 @@ public class DeepSeaInventoryManager : MonoBehaviour
     public bool HasOxygenCapsule = false; // 산소 캡슐 장착 여부
     public bool HasThermalProtector = false; // 열 보호 장치 장착 여부
     public bool IsThermalProtectorActive = false; // 열 보호 장치 활성화 여부
-    public bool HasHelicopterLocator = false; // 헬리콥터 좌표 입력 손목시계 장착 여부
 
     public List<Item> playerInventory = new List<Item>(); // 플레이어 인벤토리
     private int currentSlotIndex = 0; // 현재 선택된 슬롯 인덱스
@@ -34,7 +35,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
             Instance = this;
 
             PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
-            ApplyData(playerItemStates);
+            // ApplyData(playerItemStates);
 
             // 능력 사용 게임일 때 -> 아래 설정 필요 없음
             if (GameManager.instance.IsAbilityActive)
@@ -45,7 +46,6 @@ public class DeepSeaInventoryManager : MonoBehaviour
             // 초기 인벤토리 상태 설정
             if (HasOxygenCapsule) playerInventory.Add(oxygenCapsuleItem);
             if (HasThermalProtector) playerInventory.Add(thermalProtectorItem);
-            if (HasHelicopterLocator) playerInventory.Add(helicopterLocatorItem);
         }
         else
         {
@@ -70,6 +70,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
         if (IsDivingsuitEquipped) // 잠수복 착용 시
         {
             player.SurvivalTime = 300f; // 생존 시간 300초로 설정
+            player.OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량 설정
 
             divingHelmet.SetActive(true); // 잠수복 헬멧 오브젝트 활성화
 
@@ -79,7 +80,8 @@ public class DeepSeaInventoryManager : MonoBehaviour
         }
         else // 잠수복 미착용 시
         {
-            player.SurvivalTime = 120f; // 생존 시간 120초로 설정
+            player.SurvivalTime = 90f; // 생존 시간 90초로 설정
+            player.OxygenCostPerSec = 1.7f; // 1분에 100% 소모되도록 초당 산소 소모량 설정
 
             divingHelmet.SetActive(false); // 잠수복 헬멧 오브젝트 비활성화
                                            // 잠수복 color 기본 색상으로 변경
@@ -97,7 +99,6 @@ public class DeepSeaInventoryManager : MonoBehaviour
         IsDivingsuitEquipped = data.IsDivingsuitEquipped;
         HasOxygenCapsule = data.HasOxygenCapsule;
         HasThermalProtector = data.HasThermalProtector;
-        HasHelicopterLocator = data.HasHelicopterLocator;
     }
 
     /// <summary>
@@ -110,6 +111,12 @@ public class DeepSeaInventoryManager : MonoBehaviour
     public void OnSlotKeyPress(InputAction.CallbackContext context)
     {
         if (!context.performed || GameManager.instance.IsAbilityActive) return;
+
+        if (endingChoices != null && endingChoices.gameObject.activeInHierarchy)
+        {
+            endingChoices.HandleSlotKeyPress(context); // EndingChoices 스크립트에서 슬롯 키 입력 처리
+            return;
+        }
 
         int slotIdx = context.control.name[0] - '1';
 

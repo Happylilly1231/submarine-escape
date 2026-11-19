@@ -40,9 +40,8 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     private bool _isSprintPressed = false; // 가속 이동 Shift 키가 눌리고 있는지 여부 (실제 가속 이동 중 여부와 다름, 정지해있으면 가속이 아니라 기본 초당 산소 소모량 소모)
 
     [Header("산소")]
-    [SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
+    //[SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
     [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
-    // [SerializeField] private float abnormalOxygenCostPerSec = 5f; // 비정상 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
     [Header("체온")]
@@ -93,10 +92,14 @@ public class DeepSeaPlayerMove : PlayerMoveBase
 
     public float MaxOxygen { get; private set; } = 100f; // 최대 산소량
     public float CurrentOxygen { get; private set; } = 100f; // 현재 산소량
+    public float OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
     public float SurvivalTime = 300f; // 생존 시간(초)
     public float ThermalProtectorDuration => thermalProtectorDuration;
     public float MaxTemperature { get; private set; } = 100f; // 최대 체온
     public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
+    public bool IsOxygenLow => CurrentOxygen <= 30f; // 산소 부족 상태인지 여부
+    public bool IsTemperatureLow => CurrentTemperature <= 30f; // 체온 부족 상태인지 여부
+    public bool IsSurvivalUpdateStopped = false; // 체온, 산소 업데이트 중단 여부
     public Vector3 MoveDir2D => _moveDir2D; // 2차원(X, Z) 이동 방향
     public Vector3 MoveDir3D => _moveDir3D; // 3차원(X, Y, Z) 이동 방향
     public Vector2 MoveInput => _moveInput; // 2차원 이동 입력
@@ -106,6 +109,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     public bool IsDashing { get; private set; } = false; // 회피 중인지 여부
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
     // public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
+    public bool IsCutsceneMoving => _isCutsceneMoving; // 연출 이동/회전 진행 중인지 여부
 
     public float CurrentSpeedMultiplier { get; private set; } = 1f;
 
@@ -167,20 +171,26 @@ public class DeepSeaPlayerMove : PlayerMoveBase
         // 스탯 업데이트
         if (!GameManager.instance.IsAbilityActive) // 능력이 없는 일반 게임일 때
         {
-            // 산소 업데이트
-            if (IsSprinting)
-                ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
-            else
-                ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime); // 평소에도 지속해서 기본 산소 감소
+            if (!IsSurvivalUpdateStopped) // 체온, 산소 업데이트 중단 상태가 아닐 때만
+            {
+                // 산소 업데이트
+                if (IsSprinting)
+                    ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
+                else
+                    ConsumeOxygen(OxygenCostPerSec * Time.deltaTime); // 평소에도 지속해서 기본 산소 감소
 
-            // 체온 업데이트
-            UpdateTemperature();
+                // 체온 업데이트
+                UpdateTemperature();
+            }
         }
         else // 능력 사용 게임일 때
         {
             // 정신력 업데이트
             PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(SurvivalTime);
         }
+
+        // 생존 경고 상태 전달
+        DeepSeaUIManager.Instance.UpdateSurvivalWarning(IsOxygenLow, IsTemperatureLow);
 
         // 괴물에게 잡힌 상태일 때 -> QTE 입력만 받음 & 이동 불가
         if (_isGrabbed)
@@ -785,7 +795,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     }
 
     // 연출 준비 (시작)
-    private void PrepareCutscene()
+    public void PrepareCutscene()
     {
         SetMoveable(false);
         _isCutsceneMoving = true;

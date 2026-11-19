@@ -20,6 +20,7 @@ public class DeepSeaUIManager : MonoBehaviour
     [SerializeField] private Image oxygenBackgroundImg; // 산소 게이지 배경 이미지
     [SerializeField] private Image oxygenFillImg; // 산소 게이지 이미지
     [SerializeField] private TextMeshProUGUI oxygenText; // 산소 수치 텍스트
+    [SerializeField] private Image oxygenDarknessImg; // 산소 부족 시 화면 어둡게 처리 이미지
 
     [Header("=== Temperature UI ===")]
     [SerializeField] private Image temperatureBackgroundImg; // 체온 게이지 배경 이미지
@@ -46,9 +47,13 @@ public class DeepSeaUIManager : MonoBehaviour
 
     public bool IsActiveGuide { get; private set; } = false;
 
-    private int inactivePageIdx; // 비활성화된 페이지
+    private int _inactivePageIdx; // 비활성화된 페이지
     private DeepSeaMonsterController _deepSeaMonsterController;
 
+    private bool _isSurvivalWarningActive = true; // 생존 경고 UI 활성화 여부
+    private Coroutine _temperatureWarningCoroutine; // 체온 부족 경고 코루틴
+    private Coroutine _oxygenWarningCoroutine; // 산소 부족 경고 코루틴
+    private float _targetDarknessAlpha = 0f; // 산소 부족 시 화면 어둡게 처리 이미지의 목표 알파 값
 
     private void Awake()
     {
@@ -78,6 +83,7 @@ public class DeepSeaUIManager : MonoBehaviour
         guideUI.SetActive(false);
         statUI.SetActive(false);
         depthText_Ability.gameObject.SetActive(false);
+        oxygenDarknessImg.gameObject.SetActive(false);
     }
 
     private void OnDisable()
@@ -99,6 +105,8 @@ public class DeepSeaUIManager : MonoBehaviour
         UpdateOxygenUI();
         UpdateTemperatureUI();
         UpdatePositionUI();
+
+        UpdateOxygenVisionEffect();
     }
 
     private void UpdateUICurrentSeaZone(SeaZone currentSeaZone)
@@ -114,6 +122,7 @@ public class DeepSeaUIManager : MonoBehaviour
         }
     }
 
+    #region DeepSea 가이드 UI
     /// <summary>
     /// 심해 가이드 ui 설정
     /// </summary>
@@ -136,14 +145,14 @@ public class DeepSeaUIManager : MonoBehaviour
 
     private void PrevPage()
     {
-        inactivePageIdx = 3;
+        _inactivePageIdx = 3;
 
         UpdatePage();
     }
 
     private void NextPage()
     {
-        inactivePageIdx = 0;
+        _inactivePageIdx = 0;
 
         UpdatePage();
     }
@@ -152,10 +161,10 @@ public class DeepSeaUIManager : MonoBehaviour
     {
         for (int i = 0; i < pages.Length; i++)
         {
-            pages[i].SetActive(i != inactivePageIdx);
+            pages[i].SetActive(i != _inactivePageIdx);
         }
 
-        bool isFirstPage = inactivePageIdx == 3;
+        bool isFirstPage = _inactivePageIdx == 3;
 
         pageControls[0].gameObject.SetActive(!isFirstPage);
         pageControls[1].gameObject.SetActive(isFirstPage);
@@ -171,6 +180,7 @@ public class DeepSeaUIManager : MonoBehaviour
     {
         helmetHUD.SetActive(true);
         guideUI.SetActive(false);
+        oxygenDarknessImg.gameObject.SetActive(true);
 
         // 헬멧 hud 초기화
         oxygenFillImg.fillAmount = 1f;
@@ -188,7 +198,9 @@ public class DeepSeaUIManager : MonoBehaviour
         // _deepSeaMonsterController.StartFSM(); // 심해 몬스터 이동 시작
         DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
     }
+    #endregion
 
+    #region DeepSea 능력 사용 게임 UI
     /// <summary>
     /// 능력 있을 때 UI 설정
     /// </summary>
@@ -206,18 +218,9 @@ public class DeepSeaUIManager : MonoBehaviour
         PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
         DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
     }
+    #endregion
 
-    // /// <summary>
-    // /// 인벤토리 UI 닫기
-    // /// </summary>
-    // public void CloseInventoryUI()
-    // {
-    //     foreach (var slotImg in itemSlotImgs)
-    //     {
-    //         slotImg.gameObject.SetActive(false); // 모든 슬롯 비활성화
-    //     }
-    // }
-
+    #region 헬멧 HUD(체온, 산소, 수심, 아이템 슬롯) UI 업데이트
     /// <summary>
     /// 산소 UI 업데이트
     /// </summary>
@@ -317,6 +320,15 @@ public class DeepSeaUIManager : MonoBehaviour
     {
         if (DeepSeaInventoryManager.Instance == null) return;
 
+        bool isDivingsuitEquipped = DeepSeaInventoryManager.Instance.IsDivingsuitEquipped;
+
+        // 잠수복 착용 여부에 따라 아이템 슬롯 활성화/비활성화
+        // 단, 잠수복 미착용 시 2번 슬롯만 활성화
+        for (int i = 0; i < itemSlotImgs.Length; i++)
+        {
+            itemSlotImgs[i].gameObject.SetActive(isDivingsuitEquipped || i == 1);
+        }
+
         foreach (var slotImg in itemSlotImgs)
         {
             slotImg.transform.GetChild(0).GetComponent<Image>().enabled = false; // 모든 슬롯 비활성화
@@ -373,12 +385,12 @@ public class DeepSeaUIManager : MonoBehaviour
     {
         switch (item.ItemName)
         {
-            case "Thermal Protector": // 2초동안 glow 효과
+            case "Thermal Protector": // 열 보호 장치가 지속되는 동안 glow 효과
                 SetImageAlpha(temperatureBackgroundImg, 255f);
                 yield return new WaitWhile(() => DeepSeaInventoryManager.Instance.IsThermalProtectorActive);
                 SetImageAlpha(temperatureBackgroundImg, 100f);
                 break;
-            case "Oxygen Capsule": // 열 보호 장치가 지속되는 동안 glow 효과
+            case "Oxygen Capsule": // 2초동안 glow 효과
                 SetImageAlpha(oxygenBackgroundImg, 255f);
                 yield return new WaitForSeconds(2f);
                 SetImageAlpha(oxygenBackgroundImg, 100f);
@@ -392,4 +404,100 @@ public class DeepSeaUIManager : MonoBehaviour
         color.a = alpha / 255f;
         image.color = color;
     }
+    #endregion
+
+    #region 플레이어 생존 상태에 따른 경고 UI
+    public void UpdateSurvivalWarning(bool isOxygenLow, bool isTemperatureLow)
+    {
+        // 생존 경고 UI 비활성화 상태일 때는 경고 UI 업데이트하지 않음
+        if (!_isSurvivalWarningActive) return;
+
+        // 산소 부족 상태
+        if (isOxygenLow)
+        {
+            if (_oxygenWarningCoroutine == null)
+            {
+                _oxygenWarningCoroutine = StartCoroutine(BlinkGauge(oxygenBackgroundImg));
+            }
+
+            float ratio = Mathf.InverseLerp(30f, 0f, player.CurrentOxygen);
+            _targetDarknessAlpha = Mathf.Lerp(100f, 255f, ratio);
+        }
+        else
+        {
+            StopWarning(ref _oxygenWarningCoroutine, oxygenBackgroundImg);
+            _targetDarknessAlpha = 0f;
+        }
+
+        bool isThermalProtectorActive = DeepSeaInventoryManager.Instance.IsThermalProtectorActive;
+
+        if (isThermalProtectorActive) // 열 보호 장치 장착 상태일 때 -> 체온 부족 경고 종료
+        {
+            StopWarning(ref _temperatureWarningCoroutine, temperatureBackgroundImg, 255f);
+        }
+        else if (isTemperatureLow)// 열 보호 장치 장착x & 체온 부족 상태일 때 -> 체온 부족 경고 시작
+        {
+            if (_temperatureWarningCoroutine == null)
+            {
+                _temperatureWarningCoroutine = StartCoroutine(BlinkGauge(temperatureBackgroundImg));
+            }
+        }
+        else // 체온 부족 상태가 아닐 때 -> 체온 부족 경고 종료
+        {
+            StopWarning(ref _temperatureWarningCoroutine, temperatureBackgroundImg);
+        }
+    }
+
+    /// <summary>
+    /// 최종 패턴 클리어 시 산소/체온 경고 중지, 화면 암전 제거
+    /// </summary>
+    public void DisableSurvialWarning()
+    {
+        _isSurvivalWarningActive = false;
+        StopWarning(ref _oxygenWarningCoroutine, oxygenBackgroundImg, 255f);
+        StopWarning(ref _temperatureWarningCoroutine, temperatureBackgroundImg, 255f);
+
+        oxygenFillImg.fillAmount = 1f;
+        temperatureFillImg.fillAmount = 1f;
+
+        _targetDarknessAlpha = 0f;
+        if (oxygenDarknessImg != null)
+            SetImageAlpha(oxygenDarknessImg, 0f);
+    }
+
+    private IEnumerator BlinkGauge(Image gaugeImage)
+    {
+        while (true)
+        {
+            SetImageAlpha(gaugeImage, 100f);
+            yield return new WaitForSeconds(0.5f);
+            SetImageAlpha(gaugeImage, 255f);
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    private void StopWarning(ref Coroutine coroutine, Image gaugeImage, float alpha = 100f)
+    {
+        if (coroutine != null)
+        {
+            StopCoroutine(coroutine);
+            coroutine = null;
+        }
+
+        SetImageAlpha(gaugeImage, alpha); // 게이지 원래 색상으로 복원
+    }
+
+    private void UpdateOxygenVisionEffect()
+    {
+        Color color = oxygenDarknessImg.color;
+
+        color.a = Mathf.Lerp(
+            color.a,
+            _targetDarknessAlpha / 255f,
+            Time.deltaTime * 2f
+        );
+
+        oxygenDarknessImg.color = color;
+    }
+    #endregion
 }
