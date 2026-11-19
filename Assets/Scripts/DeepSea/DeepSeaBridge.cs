@@ -7,9 +7,10 @@ using UnityEngine.SceneManagement;
 public class PlayerItemStates
 {
     public bool IsDivingsuitEquipped; // 잠수복 착용 여부
-    public bool HasOxygenCapsule; // 산소 캡슐 장착 여부
-    public bool HasThermalProtector; // 열 보호 장치 장착 여부
-    public bool HasHelicopterLocator; // 헬리콥터 좌표 입력 손목시계 장착 여부
+    public bool HasOxygenCapsule; // 산소 캡슐 보유 여부
+    public bool HasThermalProtector; // 열 보호 장치 보유 여부
+    public bool HasMonsterGasBomb; // 괴물 가스 폭탄 보유 여부
+    public bool HasSleepingGas; // 수면 가스 폭탄 보유 여부
 }
 
 public class DeepSeaBridge : MonoBehaviour
@@ -31,9 +32,9 @@ public class DeepSeaBridge : MonoBehaviour
                 IsDivingsuitEquipped = true,
                 HasOxygenCapsule = true,
                 HasThermalProtector = true,
-                HasHelicopterLocator = true
+                HasMonsterGasBomb = true,
+                HasSleepingGas = true
             });
-            SetContactedHQ(true);
         }
         else
         {

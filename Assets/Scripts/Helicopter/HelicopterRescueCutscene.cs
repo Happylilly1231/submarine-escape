@@ -7,10 +7,14 @@ public class HelicopterRescueCutscene : MonoBehaviour
     [Header("Camera")]
     [SerializeField] private DeepSeaCameraController cameraController;
 
+    [Header("Player")]
+    [SerializeField] private DeepSeaPlayerMove playerMove;
+
     [Header("Obj")]
     [SerializeField] private Transform player;
     [SerializeField] private GameObject helicopter;
     [SerializeField] private GameObject ladder;
+    [SerializeField] private BoxCollider ladderCollider;
 
     [Header("Pos")]
     [SerializeField] private Transform ladderClimbStartPoint; // 사다리 등반이 시작하는 위치
@@ -19,14 +23,18 @@ public class HelicopterRescueCutscene : MonoBehaviour
 
     [Header("Fade")]
     [SerializeField] private CanvasGroup fadeCanvasGroup;
-    [SerializeField] private Canvas helmetCanvas;
 
-    [Header("Audio")]
-    [SerializeField] private AudioSource breathingAudio;
-    [SerializeField] private AudioSource windAudio;
-    [SerializeField] private AudioSource rotorAudio;
+    [Header("UI")]
+    [SerializeField] private GameObject choicesUI;
 
     public bool IsCutScene { get; private set; } = false;
+
+    private void Start()
+    {
+        bool hasContactedHQ = DeepSeaBridge.Instance != null && DeepSeaBridge.Instance.HasContactedHQ;
+
+        if (!hasContactedHQ) helicopter.SetActive(false);
+    }
 
     public void StartCutscene()
     {
@@ -36,7 +44,14 @@ public class HelicopterRescueCutscene : MonoBehaviour
 
         InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
 
-        helmetCanvas.enabled = false; // 헬멧 UI 비활성화
+        // HUD 비활성화
+        DeepSeaUIManager.Instance?.gameObject.SetActive(false);
+
+        // 카메라 입력 막기
+        cameraController.SetInputEnabled(false);
+        cameraController.IsInCutScene = true;
+
+        playerMove.PrepareCutscene(); // 플레이어 컷씬 모드 활성화
 
         StartCoroutine(StartSequence());
     }
@@ -88,31 +103,35 @@ public class HelicopterRescueCutscene : MonoBehaviour
     }
 
     /// <summary>
-    /// 두 회전 사이를 부드럽게 회전
+    /// 플레이어를 특정 위치로 이동시키고 완료될 때까지 대기
     /// </summary>
-    private IEnumerator RotatePlayerAndCamera(Quaternion startRotation, Quaternion targetRotation, float duration)
+    private IEnumerator MovePlayerTo(Vector3 targetPosition, float duration)
     {
-        float elapsedTime = 0f;
+        bool isComplete = false;
 
-        while (elapsedTime < duration)
-        {
-            elapsedTime += Time.deltaTime;
+        playerMove.MoveToLocationForCutscene(
+            targetPosition,
+            duration,
+            () => isComplete = true
+        );
 
-            float t = Mathf.Clamp01(elapsedTime / duration);
+        yield return new WaitUntil(() => isComplete);
+    }
 
-            Quaternion currentRotation =
-                Quaternion.Slerp(startRotation, targetRotation, t);
+    /// <summary>
+    /// 플레이어와 카메라를 특정 방향으로 회전시키고 완료될 때까지 대기
+    /// </summary>
+    private IEnumerator RotatePlayerTo(Quaternion targetRotation, float duration)
+    {
+        bool isComplete = false;
 
-            player.rotation = currentRotation;
+        playerMove.RotateToForCutscene(
+            targetRotation,
+            duration,
+            () => isComplete = true
+        );
 
-            cameraController.SetCutSceneRotation(currentRotation);
-
-
-            yield return null;
-        }
-
-        player.rotation = targetRotation;
-        cameraController.SetCutSceneRotation(targetRotation);
+        yield return new WaitUntil(() => isComplete);
     }
 
     /// <summary>
@@ -122,69 +141,71 @@ public class HelicopterRescueCutscene : MonoBehaviour
     {
         Debug.Log("사다리 등반 시작");
 
-        // 사다리 등반 시작 위치로 이동
+        // 사다리 콜라이더 비활성화
+        if (ladderCollider != null)
+            ladderCollider.enabled = false;
+
+        // 사다리 등반 시작 위치 및 정면 방향으로 회전
         if (ladderClimbStartPoint != null)
         {
             player.position = ladderClimbStartPoint.position;
-            player.rotation = ladderClimbStartPoint.rotation;
+            player.rotation = Quaternion.Euler(0f, ladderClimbStartPoint.eulerAngles.y, 0f);
+            cameraController.SetCutSceneRotation(ladderClimbStartPoint.rotation);
         }
 
-        if (breathingAudio != null && !breathingAudio.isPlaying)
-            breathingAudio.Play();
-
-        if (windAudio != null && !windAudio.isPlaying)
-            windAudio.Play();
-
-        // 현재 카메라 방향을 기준으로 위를 바라본다.
-        Quaternion startRotation = cameraController.transform.rotation;
-
-        Quaternion climbRotation =
-            Quaternion.Euler(-50f, player.eulerAngles.y, 0f);
-
+        // 사다리 위쪽을 올려다봄
+        float baseYaw = player.eulerAngles.y;
+        Quaternion climbRotation = Quaternion.Euler(-45f, baseYaw, 0f);
         yield return StartCoroutine(
-            RotatePlayerAndCamera(startRotation, climbRotation, 3f)
+            RotatePlayerTo(climbRotation, 3f)
         );
 
-        Vector3 startPosition = player.position;
+        // 사다리 등반
+        Vector3 startPos = player.position;
+        Vector3 targetPos = ladderClimbTargetPoint != null
+            ? ladderClimbTargetPoint.position
+            : player.position + Vector3.up * 3f;
 
-        Vector3 targetPosition = ladderClimbTargetPoint != null ? ladderClimbTargetPoint.position : startPosition + Vector3.up * 3f;
+        float elapsed = 0f;
+        float climbDuration = 4f; // 등반 시간
+        float climbStepCount = 4f; // 등반 스텝 수
+        float stepFrequency = (climbStepCount * Mathf.PI) / climbDuration;
 
-        float elapsedTime = 0f;
-        float climbDuration = 10f; // 사다리 등반 시간
-
-        while (elapsedTime < climbDuration)
+        while (elapsed < climbDuration)
         {
-            elapsedTime += Time.deltaTime;
+            elapsed += Time.deltaTime;
+            float normalizedTime = Mathf.Clamp01(elapsed / climbDuration);
 
-            float t = Mathf.Clamp01(elapsedTime / climbDuration);
+            float stepPulse = Mathf.Sin(normalizedTime * climbStepCount * Mathf.PI * 2f) / (climbStepCount * Mathf.PI * 2f);
+            float steppedProgress = Mathf.Clamp01(normalizedTime - stepPulse * 0.45f);
 
-            // 등반 진행에 따라 이동
-            Vector3 position = Vector3.Lerp(startPosition, targetPosition, t);
+            Vector3 currentPos = Vector3.Lerp(startPos, targetPos, steppedProgress);
+            player.position = currentPos;
 
-            // 사다리를 오르는 듯한 상하 리듬
-            float bob = Mathf.Sin(elapsedTime * 5f) * 0.05f;
+            // 시선 및 흔들림 계산
+            float handCycle = elapsed * stepFrequency;
+            float roll = Mathf.Sin(handCycle) * 2f;         // 몸이 좌우로 살짝 기움
+            float yawOffset = Mathf.Cos(handCycle) * 2f;     // 시선 좌우 미세 흔들림
+            float pitchBob = Mathf.Abs(Mathf.Sin(handCycle)) * 3f; // 발 디딜 때 살짝 고개 숙임
 
-            position.y += bob;
+            // 올라갈수록 위를 보는 각도를 서서히 완화
+            float basePitch = Mathf.Lerp(-45f, -28f, normalizedTime);
 
-            player.position = position;
+            Quaternion currentCamRot = Quaternion.Euler(
+                basePitch + pitchBob,
+                baseYaw + yawOffset,
+                roll
+            );
 
-            // 미세한 좌우 흔들림을 카메라 회전에 적용
-            float sway = Mathf.Sin(elapsedTime * 3f) * 1.2f;
-
-            Quaternion currentCameraRotation = climbRotation * Quaternion.Euler(0f, sway, 0f);
-
-            cameraController.SetCutSceneRotation(currentCameraRotation);
+            cameraController.SetCutSceneRotation(currentCamRot);
 
             yield return null;
         }
 
-        // 등반 종료 시 정확한 위치로 이동
-        player.position = targetPosition;
-
-        cameraController.SetCutSceneRotation(climbRotation);
-
-        if (windAudio != null)
-            windAudio.Stop();
+        // 최종 위치 및 정면 시선 보정
+        player.position = targetPos;
+        Quaternion finishLookRot = Quaternion.Euler(-20f, baseYaw, 0f);
+        yield return StartCoroutine(RotatePlayerTo(finishLookRot, 0.5f));
 
         Debug.Log("사다리 등반 완료");
     }
@@ -199,25 +220,22 @@ public class HelicopterRescueCutscene : MonoBehaviour
         // 페이드 아웃
         yield return StartCoroutine(Fade(1f));
 
-        // 암전 중 사다리 비활성화
         if (ladder != null)
             ladder.SetActive(false);
 
-        // 플레이어를 헬기 좌석으로 이동
         if (helicopterSeatPoint != null)
         {
             player.position = helicopterSeatPoint.position;
-
-            // 좌석 방향에 맞춰 플레이어 몸을 회전
-            Vector3 seatEuler = helicopterSeatPoint.eulerAngles;
-
-            player.rotation = Quaternion.Euler(0f, seatEuler.y, 0f);
-
-            // 카메라가 바라볼 방향도 설정
+            player.rotation = Quaternion.Euler(0f, helicopterSeatPoint.eulerAngles.y, 0f);
             cameraController.SetCutSceneRotation(helicopterSeatPoint.rotation);
+
+            // 플레이어를 헬기 자식으로 설정
+            player.SetParent(helicopter.transform, true);
         }
 
-        yield return new WaitForSeconds(0.7f);
+        // 암전 유지 시간 동안 알파값 1 보장
+        if (fadeCanvasGroup != null)
+            fadeCanvasGroup.alpha = 1f;
 
         // 페이드 인
         yield return StartCoroutine(Fade(0f));
@@ -234,31 +252,33 @@ public class HelicopterRescueCutscene : MonoBehaviour
 
         Quaternion startRotation = cameraController.transform.rotation;
 
+        float lookUpAngle = -10f;
 
         // 오른쪽 둘러보기
-        Quaternion rightRotation = startRotation * Quaternion.Euler(0f, 35f, 0f);
+        Quaternion rightRotation =
+            startRotation * Quaternion.Euler(0f, 35f, 0f) * Quaternion.Euler(lookUpAngle, 0f, 0f);
 
         yield return StartCoroutine(
-            RotatePlayerAndCamera(startRotation, rightRotation, 1f)
+            RotatePlayerTo(rightRotation, 1f)
         );
 
         yield return new WaitForSeconds(0.5f);
 
         // 왼쪽 둘러보기
-        Quaternion leftRotation = startRotation * Quaternion.Euler(0f, -70f, 0f);
+        Quaternion leftRotation =
+            startRotation * Quaternion.Euler(0f, -70f, 0f) * Quaternion.Euler(lookUpAngle, 0f, 0f);
 
         yield return StartCoroutine(
-            RotatePlayerAndCamera(rightRotation, leftRotation, 1.7f)
+            RotatePlayerTo(leftRotation, 1.7f)
         );
 
         yield return new WaitForSeconds(0.5f);
 
-        // 정면으로 돌아오기
+        // 정면으로 복귀
         yield return StartCoroutine(
-            RotatePlayerAndCamera(leftRotation, startRotation, 0.7f)
+            RotatePlayerTo(startRotation, 0.7f)
         );
 
-        // 내부를 둘러본 후 잠시 대기
         yield return new WaitForSeconds(0.7f);
 
         Debug.Log("헬기 내부 둘러보기 완료");
@@ -271,52 +291,48 @@ public class HelicopterRescueCutscene : MonoBehaviour
     {
         Debug.Log("헬기 이륙 시작");
 
-        if (rotorAudio != null && !rotorAudio.isPlaying)
-            rotorAudio.Play();
-
         Vector3 helicopterStartPosition = helicopter.transform.position;
-        Vector3 playerStartPosition = player.position;
 
-        // 헬기 상승 및 전진 목표 위치
-        Vector3 helicopterTargetPosition =
+        // 헬기의 수평 전진 방향
+        Vector3 forwardDirection = helicopter.transform.forward;
+        forwardDirection.y = 0f;
+        forwardDirection.Normalize();
+
+        // 위쪽 + 앞쪽으로 비스듬하게 상승
+        Vector3 helicopterRisePosition =
             helicopterStartPosition
             + Vector3.up * 8f
-            + helicopter.transform.forward * 12f;
+            + forwardDirection * 6f;
 
-        // 플레이어는 헬기의 움직임에 맞춰 함께 이동
-        Vector3 playerTargetPosition =
-            playerStartPosition + (helicopterTargetPosition - helicopterStartPosition);
+        // 상승한 높이를 유지하며 앞으로 전진
+        Vector3 helicopterTargetPosition =
+            helicopterRisePosition + forwardDirection * 12f;
 
-        Quaternion baseCameraRotation = cameraController.transform.rotation;
-
+        float takeoffDuration = 4f;
+        float riseDuration = 2f;
+        float forwardDuration = 2f;
         float elapsedTime = 0f;
-        float takeoffDuration = 4f; // 이륙 시간
 
         while (elapsedTime < takeoffDuration)
         {
             elapsedTime += Time.deltaTime;
 
-            float t = Mathf.Clamp01(elapsedTime / takeoffDuration);
+            if (elapsedTime < riseDuration)
+            {
+                // 1. 비스듬하게 상승
+                float smoothT = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsedTime / riseDuration));
+                helicopter.transform.position = Vector3.Lerp(helicopterStartPosition, helicopterRisePosition, smoothT);
+            }
+            else
+            {
+                float smoothT = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((elapsedTime - riseDuration) / forwardDuration));
+                helicopter.transform.position = Vector3.Lerp(helicopterRisePosition, helicopterTargetPosition, smoothT);
+            }
 
-            // 초반에는 천천히 움직이고 이후 속도를 높임
-            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+            // 카메라 진동
+            float shakeAmount = 1f;
+            float shakeSpeed = 15f;
 
-            helicopter.transform.position = Vector3.Lerp(
-                helicopterStartPosition,
-                helicopterTargetPosition,
-                smoothT
-            );
-
-            player.position = Vector3.Lerp(
-                playerStartPosition,
-                playerTargetPosition,
-                smoothT
-            );
-
-            float shakeAmount = 1f; // 흔들림 강도
-            float shakeSpeed = 15f; // 흔들림 속도
-
-            // 이륙 중 카메라 진동
             float pitchShake =
                 Mathf.Sin(elapsedTime * shakeSpeed)
                 * shakeAmount * 0.5f;
@@ -325,25 +341,14 @@ public class HelicopterRescueCutscene : MonoBehaviour
                 Mathf.Sin(elapsedTime * shakeSpeed * 0.7f)
                 * shakeAmount * 0.3f;
 
-            Quaternion shakeRotation =
-                baseCameraRotation
-                * Quaternion.Euler(
-                    pitchShake,
-                    yawShake,
-                    0f
-                );
-
+            Quaternion shakeRotation = helicopterSeatPoint.rotation * Quaternion.Euler(pitchShake, yawShake, 0f);
             cameraController.SetCutSceneRotation(shakeRotation);
 
             yield return null;
         }
 
-        // 목표 위치에 정확히 정착
         helicopter.transform.position = helicopterTargetPosition;
-        player.position = playerTargetPosition;
-
-        // 이륙 진동 종료
-        cameraController.SetCutSceneRotation(baseCameraRotation);
+        cameraController.SetCutSceneRotation(helicopterSeatPoint.rotation);
 
         Debug.Log("헬기 이륙 완료");
     }
@@ -351,10 +356,14 @@ public class HelicopterRescueCutscene : MonoBehaviour
     /// <summary>
     /// 화면 페이드
     /// </summary>
-    private IEnumerator Fade(float targetAlpha)
+    public IEnumerator Fade(float targetAlpha)
     {
         if (fadeCanvasGroup == null)
             yield break;
+
+        // 비활성화 상태라면 활성화
+        if (!fadeCanvasGroup.gameObject.activeSelf)
+            fadeCanvasGroup.gameObject.SetActive(true);
 
         float startAlpha = fadeCanvasGroup.alpha;
         float elapsedTime = 0f;
@@ -373,6 +382,10 @@ public class HelicopterRescueCutscene : MonoBehaviour
         }
 
         fadeCanvasGroup.alpha = targetAlpha;
+
+        // 페이드 아웃 완료 후 비활성화
+        if (targetAlpha >= 1f)
+            fadeCanvasGroup.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -382,7 +395,10 @@ public class HelicopterRescueCutscene : MonoBehaviour
     {
         Debug.Log("헬기 구조 엔딩 선택지 표시");
 
-        // if (choicesUI != null)
-        //     choicesUI.SetActive(true);
+        if (choicesUI != null)
+            choicesUI.SetActive(true);
+
+        FocusManager.Instance.PushFocusState(GameFocusState.DeepSeaUI);
+        PlayerManager.Instance.playerInput.actions.FindAction("DeepSea/SlotKeyPress")?.Enable();
     }
 }
