@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -38,11 +39,16 @@ public class DeepSeaAreaController : MonoBehaviour
     [Header("=== Particle Systems ===")]
     [SerializeField] private ParticleSystem floatingParticles; // 메인 카메라 하위 부유물 파티클
 
+    [Header("=== References ===")]
+    [SerializeField] private DeepSeaPlayerMove playerMove;
+
     public float SurfaceY => surfaceY;
     public float BottomY => bottomY;
 
     private SeaZone _currentZone = SeaZone.DeepSea;
     public SeaZone CurrentZone => _currentZone;
+
+    private bool _hasTriggeredNoHelicopterEnding;
 
     public event Action<SeaZone> OnCurrentSeaZoneChanged;
 
@@ -128,6 +134,7 @@ public class DeepSeaAreaController : MonoBehaviour
     // 1. 원형 경계 제한 및 수면 위 상승 제한
     private void ClampPlayerPosition()
     {
+        if (playerMove.IsCutsceneMoving) return; // 연출 이동 중에는 위치 제한 적용하지 않음
         Vector3 pos = playerTransform.position;
 
         // XZ 원형 범위 제한
@@ -206,6 +213,13 @@ public class DeepSeaAreaController : MonoBehaviour
             {
                 PlayerManager.Instance.playerAbility.monsterVolumeColorAdjustments.postExposure.value = 0f;
             }
+
+            bool hasContactedHQ = DeepSeaBridge.Instance != null && DeepSeaBridge.Instance.HasContactedHQ;
+            if (!hasContactedHQ && !_hasTriggeredNoHelicopterEnding)
+            {
+                _hasTriggeredNoHelicopterEnding = true;
+                StartCoroutine(TriggerNoHelicopterEndingAfterDelay());
+            }
         }
         // else
         // {
@@ -219,6 +233,19 @@ public class DeepSeaAreaController : MonoBehaviour
         //             floatingParticles.Play();
         //     }
         // }
+    }
+
+    /// <summary>
+    /// 수면(650) 도착 후 지정된 시간 대기 후 헬기 미도착 컷씬 시작
+    /// </summary>
+    private IEnumerator TriggerNoHelicopterEndingAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        if (NoHelicopterEndingCutscene.Instance != null)
+        {
+            NoHelicopterEndingCutscene.Instance.StartCutScene();
+        }
     }
 
     private void OnDrawGizmosSelected()

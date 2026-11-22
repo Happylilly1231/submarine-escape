@@ -13,6 +13,7 @@ public class FinalPatternManager : MonoBehaviour
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
     [SerializeField] private Rig playerHandRig;
     [SerializeField] private Rig playerMonsterSpikeRig;
+    [SerializeField] private HelicopterRotor helicopterRotor;
     private Rig _currentRig;
 
     [Header("조준선")]
@@ -442,6 +443,11 @@ public class FinalPatternManager : MonoBehaviour
 
         _isClear = true; // 클리어 변수 true
         IsPatternRunning = false; // 패턴 진행 중 아님으로 설정
+        deepSeaPlayerMove.IsSurvivalUpdateStopped = true; // 체온 감소 중단
+
+        helicopterRotor.IsMainRotorActive = true; // 헬기 로터 회전 시작
+
+        DeepSeaUIManager.Instance.DisableSurvialWarning(); // 체온 경고 UI 끄기
 
         DOTween.To(() => finalPatternVolume.weight, x => finalPatternVolume.weight = x, 0f, 1f); // 볼륨 되돌리기
         DOTween.To(() => _currentRig.weight, x => _currentRig.weight = x, 0f, 1f); // 리그 타겟 비활성화

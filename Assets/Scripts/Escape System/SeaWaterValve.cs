@@ -205,7 +205,8 @@ public class SeaWaterValve : InteractableBase
             bool isDivingSuitEquipped = false;
             bool hasOxygenCapsule = false;
             bool hasThermalProtector = false;
-            bool hasHelicopterLocator = false;
+            bool hasMonsterGasBomb = false;
+            bool hasSleepingGas = false;
 
             foreach (InventorySlot slot in _inventoryManager.InventorySlots)
             {
@@ -222,8 +223,11 @@ public class SeaWaterValve : InteractableBase
                         case "Oxygen Capsule":
                             hasOxygenCapsule = true;
                             break;
-                        case "Helicopter Locator":
-                            hasHelicopterLocator = true;
+                        case "Monster Gas Bomb":
+                            hasMonsterGasBomb = true;
+                            break;
+                        case "Sleeping Gas":
+                            hasSleepingGas = true;
                             break;
                     }
                 }
@@ -233,7 +237,8 @@ public class SeaWaterValve : InteractableBase
                 IsDivingsuitEquipped = isDivingSuitEquipped,
                 HasThermalProtector = hasThermalProtector,
                 HasOxygenCapsule = hasOxygenCapsule,
-                HasHelicopterLocator = hasHelicopterLocator
+                HasMonsterGasBomb = hasMonsterGasBomb,
+                HasSleepingGas = hasSleepingGas
             };
             DeepSeaBridge.Instance.SetPlayerItemStates(playerItemStates);
             _audioSource.Stop();
