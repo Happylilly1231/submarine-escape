@@ -4,13 +4,32 @@ using UnityEngine;
 
 using DeepSeaMonsterStates;
 using System;
+using DG.Tweening;
+using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// 심해 괴물 움직임 관리
 /// </summary>
-public class DeepSeaMonsterController : MonoBehaviour
+public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSeaMonsterController>
 {
     private StateMachine<DeepSeaMonsterController> _fsm; // 상태 머신
+
+    public UnderwaterPlayerMove underwaterPlayerMove;
+    public UnderwaterInput underwaterInput;
+    public UnderwaterPlayerStat underwaterPlayerStat;
+    public ShockwaveTrigger shockwaveTrigger;
+
+    [Header("끌어내리기 UI")]
+    public GameObject dragDownUI;
+    public Image leftTimeImage;
+    public TextMeshProUGUI spaceCountText;
+    public TextMeshProUGUI targetSpaceCountText;
+
+    public float AttackCoolDown { get; set; } = 10f;
+    public bool IsAmbush { get; set; } = false;
+
+
 
     [SerializeField] private MonsterHitBox hitBox;
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
@@ -22,10 +41,19 @@ public class DeepSeaMonsterController : MonoBehaviour
     public Transform playerGrabPos;
     public LayerMask obstacleLayerMask;
     public GameObject monsterGeo; // 몬스터 외형 모습
+    public Animator animator;
+
+    [Header("오디오")]
+    public AudioSource audioSource;
+    public AudioSource heartBeatAudioSource;
+    public AudioClip spawnSound;
+    public AudioClip moveSound;
+    public AudioClip shockwaveSound;
+    public AudioClip bigAttackSound;
 
     private Rigidbody _rb;
     public Rigidbody Rb => _rb;
-    public Animator animator;
+
     private float _fsmEndDepth; // FSM 종료 수심
 
     public List<DeepSeaMonsterAttackBase> AllPatternList { get; private set; } = new List<DeepSeaMonsterAttackBase>();
@@ -40,9 +68,6 @@ public class DeepSeaMonsterController : MonoBehaviour
     public float RespawnWaitingTime { get; private set; } = 15f; // 재스폰 대기 시간
 
     public bool IsFSMPause = false;
-
-    public AudioSource audioSource;
-    public AudioClip spawnSound;
 
     public bool IsIntroDashShowed { get; set; } = false; // 컷씬 이후 이어지는 처음 대시 공격을 보여주었는지 여부
 
@@ -63,6 +88,8 @@ public class DeepSeaMonsterController : MonoBehaviour
     {
         if (deepSeaPlayerMove == null) return;
 
+        shockwaveTrigger.gameObject.SetActive(false);
+
         if (IsFSMPause)
             StopFSM(); // FSM 정지
         else
@@ -78,9 +105,13 @@ public class DeepSeaMonsterController : MonoBehaviour
 
         // 패턴 비우고 추가
         AllPatternList.Clear();
-        AllPatternList.Add(new DashAttack(this));
-        AllPatternList.Add(new ScratchAttack(this));
-        AllPatternList.Add(new DragDownAttack(this));
+        // AllPatternList.Add(new SlamAttack(this));
+        AllPatternList.Add(new SweepAttack(this));
+        // AllPatternList.Add(new DragDownAttack(this));
+
+        // AllPatternList.Add(new DashAttack(this));
+        // AllPatternList.Add(new ScratchAttack(this));
+        // AllPatternList.Add(new AmbushAttack(this));
 
         // 현재 패턴들의 나온 횟수 0으로 초기화
         foreach (var pattern in AllPatternList)
@@ -95,7 +126,7 @@ public class DeepSeaMonsterController : MonoBehaviour
         // SetTorpedoHitCountAndApplyEffect(3);
 
         // 스폰 상태
-        _fsm.ChangeState(new SpawnState());
+        _fsm.ChangeState(new StealthMoveState());
     }
 
     /// <summary>
@@ -115,9 +146,6 @@ public class DeepSeaMonsterController : MonoBehaviour
     {
         if (deepSeaPlayerMove == null || IsFSMPause) return;
 
-        _rb.velocity = Vector3.zero;
-        _rb.angularVelocity = Vector3.zero;
-
         if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsEnded)
         {
             IsEnded = true;
@@ -131,6 +159,9 @@ public class DeepSeaMonsterController : MonoBehaviour
         if (deepSeaPlayerMove == null || IsFSMPause) return;
 
         _fsm.FixedUpdate();
+
+        _rb.velocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
     }
 
     private void OnDisable()
@@ -231,16 +262,28 @@ public class DeepSeaMonsterController : MonoBehaviour
     // 애니메이션 이벤트 1 (공격 내지르는 순간)
     public void OnAttackStart()
     {
-        hitBox.EnableHitbox(
-            onSuccess: () => currentPattern.OnAttackSuccess(), // 적중 시
-            onMiss: () => currentPattern.OnAttackMiss()       // 빗나갔을 때
-        );
+        // hitBox.EnableHitbox(
+        //     onSuccess: () => currentPattern.OnAttackSuccess(), // 적중 시
+        //     onMiss: () => currentPattern.OnAttackMiss()       // 빗나갔을 때
+        // );
     }
 
     // 애니메이션 이벤트 2 (공격 휘두르기가 끝나는 순간)
     public void OnAttackEnd()
     {
-        hitBox.DisableHitbox();
+        // hitBox.DisableHitbox();
+    }
+
+    /// <summary>
+    /// 애니메이션 이벤트 - 공격 타이밍
+    /// </summary>
+    public void OnAttack()
+    {
+        Debug.Log(currentPattern + " - 애니메이션 공격 타이밍");
+        if (currentPattern != null)
+        {
+            currentPattern.OnAnimationAttack();
+        }
     }
 
     /// <summary>
@@ -248,20 +291,8 @@ public class DeepSeaMonsterController : MonoBehaviour
     /// </summary>
     public void DamagePlayer(float amount)
     {
-        deepSeaPlayerMove.TakeDamage(amount * CurrentDamageScale); // 현재 대미지 배율 적용하여 대미지 줌
-
-        // 1. 공격 방향 계산 (괴물 위치 -> 플레이어 위치 방향 vector)
-        Vector3 hitDirection = (deepSeaPlayerMove.transform.position - transform.position).normalized;
-        hitDirection.y = 0; // 평면 기준 넉백을 위해 Y축 보정 (필요시 제거 가능)
-
-        // 2. HitStop 적용
-        deepSeaPlayerMove.TriggerHitStop(0.2f);
-
-        // // 3. 카메라 셰이크 적용
-        // deepSeaCameraController.ShakeCameraWithFOV(duration: 1f, strength: 0.5f, fovImpact: 8f);
-
-        // // 4. 플레이어 넉백 적용
-        // deepSeaPlayerMove.ApplyKnockback(hitDirection, distance: 5f, duration: 0.5f);
+        underwaterPlayerStat.TakeDamage(amount * CurrentDamageScale); // 현재 대미지 배율 적용하여 대미지 줌
+        underwaterPlayerStat.TriggerHitStop(0.2f); // 히트 스탑 적용
     }
 
     #region Attacked
@@ -294,4 +325,13 @@ public class DeepSeaMonsterController : MonoBehaviour
     }
 
     #endregion
+
+    /// <summary>
+    /// 충격파 날리기
+    /// </summary>
+    public void LaunchShockwave(Quaternion rotation, float duration = 1f, Action onAttackSuccess = null, Action onAttackMiss = null)
+    {
+        shockwaveTrigger.Fire(underwaterPlayerMove.BasePosition + Vector3.up * 1.5f, rotation, duration, onAttackSuccess, onAttackMiss
+        );
+    }
 }

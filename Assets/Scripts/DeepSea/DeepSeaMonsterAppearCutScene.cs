@@ -78,10 +78,17 @@ public class DeepSeaMonsterAppearCutScene : MonoBehaviour
         // 연출 종료 후 플레이어 조작권 복구
         _deepSeaPlayerMove.ReleaseCutsceneControl();
 
+        UnderwaterPlayerMove underwaterPlayerMove = FindAnyObjectByType<UnderwaterPlayerMove>();
+        UnderwaterCameraController underwaterCameraController = FindAnyObjectByType<UnderwaterCameraController>();
+        _deepSeaPlayerMove.enabled = false;
+        underwaterPlayerMove.enabled = true;
+        _deepSeaCameraController.enabled = false;
+        underwaterCameraController.enabled = true;
+        PlayerManager.Instance.playerMoveBase = underwaterPlayerMove;
+        PlayerManager.Instance.playerCameraControllerBase = underwaterCameraController;
+        Debug.Log("예전 조작 비활성화 -> 개선된 조작 활성화");
+
         // 괴물 FSM 시작
         _deepSeaMonsterController.StartFSM();
     }
-
-
-
 }

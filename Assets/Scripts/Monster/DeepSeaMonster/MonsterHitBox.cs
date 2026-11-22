@@ -28,9 +28,9 @@ public class MonsterHitBox : MonoBehaviour
         Collider[] initialHits = Physics.OverlapSphere(transform.position, radius, targetLayer);
         foreach (var col in initialHits)
         {
-            if (col.transform.IsChildOf(transform.root)) continue;
+            if (col.transform.IsChildOf(transform.root)) continue; // 괴물의 콜라이더는 무시
 
-            ProcessHit();
+            ProcessHit(); // 맞은 판정
             return;
         }
     }
@@ -56,8 +56,8 @@ public class MonsterHitBox : MonoBehaviour
         if (!isActive || hasHit) return;
 
         Vector3 currentPos = transform.position;
-        Vector3 dir = currentPos - lastPos;
-        float dist = dir.magnitude;
+        Vector3 dir = currentPos - lastPos; // 이전 위치로부터 현재 위치까지 잇는 벡터 계산
+        float dist = dir.magnitude; // 벡터 거리
 
         if (dist > 0f)
         {

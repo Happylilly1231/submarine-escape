@@ -14,6 +14,8 @@ namespace DeepSeaMonsterStates
 
         public void Enter(DeepSeaMonsterController owner)
         {
+            owner.monsterGeo.SetActive(true);
+
             owner.DeepSeaPlayerMove.SetSpeedMultiplier(1f);
 
             _retreatTimer = 0f;
@@ -23,7 +25,7 @@ namespace DeepSeaMonsterStates
             // 1. 기본 퇴각 방향: 현재 바라보는 방향의 반대
             Vector3 defaultDir = -owner.transform.forward;
 
-            // 2. 뒤쪽 지형 검사 (8m)
+            // 2. 뒤쪽 지형 검사
             if (Physics.Raycast(owner.transform.position, defaultDir, 8.0f, owner.obstacleLayerMask))
             {
                 _retreatDirection = GetFreeRetreatDirection(owner);
@@ -32,17 +34,8 @@ namespace DeepSeaMonsterStates
             {
                 _retreatDirection = defaultDir;
             }
-
-            // 3. [선택 A] Enter 시점에 퇴각 방향을 즉시 마주보도록 회전시키고 싶다면:
-            /*
-            if (_retreatDirection != Vector3.zero)
-            {
-                owner.transform.rotation = Quaternion.LookRotation(_retreatDirection);
-            }
-            */
         }
 
-        // Rigidbody 물리 연산이므로 FixedUpdate로 실행!
         public void FixedUpdate(DeepSeaMonsterController owner)
         {
             _retreatTimer += Time.fixedDeltaTime;
@@ -69,11 +62,10 @@ namespace DeepSeaMonsterStates
             // 3. 1.5초 지나면 쿨다운 상태로 전환
             if (_retreatTimer > 1.5f)
             {
-                owner.ChangeState(new HiddenState());
+                owner.ChangeState(new StealthMoveState());
             }
         }
 
-        // IState 구현상 Update를 비워둠 (FixedUpdate를 따로 사용하는 구조인 경우)
         public void Update(DeepSeaMonsterController owner) { }
 
         public void Exit(DeepSeaMonsterController owner) { }

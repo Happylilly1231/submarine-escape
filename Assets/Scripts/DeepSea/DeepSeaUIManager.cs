@@ -11,6 +11,8 @@ public class DeepSeaUIManager : MonoBehaviour
 
     [Header("=== Target Reference ===")]
     [SerializeField] private DeepSeaPlayerMove player;
+    [SerializeField] private UnderwaterPlayerMove underwaterPlayerMove;
+    [SerializeField] private UnderwaterPlayerStat underwaterPlayerStat;
 
     [Header("=== Helmet HUD ===")]
     [SerializeField] private GameObject helmetHUD; // 헬멧 hud
@@ -67,9 +69,9 @@ public class DeepSeaUIManager : MonoBehaviour
     private void Start()
     {
         // Player 레퍼런스를 지정하지 않았을 경우 자동 검색
-        if (player == null)
+        if (underwaterPlayerMove == null)
         {
-            player = FindObjectOfType<DeepSeaPlayerMove>();
+            underwaterPlayerMove = FindObjectOfType<UnderwaterPlayerMove>();
         }
 
         DeepSeaAreaController.Instance.OnCurrentSeaZoneChanged += UpdateUICurrentSeaZone;
@@ -88,11 +90,11 @@ public class DeepSeaUIManager : MonoBehaviour
 
     private void Update()
     {
-        if (player == null) return;
+        if (underwaterPlayerMove == null) return;
         if (DeepSeaIntroCutScene.Instance.IsCutScene) return;
         if (GameManager.instance.IsAbilityActive && depthText_Ability.gameObject.activeSelf) // 능력 사용 게임이고 수면 아래일 때 -> 깊이 UI만 업데이트
         {
-            depthText_Ability.text = $"·{player.DisplayDepth:F0}m·";
+            depthText_Ability.text = $"·{underwaterPlayerMove.DisplayDepth:F0}m·";
             return;
         }
 
@@ -223,8 +225,8 @@ public class DeepSeaUIManager : MonoBehaviour
     /// </summary>
     private void UpdateOxygenUI()
     {
-        float currentO2 = player.CurrentOxygen;
-        float maxO2 = player.MaxOxygen;
+        float currentO2 = underwaterPlayerStat.CurrentOxygen;
+        float maxO2 = underwaterPlayerStat.MaxOxygen;
 
 
         if (oxygenFillImg != null)
@@ -243,8 +245,8 @@ public class DeepSeaUIManager : MonoBehaviour
     /// </summary>
     private void UpdateTemperatureUI()
     {
-        float currentTemp = player.CurrentTemperature;
-        float maxTemp = player.MaxTemperature;
+        float currentTemp = underwaterPlayerStat.CurrentTemperature;
+        float maxTemp = underwaterPlayerStat.MaxTemperature;
 
         if (temperatureFillImg != null)
         {
@@ -260,7 +262,7 @@ public class DeepSeaUIManager : MonoBehaviour
         {
             protectorTimerText.enabled = true;
 
-            float remainingTime = player.ThermalProtectorDuration;
+            float remainingTime = underwaterPlayerStat.ThermalProtectorDuration;
             float minutes = Mathf.FloorToInt(remainingTime / 60f);
             float seconds = Mathf.FloorToInt(remainingTime % 60f);
 
@@ -279,10 +281,10 @@ public class DeepSeaUIManager : MonoBehaviour
     {
         if (playerPosText == null) return;
 
-        Vector3 pos = player.transform.position; // 플레이어의 현재 위치 가져오기
+        Vector3 pos = underwaterPlayerMove.transform.position; // 플레이어의 현재 위치 가져오기
 
         float normalizedX = Mathf.InverseLerp(-250f, 250f, pos.x); // -250 ~ 250 범위를 0~1로 정규화
-        float normalizedDepth = Mathf.InverseLerp(0f, 350f, player.DisplayDepth); // 0 ~ 350 범위를 0~1로 정규화
+        float normalizedDepth = Mathf.InverseLerp(0f, 350f, underwaterPlayerMove.DisplayDepth); // 0 ~ 350 범위를 0~1로 정규화
 
         float x = Mathf.Lerp(-posBounds.rect.width / 2f, posBounds.rect.width / 2f, normalizedX);
         float y = Mathf.Lerp(-posBounds.rect.height / 2f, posBounds.rect.height / 2f, 1 - normalizedDepth);

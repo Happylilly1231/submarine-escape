@@ -25,14 +25,14 @@ namespace DeepSeaMonsterStates
                 return;
             }
 
-            _timer += Time.deltaTime;
+            // _timer += Time.deltaTime;
 
-            // 기다리는 시간(쿨타임) 지나면 -> 스폰 상태로 전환
-            if (_timer >= owner.RespawnWaitingTime)
-            {
-                owner.ChangeState(new SpawnState());
-                return;
-            }
+            // // 기다리는 시간(쿨타임) 지나면 -> 스폰 상태로 전환
+            // if (_timer >= owner.RespawnWaitingTime)
+            // {
+            //     owner.ChangeState(new SpawnState());
+            //     return;
+            // }
         }
 
         public void Exit(DeepSeaMonsterController owner)

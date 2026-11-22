@@ -9,13 +9,17 @@ public abstract class DeepSeaMonsterAttackBase
     protected Rigidbody rb;
     protected float moveTimer;
 
-    public abstract Vector3[] SpawnDirections { get; }
-    public abstract float SpawnDistance { get; }
+    // public abstract Vector3[] SpawnDirections { get; }
+    // public abstract float SpawnDistance { get; }
+    // public abstract float MoveTimeout { get; }
+    // public abstract float AttackDistance { get; }
+    // public abstract string AnimationTriggerName { get; }
+
+    public abstract Vector3 SpawnOffset { get; }
+    public abstract Vector3 TargetOffset { get; }
     public abstract float MoveSpeed { get; }
-    public abstract float MoveTimeout { get; }
-    public abstract float AttackDistance { get; }
+    public abstract bool ShouldStop { get; }
     public abstract float DamageAmount { get; }
-    public abstract string AnimationTriggerName { get; }
 
     /// <summary>
     /// 생성자
@@ -28,7 +32,20 @@ public abstract class DeepSeaMonsterAttackBase
         playerTransform = monster.PlayerTransform;
     }
 
+    /// <summary>
+    /// 나타났을 때 (공격 상태 시작)
+    /// </summary>
     public abstract void OnSpawned();
+
+    /// <summary>
+    /// 목표 위치 도달 시
+    /// </summary>
+    public abstract void OnReachedToTarget();
+
+    /// <summary>
+    /// 애니메이션의 공격 타이밍
+    /// </summary>
+    public abstract void OnAnimationAttack();
 
     /// <summary>
     /// 이동 업데이트 (Rigidbody 이동이므로 FixedUpdate에서 실행됨)
@@ -36,8 +53,13 @@ public abstract class DeepSeaMonsterAttackBase
     /// <returns>이동 완료 여부 반환</returns>
     public abstract bool UpdateMovement();
 
-    public abstract void StartAttackAnimation();
-    public abstract void UpdateAttack();
+    /// <summary>
+    /// 공격 성공 시
+    /// </summary>
     public abstract void OnAttackSuccess();
+
+    /// <summary>
+    /// 공격 실패 시
+    /// </summary>
     public abstract void OnAttackMiss();
 }
