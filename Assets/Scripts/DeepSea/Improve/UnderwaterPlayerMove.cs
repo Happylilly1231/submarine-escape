@@ -26,18 +26,18 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     private Rigidbody _rb;
 
     // 기본 이동
-    private float _moveAscentSpeed = 3f;
+    private float _moveAscentSpeed = 2f;
 
     // 원점
     public Vector3 BasePosition { get; private set; }
 
     // 좌우 회피
     public bool IsDodging { get; private set; } = false;
-    private float _dodgeDistance = 40f;
+    private float _dodgeDistance = 5f;
 
     // 위로 대시
     public bool IsUpwardDashing { get; private set; } = false;
-    private float _dashDistance = 30f;
+    private float _dashDistance = 5f;
 
     // 잠깐 뒤돌아보기
     public bool IsGlancingBack { get; private set; } = false;
@@ -115,7 +115,7 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         if (!_underwaterInput.IsStopping)
         {
             AudioManager.Instance.PlaySoundSafe(audioSource, suitMotorSound);
-            _underwaterPlayerStat.ConsumeOxygen(baseOxygenCostPerSec * Time.deltaTime); // 산소 소모
+            _underwaterPlayerStat.ConsumeBaseOxgen(); // 기본적으로 초당 산소 소모
         }
         _underwaterPlayerStat.UpdateTemperature(); // 체온 저하
 

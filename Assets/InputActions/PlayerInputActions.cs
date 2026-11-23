@@ -72,7 +72,7 @@ using UnityEngine.InputSystem.Utilities;
 /// }
 /// </code>
 /// </example>
-public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
+public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
 {
     /// <summary>
     /// Provides access to the underlying asset instance.
@@ -964,7 +964,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                }
+                },
                 {
                     ""name"": ""Interact"",
                     ""type"": ""Button"",
@@ -1226,9 +1226,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";PC"",
                     ""action"": ""Fire"",
-                     ""isComposite"": false,
+                    ""isComposite"": false,
                     ""isPartOfComposite"": false
-                }
+                },
                 {
                     ""name"": """",
                     ""id"": ""d7eee44e-7e1e-48ad-8dca-5e9180984842"",
@@ -2053,6 +2053,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "DeepSea/Fire".
         /// </summary>
         public InputAction @Fire => m_Wrapper.m_DeepSea_Fire;
+        /// <summary>
         /// Provides access to the underlying input action "DeepSea/Interact".
         /// </summary>
         public InputAction @Interact => m_Wrapper.m_DeepSea_Interact;
@@ -2521,7 +2522,6 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         void OnUseItem(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "HorizontalDodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
@@ -2562,6 +2562,12 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnFire(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
     }
 }

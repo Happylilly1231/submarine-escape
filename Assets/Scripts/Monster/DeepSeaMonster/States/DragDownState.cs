@@ -74,6 +74,12 @@ namespace DeepSeaMonsterStates
             _monster.dragDownUI.SetActive(false); // UI 비활성화
 
             owner.underwaterInput.upwardDashEvent -= OnUpwardDash; // 입력 이벤트 구독 해제
+
+            // 최종 패턴 예약 중 -> 현재 상태가 끝났으므로 최종 패턴 실행
+            if (owner.IsFinalPatternPending)
+            {
+                owner.StartFinalPattern();
+            }
         }
 
         public void OnPlayerQTESuccess()

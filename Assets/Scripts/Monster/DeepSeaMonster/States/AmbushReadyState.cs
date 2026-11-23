@@ -37,6 +37,13 @@ namespace DeepSeaMonsterStates
 
         public void Update(DeepSeaMonsterController owner)
         {
+            // 최종 패턴 예약 중 -> 최종 패턴 즉시 실행
+            if (owner.IsFinalPatternPending)
+            {
+                owner.StartFinalPattern();
+                return;
+            }
+
             if (_isDetectingMovement)
             {
                 // 움직임 감지 시 -> 기습 패턴 선택 및 공격 상태로 전환

@@ -14,11 +14,26 @@ namespace DeepSeaMonsterStates
         {
             owner.monsterGeo.SetActive(true);
 
-            // 현재 패턴 결정
-            if (owner.IsAmbush)
-                owner.currentPattern = new AmbushAttack(owner);
+            if (owner.IsExecutingFinalPattern) // 최종 패턴일 때
+            {
+                owner.CurrentFinalPatternCount++;
+                if (owner.CurrentFinalPatternCount == 1 || owner.CurrentFinalPatternCount == owner.MaxFinalPatternCount)
+                {
+                    owner.currentPattern = new SwallowAttack(owner);
+                }
+                else
+                {
+                    owner.currentPattern = owner.AllPatternList[Random.Range(0, owner.AllPatternList.Count)];
+                }
+            }
             else
-                owner.currentPattern = owner.AllPatternList[Random.Range(0, owner.AllPatternList.Count)];
+            {
+                // 현재 패턴 결정
+                if (owner.IsAmbush)
+                    owner.currentPattern = new AmbushAttack(owner);
+                else
+                    owner.currentPattern = owner.AllPatternList[Random.Range(0, owner.AllPatternList.Count)];
+            }
 
             Debug.Log("현재 공격 패턴: " + owner.currentPattern);
 
@@ -90,6 +105,12 @@ namespace DeepSeaMonsterStates
         public void Exit(DeepSeaMonsterController owner)
         {
             owner.currentPattern = null;
+
+            // 최종 패턴 예약 중 -> 현재 상태가 끝났으므로 최종 패턴 실행
+            if (owner.IsFinalPatternPending)
+            {
+                owner.StartFinalPattern();
+            }
         }
     }
 }

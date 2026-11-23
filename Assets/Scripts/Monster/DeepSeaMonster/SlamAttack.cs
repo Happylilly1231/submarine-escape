@@ -43,7 +43,7 @@ public class SlamAttack : DeepSeaMonsterAttackBase
         monster.audioSource.PlayOneShot(monster.shockwaveSound);
 
         // 충격파 날리기
-        monster.LaunchShockwave(Quaternion.Euler(new Vector3(0f, 0f, 90f)), 1f, OnAttackSuccess, OnAttackMiss);
+        monster.LaunchShockwave(Quaternion.Euler(new Vector3(0f, 0f, 90f)), OnAttackSuccess, OnAttackMiss);
     }
 
     public override void OnAttackSuccess()
@@ -51,13 +51,19 @@ public class SlamAttack : DeepSeaMonsterAttackBase
         Debug.Log("공격 성공 - 대미지");
         monster.DamagePlayer(DamageAmount); // 대미지
         monster.underwaterPlayerMove.ApplyKnockback(); // 넉백 적용
-        monster.ChangeState(new RetreatState());
+        if (monster.IsExecutingFinalPattern)
+            GameManager.instance.GameOver(EEndingType.MonsterDeath);
+        else
+            monster.ChangeState(new RetreatState());
     }
 
     public override void OnAttackMiss()
     {
         Debug.Log("공격 실패");
-        monster.ChangeState(new RetreatState());
+        if (monster.IsExecutingFinalPattern)
+            monster.ChangeState(new RetreatState());
+        else
+            monster.ChangeState(new RetreatState());
     }
 
     public override bool UpdateMovement()

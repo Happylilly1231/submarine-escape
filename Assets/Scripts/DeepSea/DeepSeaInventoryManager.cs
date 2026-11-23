@@ -1,18 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using UnityEngine.InputSystem;
 
 public class DeepSeaInventoryManager : MonoBehaviour
 {
     public static DeepSeaInventoryManager Instance { get; private set; }
 
-    [SerializeField] private DeepSeaPlayerMove player; // 플레이어 레퍼런스
+    [SerializeField] private UnderwaterPlayerStat underwaterPlayerStat; // 플레이어 스탯 레퍼런스
     [SerializeField] private GameObject divingHelmet; // 잠수복 헬멧 오브젝트
+    [SerializeField] private Rig playerHandRig; // 플레이어 손 Rig
+    [SerializeField] private Transform playerHandTarget; // 플레이어 손 Target (들고 있는 아이템 위치)
 
     [SerializeField] private EndingChoices endingChoices; // EndingChoices 스크립트
 
     [Header("=== Item References ===")]
+    public Item energyGunItem; // 에너지 건 아이템
     public Item oxygenCapsuleItem; // 산소 캡슐 아이템
     public Item thermalProtectorItem; // 열 보호 장치 아이템
     public Item helicopterLocatorItem; // 헬리콥터 좌표 입력 손목시계 아이템
@@ -24,7 +29,8 @@ public class DeepSeaInventoryManager : MonoBehaviour
     public bool IsThermalProtectorActive = false; // 열 보호 장치 활성화 여부
 
     public List<Item> playerInventory = new List<Item>(); // 플레이어 인벤토리
-    private int currentSlotIndex = 0; // 현재 선택된 슬롯 인덱스
+    private int currentSlotIndex = -1; // 현재 선택된 슬롯 인덱스
+    public int CurrentSlotIndex => currentSlotIndex;
 
     private ItemEquipController _itemEquipController; // 아이템 장착 컨트롤러
 
@@ -44,6 +50,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
             _itemEquipController = GetComponent<ItemEquipController>();
 
             // 초기 인벤토리 상태 설정
+            playerInventory.Add(energyGunItem); // 에너지 건 아이템 1번 슬롯에 추가
             if (HasOxygenCapsule) playerInventory.Add(oxygenCapsuleItem);
             if (HasThermalProtector) playerInventory.Add(thermalProtectorItem);
         }
@@ -62,15 +69,15 @@ public class DeepSeaInventoryManager : MonoBehaviour
             return;
         }
 
-        if (player == null)
+        if (underwaterPlayerStat == null)
         {
-            player = FindObjectOfType<DeepSeaPlayerMove>();
+            underwaterPlayerStat = FindObjectOfType<UnderwaterPlayerStat>();
         }
 
         if (IsDivingsuitEquipped) // 잠수복 착용 시
         {
-            player.SurvivalTime = 300f; // 생존 시간 300초로 설정
-            player.OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량 설정
+            underwaterPlayerStat.SurvivalTime = 300f; // 생존 시간 300초로 설정
+            underwaterPlayerStat.OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량 설정
 
             divingHelmet.SetActive(true); // 잠수복 헬멧 오브젝트 활성화
 
@@ -80,8 +87,8 @@ public class DeepSeaInventoryManager : MonoBehaviour
         }
         else // 잠수복 미착용 시
         {
-            player.SurvivalTime = 90f; // 생존 시간 90초로 설정
-            player.OxygenCostPerSec = 1.7f; // 1분에 100% 소모되도록 초당 산소 소모량 설정
+            underwaterPlayerStat.SurvivalTime = 90f; // 생존 시간 90초로 설정
+            underwaterPlayerStat.OxygenCostPerSec = 1.7f; // 1분에 100% 소모되도록 초당 산소 소모량 설정
 
             divingHelmet.SetActive(false); // 잠수복 헬멧 오브젝트 비활성화
                                            // 잠수복 color 기본 색상으로 변경
@@ -120,22 +127,59 @@ public class DeepSeaInventoryManager : MonoBehaviour
 
         int slotIdx = context.control.name[0] - '1';
 
-        if (DeepSeaUIManager.Instance != null)
-        {
-            if (currentSlotIndex == slotIdx)
-            {
-                // 이미 선택된 슬롯을 다시 누르면 장착 해제
-                _itemEquipController.UnequipItem();
-                DeepSeaUIManager.Instance.SetSlotGlow(-1); // 모든 슬롯 글로우 해제
-                currentSlotIndex = -1; // 현재 선택된 슬롯 인덱스를 -1로 설정
-            }
-            else
-            {
-                if (playerInventory.Count > slotIdx) _itemEquipController.EquipItem(playerInventory[slotIdx]);
-                DeepSeaUIManager.Instance.SetSlotGlow(slotIdx);
-                currentSlotIndex = slotIdx;
-            }
-        }
+        // 키 입력 시에만 토글 처리
+        if (currentSlotIndex == slotIdx)
+            UnselectSlot();
+        else
+            SelectSlot(slotIdx);
+
+        // if (DeepSeaUIManager.Instance != null)
+        // {
+        //     if (currentSlotIndex == slotIdx)
+        //     {
+        //         // 이미 선택된 슬롯을 다시 누르면 장착 해제
+        //         _itemEquipController.UnequipItem();
+        //         DeepSeaUIManager.Instance.SetSlotGlow(-1); // 모든 슬롯 글로우 해제
+        //         currentSlotIndex = -1; // 현재 선택된 슬롯 인덱스를 -1로 설정
+        //     }
+        //     else
+        //     {
+        //         if (playerInventory.Count > slotIdx) _itemEquipController.EquipItem(playerInventory[slotIdx]);
+        //         DeepSeaUIManager.Instance.SetSlotGlow(slotIdx);
+        //         currentSlotIndex = slotIdx;
+        //     }
+        // }
+    }
+
+    /// <summary>
+    /// 특정 슬롯의 아이템 장착 (외부 호출용)
+    /// </summary>
+    public void SelectSlot(int slotIdx)
+    {
+        if (GameManager.instance.IsAbilityActive) return;
+        if (slotIdx < 0 || slotIdx >= playerInventory.Count || playerInventory[slotIdx] == null) return;
+        if (currentSlotIndex == slotIdx) return; // 이미 들고 있으면 중복 실행 방지
+
+        _itemEquipController.EquipItem(playerInventory[slotIdx]);
+        DeepSeaUIManager.Instance?.SetSlotGlow(slotIdx);
+        currentSlotIndex = slotIdx;
+
+        playerHandTarget.transform.position = _itemEquipController.HeldItemObject.transform.position;
+        DOTween.To(() => playerHandRig.weight, x => playerHandRig.weight = x, 1f, 1f); // 손으로 잡기
+    }
+
+    /// <summary>
+    /// 현재 장착 중인 아이템 해제 (외부 호출용)
+    /// </summary>
+    public void UnselectSlot()
+    {
+        if (currentSlotIndex == -1) return; // 이미 빈손이면 중복 실행 방지
+
+        _itemEquipController.UnequipItem();
+        DeepSeaUIManager.Instance?.SetSlotGlow(-1);
+        currentSlotIndex = -1;
+
+        DOTween.To(() => playerHandRig.weight, x => playerHandRig.weight = x, 0f, 1f); // 손 원래대로
     }
 
     /// <summary>
@@ -158,6 +202,10 @@ public class DeepSeaInventoryManager : MonoBehaviour
         {
             if (deepSeaItem.Use(heldItemData))
             {
+                // 에너지 건은 아래 로직 실행 X
+                if (heldItemData.ItemName == "Energy Gun")
+                    return;
+
                 // 아이템 사용 후 인벤토리에서 제거
                 playerInventory[currentSlotIndex] = null;
                 _itemEquipController.UnequipItem();

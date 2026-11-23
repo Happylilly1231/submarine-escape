@@ -14,6 +14,9 @@ public class UnderwaterCameraController : PlayerCameraControllerBase
     [SerializeField] private float maxYaw = 0f;
     [SerializeField] private float rotationSpeed = 10f;
 
+    public Light cameraLight; // 카메라 앞을 비추는 손전등 빛
+
+
     private float _mouseX = 0f;
     private float _mouseY = 0f;
     private float _pitch = 0f; // X축 회전 (상하)
@@ -24,6 +27,16 @@ public class UnderwaterCameraController : PlayerCameraControllerBase
     private bool _isPlayingLookEffect = false;
     private Quaternion _effectLocalRotation = Quaternion.identity;
     private Tween _lookEffectTween;
+
+    private void OnEnable()
+    {
+        SetInputEnabled(true);
+    }
+
+    private void OnDisable()
+    {
+        SetInputEnabled(false);
+    }
 
     private void Start()
     {

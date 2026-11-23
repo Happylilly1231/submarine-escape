@@ -7178,6 +7178,7 @@ MonoBehaviour:
   shallowSeaReverb: 3
   surfaceReverb: 0
   floatingParticles: {fileID: 1348709177}
+  playerMove: {fileID: 2057469414}
 --- !u!82 &531133871
 AudioSource:
   m_ObjectHideFlags: 0
@@ -10578,6 +10579,7 @@ MonoBehaviour:
   oxygenBackgroundImg: {fileID: 1772172239}
   oxygenFillImg: {fileID: 647397146}
   oxygenText: {fileID: 1985561294}
+  oxygenDarknessImg: {fileID: 0}
   temperatureBackgroundImg: {fileID: 209288557}
   temperatureFillImg: {fileID: 393742727}
   temperatureText: {fileID: 1931422430}
@@ -18702,6 +18704,7 @@ MonoBehaviour:
   deepSeaCameraController: {fileID: 1500282721}
   playerHandRig: {fileID: 398767858}
   playerMonsterSpikeRig: {fileID: 1776099605}
+  helicopterRotor: {fileID: 0}
   panicCrosshair: {fileID: 848974075}
   finalPatternUI: {fileID: 676235671}
   topBlackScreen: {fileID: 637562174}
@@ -36392,37 +36395,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1052457069}
   m_CullTransparentMesh: 1
---- !u!1 &1054719680
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1054719681}
-  m_Layer: 13
-  m_Name: Fast Moving Camera Pos
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1054719681
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1054719680}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.67559016, y: 0, z: 0, w: 0.7372774}
-  m_LocalPosition: {x: 0, y: -0.24, z: 0.3}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1140374119}
-  m_LocalEulerAnglesHint: {x: 85, y: 0, z: 0}
 --- !u!1 &1064871002
 GameObject:
   m_ObjectHideFlags: 0
@@ -41991,7 +41963,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 621709307}
-  - {fileID: 1054719681}
   - {fileID: 1462396991}
   - {fileID: 1605886188}
   - {fileID: 1651459998}
@@ -67274,6 +67245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 2057469414}
   divingHelmet: {fileID: 478419650}
+  endingChoices: {fileID: 0}
   oxygenCapsuleItem: {fileID: 11400000, guid: 91d85b19e4e26b1418523da485d9164b, type: 2}
   thermalProtectorItem: {fileID: 11400000, guid: 22f8bd7d2f6d54b49b33d4458be461f0,
     type: 2}
@@ -67283,7 +67255,6 @@ MonoBehaviour:
   HasOxygenCapsule: 1
   HasThermalProtector: 1
   IsThermalProtectorActive: 0
-  HasHelicopterLocator: 1
   playerInventory: []
 --- !u!4 &1771252699
 Transform:
@@ -73337,7 +73308,7 @@ MonoBehaviour:
   m_IsGlobal: 1
   priority: 1
   blendDistance: 0
-  weight: 1
+  weight: 0
   sharedProfile: {fileID: 11400000, guid: e370f9c0a1bb6264aaeb30dc1cefc454, type: 2}
 --- !u!1 &1845107764
 GameObject:
@@ -78090,7 +78061,6 @@ MonoBehaviour:
   meshRotationSpeed: 8
   dashForce: 36
   dashDuration: 0.3
-  baseOxygenCostPerSec: 0.1
   sprintOxygenCostPerSec: 0.8
   dashOxygenCost: 6
   thermalProtectorDuration: 90
@@ -78098,7 +78068,9 @@ MonoBehaviour:
   leftTimeImage: {fileID: 1389953309}
   spaceCountText: {fileID: 1208673192}
   targetSpaceCountText: {fileID: 735409543}
+  OxygenCostPerSec: 0.1
   SurvivalTime: 300
+  IsSurvivalUpdateStopped: 0
 --- !u!4 &2057469415
 Transform:
   m_ObjectHideFlags: 0
@@ -78583,6 +78555,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 71b71c0c-7fbc-4e97-b0fa-9adb0cc14513
     m_ActionName: DeepSea/Fire[/Mouse/leftButton]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 39b523d7-e18e-46d6-bab4-dbcd7308476f
+    m_ActionName: DeepSea/Interact[/Keyboard/e]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: PC
   m_DefaultActionMap: Player
@@ -78661,7 +78637,7 @@ MonoBehaviour:
   underwaterCameraController: {fileID: 1500282725}
   deepSeaAreaController: {fileID: 531133870}
   defaultCameraPos: {fileID: 621709307}
-  fastMovingCameraPos: {fileID: 1054719681}
+  fastMovingCameraPos: {fileID: 0}
   audioSource: {fileID: 2057469418}
   suitMotorSound: {fileID: 8300000, guid: 878c327f619c450489ea506a49a825a8, type: 3}
   baseOxygenCostPerSec: 0.1

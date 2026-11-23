@@ -66,7 +66,15 @@ namespace DeepSeaMonsterStates
             }
         }
 
-        public void Update(DeepSeaMonsterController owner) { }
+        public void Update(DeepSeaMonsterController owner)
+        {
+            // 최종 패턴 예약 중 -> 최종 패턴 즉시 실행
+            if (owner.IsFinalPatternPending)
+            {
+                owner.StartFinalPattern();
+                return;
+            }
+        }
 
         public void Exit(DeepSeaMonsterController owner) { }
 

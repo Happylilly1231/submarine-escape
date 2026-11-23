@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -19,7 +20,9 @@ public class UnderwaterPlayerStat : MonoBehaviour
     public float ThermalProtectorDuration => thermalProtectorDuration;
     public float MaxTemperature { get; private set; } = 100f; // 최대 체온
     public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
+    public float OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
 
+    public event Action OnPlayerDamaged; // 플레이어 대미지 이벤트
 
     #region 산소
 
@@ -35,6 +38,14 @@ public class UnderwaterPlayerStat : MonoBehaviour
             Debug.Log("=== Game Over ===");
             GameManager.instance.GameOver(EEndingType.MonsterDeath); // 임시로 괴물한테 죽음 엔딩으로 해놓음
         }
+    }
+
+    /// <summary>
+    /// 기본 산소 소모
+    /// </summary>
+    public void ConsumeBaseOxgen()
+    {
+        ConsumeOxygen(OxygenCostPerSec * Time.deltaTime);
     }
 
     /// <summary>

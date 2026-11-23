@@ -204,10 +204,27 @@ public class DeepSeaAreaController : MonoBehaviour
         // 수면 도달 시
         if (zone == SeaZone.Surface)
         {
+            // 개선된 조작 비활성화 -> 예전 조작 활성화
+            UnderwaterPlayerMove underwaterPlayerMove = FindAnyObjectByType<UnderwaterPlayerMove>();
+            underwaterPlayerMove.enabled = false;
+            UnderwaterCameraController underwaterCameraController = FindAnyObjectByType<UnderwaterCameraController>();
+            underwaterCameraController.enabled = false;
+            if (PlayerManager.Instance.playerMoveBase is DeepSeaPlayerMove deepSeaPlayerMove)
+            {
+                deepSeaPlayerMove.enabled = true;
+                PlayerManager.Instance.playerMoveBase = deepSeaPlayerMove;
+            }
+            if (PlayerManager.Instance.playerCameraControllerBase is DeepSeaCameraController deepSeaCameraController)
+            {
+                deepSeaCameraController.enabled = true;
+                PlayerManager.Instance.playerCameraControllerBase = deepSeaCameraController;
+            }
+            Debug.Log("개선된 조작 비활성화 -> 예전 조작 활성화");
+
             if (floatingParticles != null)
                 floatingParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); // 부유물 파티클 중지
             RenderSettings.fog = false; // 안개 제거
-            Camera.main.GetComponent<DeepSeaCameraController>().cameraLight.enabled = false; // 조명 끄기
+            Camera.main.GetComponent<UnderwaterCameraController>().cameraLight.enabled = false; // 조명 끄기
 
             if (PlayerManager.Instance.CheckMonsterTransformation())
             {
