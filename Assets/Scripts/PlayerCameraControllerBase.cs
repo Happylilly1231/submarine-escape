@@ -15,7 +15,7 @@ public abstract class PlayerCameraControllerBase : MonoBehaviour
     /// <summary>
     /// 플레이어 조작 입력 가능 여부 설정
     /// </summary>
-    public void SetInputEnabled(bool isEnabled)
+    public virtual void SetInputEnabled(bool isEnabled)
     {
         _canControlInput = isEnabled;
     }

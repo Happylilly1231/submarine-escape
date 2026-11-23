@@ -826,6 +826,60 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "HorizontalDodge",
+                    "type": "Value",
+                    "id": "724a2ec9-0b7a-44c4-805a-7c650a8f4954",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "UpwardDash",
+                    "type": "Button",
+                    "id": "54e9c5ba-9ea8-42df-b33d-74b122ceb527",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Stop",
+                    "type": "Button",
+                    "id": "aa8e467b-5252-4e54-9a4a-43977b477b0c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "GlanceBack",
+                    "type": "Button",
+                    "id": "b2f3707e-0131-4f8f-87f7-5b296c4fce07",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "HoldGun",
+                    "type": "Button",
+                    "id": "2db6a150-b31f-4de7-a67b-e395659e2d57",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Fire",
+                    "type": "Button",
+                    "id": "71b71c0c-7fbc-4e97-b0fa-9adb0cc14513",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Interact",
                     "type": "Button",
                     "id": "39b523d7-e18e-46d6-bab4-dbcd7308476f",
@@ -998,6 +1052,94 @@
                     "processors": "",
                     "groups": "",
                     "action": "UseItem",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "1D Axis",
+                    "id": "f43a0825-6628-40a5-896c-870e62ef7953",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "HorizontalDodge",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "e147da04-8757-4018-ab0a-4a9b1d986423",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "HorizontalDodge",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "9c37e3d0-6408-4eaa-bc5a-9a39cbf4509f",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "HorizontalDodge",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "277cf658-3f23-47f7-b6d9-ee8c35194feb",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "UpwardDash",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "11aede61-b38a-4563-9963-a73d4da73b44",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "Stop",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b2d4b571-d90b-4bd3-9a39-b8fa6cfe109a",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "GlanceBack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "61e64286-7a0c-4253-9cfa-79696f2bec15",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "HoldGun",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f292b028-7397-4a0c-bce0-f82c214afacb",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "Fire",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

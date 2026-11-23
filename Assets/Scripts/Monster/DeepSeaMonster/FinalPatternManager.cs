@@ -60,7 +60,7 @@ public class FinalPatternManager : MonoBehaviour
 
     private void Start()
     {
-        finalPatternUI.SetActive(false);
+        // finalPatternUI.SetActive(false);
         finalPatternVolume.weight = 0f;
         _currentRig = GameManager.instance.IsAbilityActive ? playerMonsterSpikeRig : playerHandRig;
     }

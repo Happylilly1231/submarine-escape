@@ -15,6 +15,8 @@ public enum GameFocusState
     UIScene,        // UI만 있고, 플레이어 없는 씬 - EndingScene 전용 포커스
     DeepSea,        // 심해 전용
     DeepSeaUI,      // 심해 UI 전용
+    DeepSeaControlAim, // 심해 에임 조작
+    DeepSeaSwallow, // 심해 괴물한테 삼켜질 때
 }
 
 public class FocusManager : MonoBehaviour
@@ -73,7 +75,7 @@ public class FocusManager : MonoBehaviour
             ResetFocusState(GameFocusState.UIScene);
         else if (scene.name == "EndingFrameScene") // 임시!!!
             ResetFocusState(GameFocusState.ESCMenu);
-        else if (FindAnyObjectByType<DeepSeaPlayerMove>() != null) // 테스트용
+        else if (FindAnyObjectByType<DeepSeaPlayerMove>() != null || FindAnyObjectByType<UnderwaterPlayerMove>() != null) // 테스트용
             ResetFocusState(GameFocusState.DeepSea);
         else
             ResetFocusState(GameFocusState.None);
@@ -218,6 +220,16 @@ public class FocusManager : MonoBehaviour
                 PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
                 GameManager.instance.SetCursorVisible(true); // 커서 보이게
                 break;
+            case GameFocusState.DeepSeaControlAim:
+                // PlayerManager.Instance.playerMoveBase.SetMoveable(false);
+                // PlayerManager.Instance.playerCameraControllerBase.SetInputEnabled(false); // 카메라 완전 비활성화가 아니라 조작만 비활성화
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
+                GameManager.instance.SetCursorVisible(true); // 커서 보이게
+                break;
+            case GameFocusState.DeepSeaSwallow:
+                PlayerManager.Instance.SetPlayerCanMoveAndCameraEnable(false); // 플레이어 이동/회전 불가능
+                GameManager.instance.SetCursorVisible(false); // 커서 안 보이게
+                break;
         }
 
         // 인풋 관리
@@ -287,8 +299,19 @@ public class FocusManager : MonoBehaviour
             case GameFocusState.DeepSea:
                 InputManager.instance.SwitchActionMapWithPermanent("DeepSea"); // 심해 전용 액션 맵으로 변환
                 break;
+
             case GameFocusState.DeepSeaUI:
                 InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
+                break;
+
+            case GameFocusState.DeepSeaControlAim:
+                break;
+
+            case GameFocusState.DeepSeaSwallow:
+                // InputManager.instance.DisableAllInputs(); // 모든 인풋 비활성화
+                // PlayerManager.Instance.playerInput.actions["ToggleMenu"].Enable();
+                // PlayerManager.Instance.playerInput.actions["HoldGun"].Enable();
+                // PlayerManager.Instance.playerInput.actions["Fire"].Enable();
                 break;
         }
     }

@@ -912,6 +912,60 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""HorizontalDodge"",
+                    ""type"": ""Value"",
+                    ""id"": ""724a2ec9-0b7a-44c4-805a-7c650a8f4954"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""UpwardDash"",
+                    ""type"": ""Button"",
+                    ""id"": ""54e9c5ba-9ea8-42df-b33d-74b122ceb527"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Stop"",
+                    ""type"": ""Button"",
+                    ""id"": ""aa8e467b-5252-4e54-9a4a-43977b477b0c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""GlanceBack"",
+                    ""type"": ""Button"",
+                    ""id"": ""b2f3707e-0131-4f8f-87f7-5b296c4fce07"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""HoldGun"",
+                    ""type"": ""Button"",
+                    ""id"": ""2db6a150-b31f-4de7-a67b-e395659e2d57"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Fire"",
+                    ""type"": ""Button"",
+                    ""id"": ""71b71c0c-7fbc-4e97-b0fa-9adb0cc14513"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""Interact"",
                     ""type"": ""Button"",
                     ""id"": ""39b523d7-e18e-46d6-bab4-dbcd7308476f"",
@@ -1088,6 +1142,94 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 },
                 {
+                    ""name"": ""1D Axis"",
+                    ""id"": ""f43a0825-6628-40a5-896c-870e62ef7953"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""HorizontalDodge"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""e147da04-8757-4018-ab0a-4a9b1d986423"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""HorizontalDodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""9c37e3d0-6408-4eaa-bc5a-9a39cbf4509f"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""HorizontalDodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""277cf658-3f23-47f7-b6d9-ee8c35194feb"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""UpwardDash"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""11aede61-b38a-4563-9963-a73d4da73b44"",
+                    ""path"": ""<Keyboard>/leftCtrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Stop"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b2d4b571-d90b-4bd3-9a39-b8fa6cfe109a"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""GlanceBack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""61e64286-7a0c-4253-9cfa-79696f2bec15"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""HoldGun"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f292b028-7397-4a0c-bce0-f82c214afacb"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
                     ""name"": """",
                     ""id"": ""d7eee44e-7e1e-48ad-8dca-5e9180984842"",
                     ""path"": ""<Keyboard>/e"",
@@ -1165,6 +1307,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_DeepSea_LeftClick = m_DeepSea.FindAction("LeftClick", throwIfNotFound: true);
         m_DeepSea_SlotKeyPress = m_DeepSea.FindAction("SlotKeyPress", throwIfNotFound: true);
         m_DeepSea_UseItem = m_DeepSea.FindAction("UseItem", throwIfNotFound: true);
+        m_DeepSea_HorizontalDodge = m_DeepSea.FindAction("HorizontalDodge", throwIfNotFound: true);
+        m_DeepSea_UpwardDash = m_DeepSea.FindAction("UpwardDash", throwIfNotFound: true);
+        m_DeepSea_Stop = m_DeepSea.FindAction("Stop", throwIfNotFound: true);
+        m_DeepSea_GlanceBack = m_DeepSea.FindAction("GlanceBack", throwIfNotFound: true);
+        m_DeepSea_HoldGun = m_DeepSea.FindAction("HoldGun", throwIfNotFound: true);
+        m_DeepSea_Fire = m_DeepSea.FindAction("Fire", throwIfNotFound: true);
         m_DeepSea_Interact = m_DeepSea.FindAction("Interact", throwIfNotFound: true);
     }
 
@@ -1831,6 +1979,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_DeepSea_LeftClick;
     private readonly InputAction m_DeepSea_SlotKeyPress;
     private readonly InputAction m_DeepSea_UseItem;
+    private readonly InputAction m_DeepSea_HorizontalDodge;
+    private readonly InputAction m_DeepSea_UpwardDash;
+    private readonly InputAction m_DeepSea_Stop;
+    private readonly InputAction m_DeepSea_GlanceBack;
+    private readonly InputAction m_DeepSea_HoldGun;
+    private readonly InputAction m_DeepSea_Fire;
     private readonly InputAction m_DeepSea_Interact;
     /// <summary>
     /// Provides access to input actions defined in input action map "DeepSea".
@@ -1875,6 +2029,30 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "DeepSea/UseItem".
         /// </summary>
         public InputAction @UseItem => m_Wrapper.m_DeepSea_UseItem;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/HorizontalDodge".
+        /// </summary>
+        public InputAction @HorizontalDodge => m_Wrapper.m_DeepSea_HorizontalDodge;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/UpwardDash".
+        /// </summary>
+        public InputAction @UpwardDash => m_Wrapper.m_DeepSea_UpwardDash;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Stop".
+        /// </summary>
+        public InputAction @Stop => m_Wrapper.m_DeepSea_Stop;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/GlanceBack".
+        /// </summary>
+        public InputAction @GlanceBack => m_Wrapper.m_DeepSea_GlanceBack;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/HoldGun".
+        /// </summary>
+        public InputAction @HoldGun => m_Wrapper.m_DeepSea_HoldGun;
+        /// <summary>
+        /// Provides access to the underlying input action "DeepSea/Fire".
+        /// </summary>
+        public InputAction @Fire => m_Wrapper.m_DeepSea_Fire;
         /// <summary>
         /// Provides access to the underlying input action "DeepSea/Interact".
         /// </summary>
@@ -1929,6 +2107,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @UseItem.started += instance.OnUseItem;
             @UseItem.performed += instance.OnUseItem;
             @UseItem.canceled += instance.OnUseItem;
+            @HorizontalDodge.started += instance.OnHorizontalDodge;
+            @HorizontalDodge.performed += instance.OnHorizontalDodge;
+            @HorizontalDodge.canceled += instance.OnHorizontalDodge;
+            @UpwardDash.started += instance.OnUpwardDash;
+            @UpwardDash.performed += instance.OnUpwardDash;
+            @UpwardDash.canceled += instance.OnUpwardDash;
+            @Stop.started += instance.OnStop;
+            @Stop.performed += instance.OnStop;
+            @Stop.canceled += instance.OnStop;
+            @GlanceBack.started += instance.OnGlanceBack;
+            @GlanceBack.performed += instance.OnGlanceBack;
+            @GlanceBack.canceled += instance.OnGlanceBack;
+            @HoldGun.started += instance.OnHoldGun;
+            @HoldGun.performed += instance.OnHoldGun;
+            @HoldGun.canceled += instance.OnHoldGun;
+            @Fire.started += instance.OnFire;
+            @Fire.performed += instance.OnFire;
+            @Fire.canceled += instance.OnFire;
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
@@ -1967,6 +2163,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @UseItem.started -= instance.OnUseItem;
             @UseItem.performed -= instance.OnUseItem;
             @UseItem.canceled -= instance.OnUseItem;
+            @HorizontalDodge.started -= instance.OnHorizontalDodge;
+            @HorizontalDodge.performed -= instance.OnHorizontalDodge;
+            @HorizontalDodge.canceled -= instance.OnHorizontalDodge;
+            @UpwardDash.started -= instance.OnUpwardDash;
+            @UpwardDash.performed -= instance.OnUpwardDash;
+            @UpwardDash.canceled -= instance.OnUpwardDash;
+            @Stop.started -= instance.OnStop;
+            @Stop.performed -= instance.OnStop;
+            @Stop.canceled -= instance.OnStop;
+            @GlanceBack.started -= instance.OnGlanceBack;
+            @GlanceBack.performed -= instance.OnGlanceBack;
+            @GlanceBack.canceled -= instance.OnGlanceBack;
+            @HoldGun.started -= instance.OnHoldGun;
+            @HoldGun.performed -= instance.OnHoldGun;
+            @HoldGun.canceled -= instance.OnHoldGun;
+            @Fire.started -= instance.OnFire;
+            @Fire.performed -= instance.OnFire;
+            @Fire.canceled -= instance.OnFire;
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
@@ -2306,6 +2520,48 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnUseItem(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "HorizontalDodge" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnHorizontalDodge(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UpwardDash" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUpwardDash(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Stop" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnStop(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GlanceBack" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGlanceBack(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "HoldGun" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnHoldGun(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Fire" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnFire(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
