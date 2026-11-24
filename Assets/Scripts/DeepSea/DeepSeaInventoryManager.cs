@@ -165,7 +165,19 @@ public class DeepSeaInventoryManager : MonoBehaviour
         currentSlotIndex = slotIdx;
 
         playerHandTarget.transform.position = _itemEquipController.HeldItemObject.transform.position;
+
         DOTween.To(() => playerHandRig.weight, x => playerHandRig.weight = x, 1f, 1f); // 손으로 잡기
+    }
+
+    public void UpdatePlayerHandTarget(bool IsLookingBack = false)
+    {
+        if (_itemEquipController.HeldItemObject != null)
+        {
+            if (IsLookingBack)
+                playerHandTarget.transform.position = underwaterPlayerStat.transform.position;
+            else
+                playerHandTarget.transform.position = _itemEquipController.HeldItemObject.transform.position;
+        }
     }
 
     /// <summary>
@@ -209,6 +221,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
                 // 아이템 사용 후 인벤토리에서 제거
                 playerInventory[currentSlotIndex] = null;
                 _itemEquipController.UnequipItem();
+                DOTween.To(() => playerHandRig.weight, x => playerHandRig.weight = x, 0f, 1f); // 손 원래대로
 
                 // UI 업데이트
                 if (DeepSeaUIManager.Instance != null)

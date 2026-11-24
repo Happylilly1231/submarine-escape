@@ -5,19 +5,18 @@ using UnityEngine;
 
 public class UnderwaterPlayerMove : PlayerMoveBase
 {
+    [Header("참조")]
     [SerializeField] private Transform modelTransform; // 실제 3D 모델의 트랜스폼
+    [SerializeField] private CapsuleCollider capsuleCollider; // 콜라이더 (모델)
+    public CapsuleCollider modelCollider => capsuleCollider;
     [SerializeField] private UnderwaterCameraController underwaterCameraController;
     [SerializeField] private DeepSeaAreaController deepSeaAreaController;
-
-    [SerializeField] private Transform defaultCameraPos;
-    [SerializeField] private Transform fastMovingCameraPos;
 
     [Header("오디오")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip suitMotorSound;
 
     [Header("산소")]
-    [SerializeField] private float baseOxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
     [SerializeField] private float fastMovingOxygenCost = 6f; // 빠른 이동 시 산소 소모량
 
     // 참조
@@ -27,8 +26,7 @@ public class UnderwaterPlayerMove : PlayerMoveBase
 
     // 기본 이동
     private float _moveAscentSpeed = 2f;
-
-    // 원점
+    public float MoveAscentSpeed => _moveAscentSpeed;
     public Vector3 BasePosition { get; private set; }
 
     // 좌우 회피
@@ -39,19 +37,14 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     public bool IsUpwardDashing { get; private set; } = false;
     private float _dashDistance = 5f;
 
-    // 잠깐 뒤돌아보기
-    public bool IsGlancingBack { get; private set; } = false;
-    private float _targetY;
-    public bool _isGlanceBackStarted = false;
-    public bool _isRotationEnded = false;
-    private Coroutine _glanceTimerCoroutine;
-
     // 넉백
     public bool IsKnockedBack { get; private set; } // 넉백 중 여부
     private Sequence _actionSequence; // 회피, 대시, 넉백 시퀀스
 
     // 애니메이션
     private readonly int _swimSpeedHash = Animator.StringToHash("SwimSpeed");
+
+    public bool IsActionLocked => IsDodging || IsUpwardDashing || IsKnockedBack; // 플레이어 액션 락된 상태 변수
 
     /// <summary>
     /// 게임 표기용 현재 수심 (1/2배 적용된 Y좌표 - 수심 350 ~ 0m(수면))
@@ -71,6 +64,8 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         }
     }
 
+    #region 생명주기
+
     private void Awake()
     {
         _underwaterInput = GetComponent<UnderwaterInput>();
@@ -80,6 +75,9 @@ public class UnderwaterPlayerMove : PlayerMoveBase
 
     private void Start()
     {
+        if (GameManager.instance.IsAbilityActive)
+            _moveAscentSpeed = 4f;
+
         enabled = false; // 임시
     }
 
@@ -87,37 +85,40 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     {
         BasePosition = _rb.position;
 
-        _underwaterInput.horizontalDodgeEvent -= OnHorizontalDodge;
-        _underwaterInput.upwardDashEvent -= OnUpwardDash;
-        _underwaterInput.glanceBackEvent -= OnGlanceBack;
-        _underwaterInput.glanceBackCancelEvent -= FinishGlanceBack;
-        _underwaterInput.horizontalDodgeEvent += OnHorizontalDodge;
-        _underwaterInput.upwardDashEvent += OnUpwardDash;
-        _underwaterInput.glanceBackEvent += OnGlanceBack;
-        _underwaterInput.glanceBackCancelEvent += FinishGlanceBack;
+        UnsubscriveInputEvents();
+        SubscriveInputEvents();
     }
 
     private void OnDisable()
     {
-        if (_underwaterInput != null)
-        {
-            _underwaterInput.horizontalDodgeEvent -= OnHorizontalDodge;
-            _underwaterInput.upwardDashEvent -= OnUpwardDash;
-            _underwaterInput.glanceBackEvent -= OnGlanceBack;
-            _underwaterInput.glanceBackCancelEvent -= FinishGlanceBack;
-        }
+        UnsubscriveInputEvents();
     }
 
     private void Update()
     {
         if (GameManager.instance.IsPausing || !CanMove) return;
 
-        if (!_underwaterInput.IsStopping)
+        // 스탯 업데이트
+        if (!GameManager.instance.IsAbilityActive) // 능력이 없는 일반 게임일 때
         {
-            AudioManager.Instance.PlaySoundSafe(audioSource, suitMotorSound);
-            _underwaterPlayerStat.ConsumeBaseOxgen(); // 기본적으로 초당 산소 소모
+            if (!_underwaterPlayerStat.IsSurvivalUpdateStopped) // 체온, 산소 업데이트 중단 상태가 아닐 때만
+            {
+                if (!_underwaterInput.IsStopping)
+                {
+                    AudioManager.Instance.PlaySoundSafe(audioSource, suitMotorSound);
+                }
+                _underwaterPlayerStat.ConsumeBaseOxgen(); // 기본적으로 초당 산소 소모
+                _underwaterPlayerStat.UpdateTemperature(); // 체온 저하
+            }
         }
-        _underwaterPlayerStat.UpdateTemperature(); // 체온 저하
+        else // 능력 사용 게임일 때
+        {
+            // 정신력 업데이트
+            PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(_underwaterPlayerStat.SurvivalTime);
+        }
+
+        // 생존 경고 상태 전달
+        DeepSeaUIManager.Instance.UpdateSurvivalWarning(_underwaterPlayerStat.IsOxygenLow, _underwaterPlayerStat.IsTemperatureLow);
 
         // 수영 애니메이션 속도 결정
         float speedMultiplier = 1f;
@@ -128,31 +129,6 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         animator.SetFloat(_swimSpeedHash, speedMultiplier);
 
         if (IsDodging || IsUpwardDashing || IsKnockedBack) return;
-
-        // 잠깐 뒤돌아볼 때
-        if (IsGlancingBack)
-        {
-            float currentYaw = Mathf.MoveTowardsAngle(transform.eulerAngles.y, _targetY, 180f * Time.deltaTime);
-            transform.rotation = Quaternion.Euler(0f, currentYaw, 0f);
-
-            if (!_isRotationEnded && Mathf.Approximately(currentYaw, _targetY))
-            {
-                _isRotationEnded = true;
-                transform.rotation = Quaternion.Euler(0f, _targetY, 0f);
-
-                if (_isGlanceBackStarted)
-                {
-                    _isGlanceBackStarted = false;
-                    if (_glanceTimerCoroutine == null)
-                        _glanceTimerCoroutine = StartCoroutine(GlanceBackTimerRoutine());
-                }
-                else
-                {
-                    IsGlancingBack = false;
-                    Debug.Log("잠깐 뒤돌아보기 끝");
-                }
-            }
-        }
     }
 
     private void FixedUpdate()
@@ -169,6 +145,10 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         _rb.MovePosition(_rb.position + verticalMovement);
     }
 
+    #endregion
+
+    #region 기본 함수들
+
     public override void SetMoveable(bool isMoveable)
     {
         base.SetMoveable(isMoveable);
@@ -177,27 +157,48 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         {
             BasePosition = _rb.position;
 
-            _underwaterInput.horizontalDodgeEvent -= OnHorizontalDodge;
-            _underwaterInput.upwardDashEvent -= OnUpwardDash;
-            _underwaterInput.glanceBackEvent -= OnGlanceBack;
-            _underwaterInput.glanceBackCancelEvent -= FinishGlanceBack;
-            _underwaterInput.horizontalDodgeEvent += OnHorizontalDodge;
-            _underwaterInput.upwardDashEvent += OnUpwardDash;
-            _underwaterInput.glanceBackEvent += OnGlanceBack;
-            _underwaterInput.glanceBackCancelEvent += FinishGlanceBack;
+            UnsubscriveInputEvents();
+            SubscriveInputEvents();
         }
         else
         {
             if (audioSource.isPlaying) audioSource.Stop();
 
-            _underwaterInput.horizontalDodgeEvent -= OnHorizontalDodge;
-            _underwaterInput.upwardDashEvent -= OnUpwardDash;
-            _underwaterInput.glanceBackEvent -= OnGlanceBack;
-            _underwaterInput.glanceBackCancelEvent -= FinishGlanceBack;
+            UnsubscriveInputEvents();
         }
     }
 
-    #region 입력 처리
+    public void SubscriveInputEvents()
+    {
+        if (_underwaterInput == null)
+        {
+            Debug.Log("입력 컴포넌트 참조 필요");
+            return;
+        }
+
+        _underwaterInput.horizontalDodgeEvent += OnHorizontalDodge;
+        _underwaterInput.upwardDashEvent += OnUpwardDash;
+        // _underwaterInput.glanceBackEvent += OnGlanceBack;
+        // _underwaterInput.glanceBackCancelEvent += FinishGlanceBack;
+    }
+
+    public void UnsubscriveInputEvents()
+    {
+        if (_underwaterInput == null)
+        {
+            Debug.Log("입력 컴포넌트 참조 필요");
+            return;
+        }
+
+        _underwaterInput.horizontalDodgeEvent -= OnHorizontalDodge;
+        _underwaterInput.upwardDashEvent -= OnUpwardDash;
+        // _underwaterInput.glanceBackEvent -= OnGlanceBack;
+        // _underwaterInput.glanceBackCancelEvent -= FinishGlanceBack;
+    }
+
+    #endregion
+
+    #region 좌우 회피
 
     /// <summary>
     /// 좌우로 회피
@@ -207,12 +208,16 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     {
         if (IsDodging || IsUpwardDashing || IsKnockedBack) return;
 
-        if (_underwaterPlayerStat.CurrentOxygen < fastMovingOxygenCost)
+        if (!GameManager.instance.IsAbilityActive)
         {
-            Debug.Log("회피에 필요한 산소가 부족합니다! 회피 실패!");
-            return;
+            if (_underwaterPlayerStat.CurrentOxygen < fastMovingOxygenCost)
+            {
+                Debug.Log("회피에 필요한 산소가 부족합니다! 회피 실패!");
+                return;
+            }
+
+            _underwaterPlayerStat.ConsumeOxygen(fastMovingOxygenCost); // 산소 소모
         }
-        _underwaterPlayerStat.ConsumeOxygen(fastMovingOxygenCost); // 산소 소모
 
         IsDodging = true;
         Debug.Log(dir + " 방향 회피");
@@ -231,6 +236,10 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         });
     }
 
+    #endregion
+
+    #region 위로 대시
+
     /// <summary>
     /// 위로 대시
     /// </summary>
@@ -238,12 +247,15 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     {
         if (IsUpwardDashing || IsDodging || IsKnockedBack) return;
 
-        if (_underwaterPlayerStat.CurrentOxygen < fastMovingOxygenCost)
+        if (!GameManager.instance.IsAbilityActive)
         {
-            Debug.Log("대시에 필요한 산소가 부족합니다! 대시 실패!");
-            return;
+            if (_underwaterPlayerStat.CurrentOxygen < fastMovingOxygenCost)
+            {
+                Debug.Log("대시에 필요한 산소가 부족합니다! 대시 실패!");
+                return;
+            }
+            _underwaterPlayerStat.ConsumeOxygen(fastMovingOxygenCost); // 산소 소모
         }
-        _underwaterPlayerStat.ConsumeOxygen(fastMovingOxygenCost); // 산소 소모
 
         IsUpwardDashing = true;
         Debug.Log("위로 대시");
@@ -262,60 +274,16 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         });
     }
 
-    /// <summary>
-    /// 잠깐 뒤돌아보기
-    /// </summary>
-    private void OnGlanceBack()
-    {
-        if (IsGlancingBack) return;
-
-        Debug.Log("잠깐 뒤돌아보기 시작");
-
-        IsGlancingBack = true;
-        _isGlanceBackStarted = true;
-        _targetY = transform.eulerAngles.y + 180f;
-        _isRotationEnded = false;
-    }
-
-    /// <summary>
-    /// 잠깐 뒤돌아보기 종료
-    /// </summary>
-    private void FinishGlanceBack()
-    {
-        if (!IsGlancingBack) return;
-
-        Debug.Log("정면으로 돌기 시작");
-
-        if (_glanceTimerCoroutine != null)
-        {
-            StopCoroutine(_glanceTimerCoroutine);
-            _glanceTimerCoroutine = null;
-        }
-
-        _targetY = _targetY - 180f;
-        _isGlanceBackStarted = false;
-        _isRotationEnded = false;
-    }
-
-    /// <summary>
-    /// 잠깐 뒤돌아보기 타이머 코루틴 (3초 넘으면 뒤돌아보기 자동 종료)
-    /// </summary>
-    /// <returns></returns>
-    private IEnumerator GlanceBackTimerRoutine()
-    {
-        yield return new WaitForSeconds(3f);
-        _glanceTimerCoroutine = null;
-        FinishGlanceBack();
-    }
-
     #endregion
+
+    #region 넉백
 
     /// <summary>
     /// 넉백 (회피/대시 중이었다면 강제 캔슬 후 실행)
     /// </summary>
     /// <param name="distance">밀려날 거리</param>
     /// <param name="duration">넉백 지속 시간</param>
-    public void ApplyKnockback(float distance = 20f, float knockbackDuration = 0.25f, float holdDuration = 0.1f, float returnDuration = 0.3f)
+    public void ApplyKnockback(bool isBehindAttack = false, float distance = 20f, float knockbackDuration = 0.25f, float holdDuration = 0.1f, float returnDuration = 0.3f)
     {
         // 진행 중이던 액션 시퀀스 종료
         _actionSequence?.Kill();
@@ -329,7 +297,7 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         underwaterCameraController.SetInputEnabled(true);
 
         // 플레이어 기준 뒤쪽 방향 계산
-        Vector3 knockbackDir = -transform.forward;
+        Vector3 knockbackDir = isBehindAttack ? transform.forward : -transform.forward; // 뒤 공격일 때 -> 앞으로 넉백
         knockbackDir.y = 0f;
         knockbackDir.Normalize();
 
@@ -347,4 +315,6 @@ public class UnderwaterPlayerMove : PlayerMoveBase
             BasePosition = _rb.position;
         });
     }
+
+    #endregion
 }

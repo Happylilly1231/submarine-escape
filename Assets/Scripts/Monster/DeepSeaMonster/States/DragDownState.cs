@@ -22,6 +22,7 @@ namespace DeepSeaMonsterStates
 
         public void Enter(DeepSeaMonsterController owner)
         {
+            owner.IsGrabbing = true;
             owner.monsterGeo.SetActive(true);
             _monster = owner;
 
@@ -69,7 +70,7 @@ namespace DeepSeaMonsterStates
         public void Exit(DeepSeaMonsterController owner)
         {
             owner.underwaterPlayerMove.SetMoveable(true); // 플레이어 이동 가능
-            underwaterCameraController.SetInputEnabled(true); // 카메라 조작 가능
+            if (underwaterCameraController != null) underwaterCameraController.SetInputEnabled(true); // 카메라 조작 가능
 
             _monster.dragDownUI.SetActive(false); // UI 비활성화
 
@@ -80,6 +81,8 @@ namespace DeepSeaMonsterStates
             {
                 owner.StartFinalPattern();
             }
+
+            owner.IsGrabbing = false;
         }
 
         public void OnPlayerQTESuccess()

@@ -443,7 +443,7 @@ public class FinalPatternManager : MonoBehaviour
 
         _isClear = true; // 클리어 변수 true
         IsPatternRunning = false; // 패턴 진행 중 아님으로 설정
-        deepSeaPlayerMove.IsSurvivalUpdateStopped = true; // 체온 감소 중단
+        // deepSeaPlayerMove.IsSurvivalUpdateStopped = true; // 체온 감소 중단
 
         helicopterRotor.IsMainRotorActive = true; // 헬기 로터 회전 시작
 

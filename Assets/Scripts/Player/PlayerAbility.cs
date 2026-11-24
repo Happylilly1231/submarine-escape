@@ -46,6 +46,7 @@ public class PlayerAbility : MonoBehaviour
     [SerializeField] private ParticleSystem explosionParticle; // 폭발 파티클
     public ParticleSystem ExplosionParticle => explosionParticle;
     [SerializeField] private Transform monsterTransform; // 괴물 트랜스폼
+    [SerializeField] private ShockwaveTrigger shockwaveTrigger; // 충격파 (심해 전용)
 
     [Header("오디오")]
     [SerializeField] private AudioClip destroySound;
@@ -131,11 +132,14 @@ public class PlayerAbility : MonoBehaviour
         TransformToMonster(true);
 
         if (SubmarineInGameManager.instance != null) // 잠수함 내
+        {
             PlayerManager.Instance.playerStat.StartSanityInstability(); // 정신 불안정 상태로 시작
+        }
         else // 심해씬
         {
             PlayerManager.Instance.playerStat.StopSanityInstability(); // 정신 안정 상태로 시작 (최대 수치에서)
-            UpdateChargingTime(true); // 심해에서는 손전등도 있고 심해 물에 닿아있다보니까 공격력 높아진 걸로 간주해서 차징 시간 줄임
+            chargingTime = 0.3f; // 심해에서는 손전등도 있고 심해 물에 닿아있다보니까 공격력 높아진 걸로 간주해서 차징 시간 줄임
+            attackDistance = 10f;
         }
     }
 
@@ -397,7 +401,7 @@ public class PlayerAbility : MonoBehaviour
         else // 심해씬
         {
             // 모델 콜라이더 크기 변경
-            CapsuleCollider modelCollider = PlayerManager.Instance.playerMoveBase.GetComponent<DeepSeaPlayerMove>().modelCollider;
+            CapsuleCollider modelCollider = PlayerManager.Instance.playerMoveBase.GetComponent<UnderwaterPlayerMove>().modelCollider;
             Vector3 centerPos = modelCollider.center;
             centerPos.y = yValue;
             modelCollider.center = centerPos;
@@ -598,16 +602,42 @@ public class PlayerAbility : MonoBehaviour
         }
         else
         {
-            float distanceToMonster = Vector3.Distance(_playerMoveBase.transform.position, monsterTransform.position);
+            float distanceToMonster = Vector3.Distance(_mainCamera.transform.position, monsterTransform.position);
+            Debug.Log("distanceToMonster: " + distanceToMonster);
             if (distanceToMonster <= attackDistance)
             {
                 // 플레이어 정면 기준 시야각 체크
-                Vector3 dirToMonster = (monsterTransform.position - _playerMoveBase.transform.position).normalized;
-                float angleToMonster = Vector3.Angle(_playerMoveBase.transform.forward, dirToMonster);
+                Vector3 dirToMonster = (monsterTransform.position - _mainCamera.transform.position).normalized;
+                float angleToMonster = Vector3.Angle(_mainCamera.transform.forward, dirToMonster);
 
                 // 플레이어 정면 기준 좌우 60도 이내에 있어야 공격 가능
                 if (angleToMonster <= 60f)
                     AttackMonster();
+            }
+            else
+            {
+                if (shockwaveTrigger != null && shockwaveTrigger.gameObject.activeSelf)
+                {
+                    float ditanceToShockwave = Vector3.Distance(_mainCamera.transform.position, shockwaveTrigger.transform.position);
+                    Debug.Log(ditanceToShockwave);
+
+                    if (ditanceToShockwave <= attackDistance) // 충격파 반사
+                    {
+                        // 플레이어 정면 기준 시야각 체크
+                        Vector3 dirToShockwave = (shockwaveTrigger.transform.position - _mainCamera.transform.position).normalized;
+                        float angleToShockwave = Vector3.Angle(_mainCamera.transform.forward, dirToShockwave);
+
+                        // 플레이어 정면 기준 좌우 60도 이내에 있어야 반사 가능
+                        if (angleToShockwave <= 60f)
+                        {
+                            if (_deepSeaMonsterController.IsExecutingFinalPattern)
+                                shockwaveTrigger.ReflectShockwave(monsterTransform, 1f, _deepSeaMonsterController.Die);
+                            else
+                                shockwaveTrigger.ReflectShockwave(monsterTransform, 1f, _deepSeaMonsterController.Weaken);
+                        }
+
+                    }
+                }
             }
         }
 
@@ -645,6 +675,13 @@ public class PlayerAbility : MonoBehaviour
         if (_innerMonsterController != null)
             _innerMonsterController.TakeDamage(20f);
         else if (_deepSeaMonsterController != null)
-            _deepSeaMonsterController.TakeDamage(20f);
+        {
+            // _deepSeaMonsterController.TakeDamage(20f);
+            if (_deepSeaMonsterController.IsExecutingFinalPattern)
+                _deepSeaMonsterController.Die();
+            else
+                _deepSeaMonsterController.Weaken();
+        }
+
     }
 }
