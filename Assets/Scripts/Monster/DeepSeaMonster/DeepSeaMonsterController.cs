@@ -19,6 +19,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     public UnderwaterPlayerMove underwaterPlayerMove;
     public UnderwaterInput underwaterInput;
     public UnderwaterPlayerStat underwaterPlayerStat;
+    public UnderwaterCameraController underwaterCameraController;
     public ShockwaveTrigger shockwaveTrigger;
 
     [Header("끌어내리기 UI")]
@@ -31,8 +32,10 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
     public EnergyGunController energyGunController;
 
-    public float AttackCoolDown { get; set; } = 10f;
-    public bool IsAmbush { get; set; } = false;
+    public float AttackCoolDown { get; private set; } = 10f; // 공격 쿨타임
+    public bool IsAmbush { get; set; } = false; // 현재 기습 공격인지 여부
+    public bool IsGrabbing { get; set; } = false; // 현재 플레이어를 잡고 있는지(끌어내리기 상태) 여부
+    public bool IsBehindPlayer { get; set; } = false; // 현재 플레이어 뒤에 있는지 여부
 
     // 최종 패턴
     public RectTransform topBlackScreen;    // 위쪽 검은 상단 막(UI)
@@ -45,12 +48,10 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     public int CurrentFinalPatternCount { get; set; } = 0; // 현재 몇 번째 패턴인가
     public int MaxFinalPatternCount { get; private set; } = 5;
     private bool _isFinalPatternClear = false; // 최종 패턴 클리어 여부
-    // private Queue<IState<DeepSeaMonsterController>> finalPatternQueue = new Queue<IState<DeepSeaMonsterController>>(); // 최종 패턴 큐
 
     public float shockwaveDuration = 1f;
 
 
-    [SerializeField] private MonsterHitBox hitBox;
     [SerializeField] private DeepSeaCameraController deepSeaCameraController;
     public DeepSeaCameraController CameraController => deepSeaCameraController;
     [SerializeField] private Transform playerTransform;
@@ -61,6 +62,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     public LayerMask obstacleLayerMask;
     public GameObject monsterGeo; // 몬스터 외형 모습
     public Animator animator;
+    [SerializeField] private HelicopterRotor helicopterRotor;
 
     [Header("오디오")]
     public AudioSource audioSource;
@@ -70,18 +72,19 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     public AudioClip moveSound;
     public AudioClip shockwaveSound;
     public AudioClip bigAttackSound;
+    public AudioClip behindPlayerSound; // 플레이어 뒤에 있을 때 나는 소리
 
     private Rigidbody _rb;
     public Rigidbody Rb => _rb;
 
-    private float _fsmEndDepth; // FSM 종료 수심
+    private float _fsmEndDepth = 100f; // FSM 종료 수심 (90f)
 
     public List<DeepSeaMonsterAttackBase> AllPatternList { get; private set; } = new List<DeepSeaMonsterAttackBase>();
     public DeepSeaMonsterAttackBase currentPattern = null;
     private Dictionary<DeepSeaMonsterAttackBase, int> _patternCounts = new Dictionary<DeepSeaMonsterAttackBase, int>();
 
     public bool IsEnded { get; private set; } = false; // FSM 종료 여부
-    public bool IsPlayerTriggered { get; private set; } = false;
+    // public bool IsPlayerTriggered { get; private set; } = false;
     public float MonsterRadius { get; private set; } = 5f;
     public int TorpedoHitCount { get; private set; } = 0; // 어뢰 발사 맞은 횟수
     public float CurrentDamageScale { get; private set; } = 1f; // 현재 대미지 배율
@@ -93,22 +96,21 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
     // 피격
     private float _hp = 100f;
+    public float Hp => _hp;
 
     private void Awake()
     {
-        if (deepSeaPlayerMove == null) return;
+        if (underwaterPlayerMove == null) return;
 
         _fsm = new StateMachine<DeepSeaMonsterController>(this);
         _rb = GetComponent<Rigidbody>();
-
-        _fsmEndDepth = FindAnyObjectByType<FinalPatternManager>().startDepth + 5f;
 
         monsterLight.gameObject.SetActive(false);
     }
 
     private void Start()
     {
-        if (deepSeaPlayerMove == null) return;
+        if (underwaterPlayerMove == null) return;
 
         shockwaveTrigger.gameObject.SetActive(false);
 
@@ -171,11 +173,11 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
     private void Update()
     {
-        if (deepSeaPlayerMove == null || IsFSMPause) return;
+        if (underwaterPlayerMove == null || IsFSMPause) return;
         if (GameManager.instance.IsPausing) return;
         if (_isFinalPatternClear) return;
 
-        if (deepSeaPlayerMove.DisplayDepth <= _fsmEndDepth && !IsFinalPatternPending)
+        if (underwaterPlayerMove.DisplayDepth <= _fsmEndDepth && !IsFinalPatternPending && !IsExecutingFinalPattern)
         {
             IsFinalPatternPending = true;
         }
@@ -185,7 +187,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
     private void FixedUpdate()
     {
-        if (deepSeaPlayerMove == null || IsFSMPause) return;
+        if (underwaterPlayerMove == null || IsFSMPause) return;
         if (GameManager.instance.IsPausing) return;
         if (_isFinalPatternClear) return;
 
@@ -197,7 +199,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
     private void OnDisable()
     {
-        if (deepSeaPlayerMove == null || IsFSMPause) return;
+        if (underwaterPlayerMove == null || IsFSMPause) return;
 
         _fsm.ExitState(); // 비활성화(파괴 직전)될 때 -> 무조건 상태 종료
 
@@ -205,27 +207,27 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
             finalPatternAudioSource.Stop();
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (deepSeaPlayerMove == null || IsFSMPause) return;
+    // private void OnTriggerEnter(Collider other)
+    // {
+    //     if (deepSeaPlayerMove == null || IsFSMPause) return;
 
-        if (!IsPlayerTriggered && other.gameObject.CompareTag("Player"))
-        {
-            IsPlayerTriggered = true;
-            Debug.Log("플레이어 트리거 발생");
-        }
-    }
+    //     if (!IsPlayerTriggered && other.gameObject.CompareTag("Player"))
+    //     {
+    //         IsPlayerTriggered = true;
+    //         Debug.Log("플레이어 트리거 발생");
+    //     }
+    // }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (deepSeaPlayerMove == null || IsFSMPause) return;
+    // private void OnTriggerExit(Collider other)
+    // {
+    //     if (deepSeaPlayerMove == null || IsFSMPause) return;
 
-        if (IsPlayerTriggered && other.gameObject.CompareTag("Player"))
-        {
-            IsPlayerTriggered = false;
-            Debug.Log("플레이어 트리거 발생 X");
-        }
-    }
+    //     if (IsPlayerTriggered && other.gameObject.CompareTag("Player"))
+    //     {
+    //         IsPlayerTriggered = false;
+    //         Debug.Log("플레이어 트리거 발생 X");
+    //     }
+    // }
 
     // 상태 전환
     public void ChangeState(IState<DeepSeaMonsterController> newState)
@@ -332,7 +334,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     #region Attacked
 
     /// <summary>
-    /// 대미지 받기
+    /// 대미지 받기 (3번 맞으면 죽음)
     /// </summary>
     public void TakeDamage(float amount)
     {
@@ -340,7 +342,6 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
         Debug.Log("괴물 체력: " + _hp);
         if (_hp <= 0)
         {
-            _hp = 0;
             Die();
         }
         else
@@ -352,10 +353,13 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     /// <summary>
     /// 죽기
     /// </summary>
-    private void Die()
+    public void Die()
     {
-        IsEnded = true;
-        ChangeState(new HiddenState()); // 사라진 상태로 전환 (FSM 종료 플래그 켜져있으므로 FSM 종료)
+        Debug.Log("심해 괴물 사망");
+        _hp = 0;
+        if (currentPattern != null)
+            currentPattern.OnAttackMiss();
+        ChangeState(new DeadState()); // 죽은 상태로 전환
     }
 
     #endregion
@@ -365,7 +369,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     /// </summary>
     public void LaunchShockwave(Quaternion rotation, Action onAttackSuccess = null, Action onAttackMiss = null)
     {
-        shockwaveTrigger.Fire(underwaterPlayerMove.BasePosition + Vector3.up * shockwaveDuration, rotation, shockwaveDuration, onAttackSuccess, onAttackMiss
+        shockwaveTrigger.Fire(underwaterPlayerMove.BasePosition + Vector3.up * underwaterPlayerMove.MoveAscentSpeed / 2f, rotation, shockwaveDuration, onAttackSuccess, onAttackMiss
         );
     }
 
@@ -410,27 +414,15 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
         finalPatternAudioSource.Play();
         DOTween.To(() => finalPatternVolume.weight, x => finalPatternVolume.weight = x, 1f, 1f);
-        if (PlayerManager.Instance.playerCameraControllerBase is UnderwaterCameraController underwaterCameraController)
-            underwaterCameraController.cameraLight.color = Color.red; // 카메라 손전등 빨간 빛으로 변경
-
-        ChangeState(new StealthMoveState());
-
-        // finalPatternQueue.Clear();
-
-        // // 삼키기 -> 일반 공격 3번 -> 삼키기
-        // finalPatternQueue.Enqueue(new SwallowState());
-        // finalPatternQueue.Enqueue(new AttackState());
-        // finalPatternQueue.Enqueue(new AttackState());
-        // finalPatternQueue.Enqueue(new AttackState());
-        // finalPatternQueue.Enqueue(new SwallowState());
+        underwaterCameraController.cameraLight.color = Color.red; // 카메라 손전등 빨간 빛으로 변경
 
         // 최종 패턴에서 나올 일반 공격만 일반 공격 패턴 리스트에 넣음 (내려치기, 휩쓸기)
         AllPatternList.Clear();
         AllPatternList.Add(new SlamAttack(this));
         AllPatternList.Add(new SweepAttack(this));
 
-        // // 첫 번째 패턴 실행
-        // ExecuteNextFinalPattern();
+        // 은신 이동 상태로 이동
+        ChangeState(new StealthMoveState());
     }
 
     /// <summary>
@@ -443,6 +435,8 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
         IsExecutingFinalPattern = false;
         _isFinalPatternClear = true;
 
+        underwaterPlayerStat.IsSurvivalUpdateStopped = true; // 체온 감소 중단
+        helicopterRotor.IsMainRotorActive = true; // 헬기 로터 회전 시작
         DeepSeaUIManager.Instance.DisableSurvialWarning(); // 체온 경고 UI 끄기
 
         DOTween.To(() => finalPatternVolume.weight, x => finalPatternVolume.weight = x, 0f, 1f); // 볼륨 되돌리기
@@ -493,6 +487,9 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
         yield break;
     }
 
+    /// <summary>
+    /// 삼키기 공격 중 약점 맞았을 때 -> 넉백
+    /// </summary>
     public void OnSwallowWeakPointHit()
     {
         Vector3 startPos = Rb.position;
@@ -501,36 +498,5 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
         seq.Append(Rb.DOMove(Rb.position - transform.forward * 5f, 1.5f).SetEase(Ease.OutExpo));
         seq.Append(Rb.DOMove(startPos, 1.5f));
     }
-
-    // /// <summary>
-    // /// 다음 최종 패턴 실행
-    // /// </summary>
-    // private void ExecuteNextFinalPattern()
-    // {
-    //     if (finalPatternQueue.Count > 0)
-    //     {
-    //         IState<DeepSeaMonsterController> nextState = finalPatternQueue.Dequeue();
-    //         ChangeState(nextState);
-    //     }
-    //     else
-    //     {
-    //         // 큐를 모두 비웠다면 최종 패턴 종료 -> 평소 AI 상태로 복귀
-    //         IsExecutingFinalPattern = false;
-    //         _isFinalPatternClear = true;
-
-    //         if (GameManager.instance.IsAbilityActive)
-    //             ChangeState(new HiddenState());
-    //         else
-    //             ChangeState(new DeadState());
-    //     }
-    // }
-
-    // /// <summary>
-    // /// 최종 패턴 각 상태 끝날 시점에 호출
-    // /// </summary>
-    // public void OnFinalPatternStateFinished()
-    // {
-    //     ExecuteNextFinalPattern(); // 다음 패턴 실행
-    // }
     #endregion
 }

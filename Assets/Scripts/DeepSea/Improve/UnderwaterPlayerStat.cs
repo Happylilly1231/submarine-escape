@@ -21,6 +21,9 @@ public class UnderwaterPlayerStat : MonoBehaviour
     public float MaxTemperature { get; private set; } = 100f; // 최대 체온
     public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
     public float OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
+    public bool IsOxygenLow => CurrentOxygen <= 30f; // 산소 부족 상태인지 여부
+    public bool IsTemperatureLow => CurrentTemperature <= 30f; // 체온 부족
+    public bool IsSurvivalUpdateStopped = false; // 체온, 산소 업데이트 중단 여부
 
     public event Action OnPlayerDamaged; // 플레이어 대미지 이벤트
 

@@ -10,13 +10,16 @@ public class DeepSeaUIManager : MonoBehaviour
     public static DeepSeaUIManager Instance { get; private set; }
 
     [Header("=== Target Reference ===")]
-    [SerializeField] private DeepSeaPlayerMove player;
+    // [SerializeField] private DeepSeaPlayerMove player;
     [SerializeField] private UnderwaterPlayerMove underwaterPlayerMove;
     [SerializeField] private UnderwaterPlayerStat underwaterPlayerStat;
 
     [Header("=== Helmet HUD ===")]
     [SerializeField] private GameObject helmetHUD; // 헬멧 hud
     [SerializeField] private GameObject statUI; // 스탯 UI (능력 사용 게임이라서 괴물 형태일 때만 헬멧 hud 대신 사용)
+    [SerializeField] private GameObject backViewUI; // 백 뷰 표시
+    [SerializeField] private GameObject backViewAbilityUI; // 능력 있을 때 백 뷰 표시
+    [SerializeField] private GameObject redVignetteImage;
 
     [Header("=== Oxygen UI ===")]
     [SerializeField] private Image oxygenBackgroundImg; // 산소 게이지 배경 이미지
@@ -44,12 +47,15 @@ public class DeepSeaUIManager : MonoBehaviour
 
     [Header("=== DeepSea Guide ===")]
     [SerializeField] private GameObject guideUI; // 심해 가이드
+    [SerializeField] private GameObject guideUIAbility; // 심해 가이드 (능력 플레이 전용)
     [SerializeField] private GameObject[] pages; // 가이드 페이지(조작법, 플레이어 상태, 아이템)
     [SerializeField] private Button[] pageControls; // 페이지 조작 버튼(이전, 다음, 닫기)
+    [SerializeField] private Button pageCloseButtonAbility; // 페이지 닫기 버튼 (능력 플레이 전용)
 
     public bool IsActiveGuide { get; private set; } = false;
 
     private int _inactivePageIdx; // 비활성화된 페이지
+    private int _currentStartIndex = 0;       // 현재 화면 맨 왼쪽(첫 번째)에 보일 아이템 인덱스
     private DeepSeaMonsterController _deepSeaMonsterController;
 
     private bool _isSurvivalWarningActive = true; // 생존 경고 UI 활성화 여부
@@ -83,9 +89,12 @@ public class DeepSeaUIManager : MonoBehaviour
 
         helmetHUD.SetActive(false);
         guideUI.SetActive(false);
+        guideUIAbility.SetActive(false);
         statUI.SetActive(false);
         depthText_Ability.gameObject.SetActive(false);
         oxygenDarknessImg.gameObject.SetActive(false);
+
+        redVignetteImage.SetActive(GameManager.instance.IsAbilityActive);
     }
 
     private void OnDisable()
@@ -124,6 +133,14 @@ public class DeepSeaUIManager : MonoBehaviour
         }
     }
 
+    public void SetActiveBackViewUI(bool isEnable)
+    {
+        if (GameManager.instance.IsAbilityActive)
+            backViewAbilityUI.SetActive(isEnable);
+        else
+            backViewUI.SetActive(isEnable);
+    }
+
     #region DeepSea 가이드 UI
     /// <summary>
     /// 심해 가이드 ui 설정
@@ -134,43 +151,58 @@ public class DeepSeaUIManager : MonoBehaviour
 
         // 헬멧 hud 비활성화 및 가이드 ui 활성화
         helmetHUD.SetActive(false);
-        guideUI.SetActive(true);
+        if (GameManager.instance.IsAbilityActive)
+        {
+            guideUIAbility.SetActive(true);
 
-        // 다음 버튼 활성화 및 닫기 버튼 비활성화
-        pageControls[0].gameObject.SetActive(false);
-        pageControls[0].onClick.AddListener(PrevPage);
-        pageControls[1].gameObject.SetActive(true);
-        pageControls[1].onClick.AddListener(NextPage);
-        pageControls[2].gameObject.SetActive(false);
-        pageControls[2].onClick.AddListener(ClosePage);
+            pageCloseButtonAbility.gameObject.SetActive(true);
+            pageCloseButtonAbility.onClick.AddListener(ClosePage);
+        }
+        else
+        {
+            guideUI.SetActive(true);
+
+            // 다음 버튼 활성화 및 닫기 버튼 비활성화
+            pageControls[0].gameObject.SetActive(false);
+            pageControls[0].onClick.AddListener(PrevPage);
+            pageControls[1].gameObject.SetActive(true);
+            pageControls[1].onClick.AddListener(NextPage);
+            pageControls[2].gameObject.SetActive(false);
+            pageControls[2].onClick.AddListener(ClosePage);
+        }
     }
 
     private void PrevPage()
     {
-        _inactivePageIdx = 3;
-
+        _currentStartIndex = Mathf.Max(0, _currentStartIndex - 1);
         UpdatePage();
     }
 
     private void NextPage()
     {
         _inactivePageIdx = 0;
-
+        int maxStartIndex = Mathf.Max(0, pages.Length - 3);
+        _currentStartIndex = Mathf.Min(maxStartIndex, _currentStartIndex + 1);
         UpdatePage();
     }
 
     private void UpdatePage()
     {
+        // 현재 시작 인덱스부터 3개만 활성화하고 나머지는 비활성화
         for (int i = 0; i < pages.Length; i++)
         {
-            pages[i].SetActive(i != _inactivePageIdx);
+            bool isVisible = (i >= _currentStartIndex) && (i < _currentStartIndex + 3);
+            pages[i].SetActive(isVisible);
         }
 
-        bool isFirstPage = _inactivePageIdx == 3;
+        // 첫 페이지 여부와 마지막 페이지 여부 계산
+        int maxStartIndex = Mathf.Max(0, pages.Length - 3);
+        bool isFirstPage = (_currentStartIndex == 0);
+        bool isLastPage = (_currentStartIndex >= maxStartIndex);
 
         pageControls[0].gameObject.SetActive(!isFirstPage);
-        pageControls[1].gameObject.SetActive(isFirstPage);
-        pageControls[2].gameObject.SetActive(!isFirstPage);
+        pageControls[1].gameObject.SetActive(!isLastPage);
+        pageControls[2].gameObject.SetActive(isLastPage);
     }
 
     /// <summary>
@@ -180,17 +212,27 @@ public class DeepSeaUIManager : MonoBehaviour
     /// </summary>
     public void ClosePage()
     {
-        helmetHUD.SetActive(true);
-        guideUI.SetActive(false);
-        oxygenDarknessImg.gameObject.SetActive(true);
+        if (GameManager.instance.IsAbilityActive)
+        {
+            guideUIAbility.SetActive(false);
+            statUI.SetActive(true);
+            depthText_Ability.gameObject.SetActive(true);
+            PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
+        }
+        else
+        {
+            helmetHUD.SetActive(true);
+            guideUI.SetActive(false);
+            oxygenDarknessImg.gameObject.SetActive(true);
 
-        // 헬멧 hud 초기화
-        oxygenFillImg.fillAmount = 1f;
-        temperatureFillImg.fillAmount = 1f;
+            // 헬멧 hud 초기화
+            oxygenFillImg.fillAmount = 1f;
+            temperatureFillImg.fillAmount = 1f;
 
-        SetItemSlotUI();
+            SetItemSlotUI();
 
-        helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
+            helicopterImg.enabled = DeepSeaBridge.Instance.HasContactedHQ;
+        }
 
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
         // FocusManager.Instance.PopFocusState();
@@ -202,25 +244,25 @@ public class DeepSeaUIManager : MonoBehaviour
     }
     #endregion
 
-    #region DeepSea 능력 사용 게임 UI
-    /// <summary>
-    /// 능력 있을 때 UI 설정
-    /// </summary>
-    public void SetUIWithAbility()
-    {
-        // 헬멧 HUD 따로 켜지 않음
+    // #region DeepSea 능력 사용 게임 UI
+    // /// <summary>
+    // /// 능력 있을 때 UI 설정
+    // /// </summary>
+    // public void SetUIWithAbility()
+    // {
+    //     // 헬멧 HUD 따로 켜지 않음
 
-        FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
+    //     FocusManager.Instance.PushFocusState(GameFocusState.DeepSea);
 
-        IsActiveGuide = false;
+    //     IsActiveGuide = false;
 
-        // CloseInventoryUI(); // 인벤토리 UI 닫기
-        statUI.SetActive(true);
-        depthText_Ability.gameObject.SetActive(true);
-        PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
-        DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
-    }
-    #endregion
+    //     // CloseInventoryUI(); // 인벤토리 UI 닫기
+    //     statUI.SetActive(true);
+    //     depthText_Ability.gameObject.SetActive(true);
+    //     PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
+    //     DeepSeaMonsterAppearCutScene.Instance.PlayMonsterAppearSequence(); // 심해 괴물 등장 컷씬 시작
+    // }
+    // #endregion
 
     #region 헬멧 HUD(체온, 산소, 수심, 아이템 슬롯) UI 업데이트
     /// <summary>
@@ -422,7 +464,7 @@ public class DeepSeaUIManager : MonoBehaviour
                 _oxygenWarningCoroutine = StartCoroutine(BlinkGauge(oxygenBackgroundImg));
             }
 
-            float ratio = Mathf.InverseLerp(30f, 0f, player.CurrentOxygen);
+            float ratio = Mathf.InverseLerp(30f, 0f, underwaterPlayerStat.CurrentOxygen);
             _targetDarknessAlpha = Mathf.Lerp(100f, 255f, ratio);
         }
         else

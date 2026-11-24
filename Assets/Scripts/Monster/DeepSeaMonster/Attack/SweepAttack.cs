@@ -8,7 +8,7 @@ public class SweepAttack : DeepSeaMonsterAttackBase
     public override Vector3 SpawnOffset => CalculateSpawnPos();
     public override Vector3 TargetOffset => new Vector3(0f, 0f, 30f);
     public override float MoveSpeed => 10f;
-    public override bool ShouldStop => true;
+    public override bool CanAttackFromBehind => true;
     public override float DamageAmount => 30f;
 
     private float _circleRadius = 20f;
@@ -30,7 +30,10 @@ public class SweepAttack : DeepSeaMonsterAttackBase
 
     public override void OnSpawned()
     {
-
+        if (monster.IsBehindPlayer)
+        {
+            monster.audioSource.PlayOneShot(monster.behindPlayerSound);
+        }
     }
 
     public override void OnReachedToTarget()

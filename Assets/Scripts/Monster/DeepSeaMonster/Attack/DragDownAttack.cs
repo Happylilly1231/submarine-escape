@@ -16,8 +16,9 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
     public override Vector3 SpawnOffset => Vector3.down * 20f;
     public override Vector3 TargetOffset => Vector3.down * 5f;
     public override float MoveSpeed => 10f;
-    public override bool ShouldStop => false;
+    public override bool CanAttackFromBehind => false;
     public override float DamageAmount => 30f;
+    public override bool LookAtPlayerWhileMoving => false;
 
     public Vector3 moveDir;
 
@@ -78,6 +79,7 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
     public override void OnSpawned()
     {
         monster.transform.rotation = monster.playerGrabPos.rotation;
+        monster.audioSource.PlayOneShot(monster.spawnSound);
     }
 
     public override void OnReachedToTarget()

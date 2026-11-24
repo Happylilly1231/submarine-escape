@@ -144,7 +144,7 @@ public class EnergyGunController : MonoBehaviour
         // 조준 중일 때만 -> 조준 UI 업데이트 및 발사 가능 여부 판단
         if (IsAming)
         {
-            if (deepSeaMonsterController.currentPattern is AmbushAttack || underwaterPlayerMove.IsDodging || underwaterPlayerMove.IsUpwardDashing || underwaterPlayerMove.IsKnockedBack)
+            if (!CheckCanAim())
             {
                 ExitAimMode();
                 return;
@@ -165,6 +165,11 @@ public class EnergyGunController : MonoBehaviour
         }
     }
 
+    private bool CheckCanAim()
+    {
+        return !(deepSeaMonsterController.currentPattern is AmbushAttack || underwaterPlayerMove.IsDodging || underwaterPlayerMove.IsUpwardDashing || underwaterPlayerMove.IsKnockedBack || deepSeaMonsterController.IsGrabbing);
+    }
+
     /// <summary>
     /// 게이지 UI 갱신
     /// </summary>
@@ -177,7 +182,6 @@ public class EnergyGunController : MonoBehaviour
         }
 
         int filledCount = Mathf.FloorToInt(_currentGauge);
-        Debug.Log(_gaugeCellImgs.Length + " / " + _currentGauge + " / " + filledCount);
         for (int i = 0; i < _gaugeCellImgs.Length; i++)
         {
             _gaugeCellImgs[i].enabled = i < filledCount;
@@ -391,7 +395,7 @@ public class EnergyGunController : MonoBehaviour
     /// </summary>
     private void EnterAimMode()
     {
-        if (deepSeaMonsterController.currentPattern is AmbushAttack || underwaterPlayerMove.IsDodging || underwaterPlayerMove.IsUpwardDashing || underwaterPlayerMove.IsKnockedBack)
+        if (!CheckCanAim())
             return;
 
         Debug.Log("조준 모드 활성화");

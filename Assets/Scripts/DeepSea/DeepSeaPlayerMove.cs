@@ -26,7 +26,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     [Header("이동")]
     [SerializeField] private float normalSpeed = 5f; // 기본 이동 속도
     [SerializeField] private float sprintSpeed = 7f; // 가속 이동 속도
-    [SerializeField] private float slowSpeed = 4.2f; // 느려질 때 속도
+    // [SerializeField] private float slowSpeed = 4.2f; // 느려질 때 속도
     [SerializeField] private float dragDownSpeed = 4f; // 끌려 내려갈 때 속도
     [SerializeField] private float meshRotationSpeed = 8f; // 메쉬(모델) 회전 속도
     private Vector3 _moveDir2D; // 2차원(X, Z) 이동 방향
@@ -44,8 +44,8 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     [SerializeField] private float sprintOxygenCostPerSec = 0.8f; // 가속 이동 시 산소 소모량
     [SerializeField] private float dashOxygenCost = 6f; // 회피 시 산소 소모량
 
-    [Header("체온")]
-    [SerializeField] private float thermalProtectorDuration = 90f; // 열 보호 장치 지속 시간(초)
+    // [Header("체온")]
+    // [SerializeField] private float thermalProtectorDuration = 90f; // 열 보호 장치 지속 시간(초)
 
     [Header("끌어내려질 때 UI")]
     [SerializeField] private GameObject dragDownUI;
@@ -84,31 +84,30 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     // 기타
     private Rigidbody _rb;
     private Transform _mainCamTransform;
-    private Vector3 _standingCenter = new Vector3(0, 1f, 0);
-    private Vector3 _swimmingCenter = new Vector3(0, 0.65f, 0);
+    private UnderwaterPlayerStat _underwaterPlayerStat;
 
 
     #region 다른 데서 사용할 수 있는 변수들 (추가 가능)
 
-    public float MaxOxygen { get; private set; } = 100f; // 최대 산소량
-    public float CurrentOxygen { get; private set; } = 100f; // 현재 산소량
-    public float OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
-    public float SurvivalTime = 300f; // 생존 시간(초)
-    public float ThermalProtectorDuration => thermalProtectorDuration;
-    public float MaxTemperature { get; private set; } = 100f; // 최대 체온
-    public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
-    public bool IsOxygenLow => CurrentOxygen <= 30f; // 산소 부족 상태인지 여부
-    public bool IsTemperatureLow => CurrentTemperature <= 30f; // 체온 부족 상태인지 여부
-    public bool IsSurvivalUpdateStopped = false; // 체온, 산소 업데이트 중단 여부
-    public Vector3 MoveDir2D => _moveDir2D; // 2차원(X, Z) 이동 방향
-    public Vector3 MoveDir3D => _moveDir3D; // 3차원(X, Y, Z) 이동 방향
-    public Vector2 MoveInput => _moveInput; // 2차원 이동 입력
-    public float VerticalInput => _verticalInput; // 상하 이동 입력
+    // public float MaxOxygen { get; private set; } = 100f; // 최대 산소량
+    // public float CurrentOxygen { get; private set; } = 100f; // 현재 산소량
+    // public float OxygenCostPerSec = 0.1f; // 기본 초당 산소 소모량
+    // public float SurvivalTime = 300f; // 생존 시간(초)
+    // public float ThermalProtectorDuration => thermalProtectorDuration;
+    // public float MaxTemperature { get; private set; } = 100f; // 최대 체온
+    // public float CurrentTemperature { get; private set; } = 100f; // 현재 체온
+    // public bool IsOxygenLow => CurrentOxygen <= 30f; // 산소 부족 상태인지 여부
+    // public bool IsTemperatureLow => CurrentTemperature <= 30f; // 체온 부족 상태인지 여부
+    // public bool IsSurvivalUpdateStopped = false; // 체온, 산소 업데이트 중단 여부
+    // public Vector3 MoveDir2D => _moveDir2D; // 2차원(X, Z) 이동 방향
+    // public Vector3 MoveDir3D => _moveDir3D; // 3차원(X, Y, Z) 이동 방향
+    // public Vector2 MoveInput => _moveInput; // 2차원 이동 입력
+    // public float VerticalInput => _verticalInput; // 상하 이동 입력
+
     public float MouseX { get; private set; } // 마우스 좌우 값
     public float MouseY { get; private set; } // 마우스 상하 값
     public bool IsDashing { get; private set; } = false; // 회피 중인지 여부
     public bool IsSprinting { get; private set; } = false; // 가속 이동 중인지 여부
-    // public bool IsOxgenNonSafe { get; set; } = false; // 산소 비정상 소모 중인지 여부
     public bool IsCutsceneMoving => _isCutsceneMoving; // 연출 이동/회전 진행 중인지 여부
 
     public float CurrentSpeedMultiplier { get; private set; } = 1f;
@@ -139,6 +138,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     {
         _rb = GetComponent<Rigidbody>();
         _mainCamTransform = Camera.main.transform;
+        _underwaterPlayerStat = GetComponent<UnderwaterPlayerStat>();
 
         // 입력 관련 변수 가져오기
         _playerInput = GetComponent<PlayerInput>();
@@ -171,26 +171,26 @@ public class DeepSeaPlayerMove : PlayerMoveBase
         // 스탯 업데이트
         if (!GameManager.instance.IsAbilityActive) // 능력이 없는 일반 게임일 때
         {
-            if (!IsSurvivalUpdateStopped) // 체온, 산소 업데이트 중단 상태가 아닐 때만
+            if (!_underwaterPlayerStat.IsSurvivalUpdateStopped) // 체온, 산소 업데이트 중단 상태가 아닐 때만
             {
                 // 산소 업데이트
                 if (IsSprinting)
-                    ConsumeOxygen(sprintOxygenCostPerSec * Time.fixedDeltaTime);
+                    _underwaterPlayerStat.ConsumeOxygen(sprintOxygenCostPerSec * Time.deltaTime);
                 else
-                    ConsumeOxygen(OxygenCostPerSec * Time.deltaTime); // 평소에도 지속해서 기본 산소 감소
+                    _underwaterPlayerStat.ConsumeBaseOxgen(); // 평소에도 지속해서 기본 산소 감소
 
                 // 체온 업데이트
-                UpdateTemperature();
+                _underwaterPlayerStat.UpdateTemperature();
             }
         }
         else // 능력 사용 게임일 때
         {
             // 정신력 업데이트
-            PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(SurvivalTime);
+            PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(_underwaterPlayerStat.SurvivalTime);
         }
 
         // 생존 경고 상태 전달
-        DeepSeaUIManager.Instance.UpdateSurvivalWarning(IsOxygenLow, IsTemperatureLow);
+        DeepSeaUIManager.Instance.UpdateSurvivalWarning(_underwaterPlayerStat.IsOxygenLow, _underwaterPlayerStat.IsTemperatureLow);
 
         // 괴물에게 잡힌 상태일 때 -> QTE 입력만 받음 & 이동 불가
         if (_isGrabbed)
@@ -228,32 +228,66 @@ public class DeepSeaPlayerMove : PlayerMoveBase
 
     #endregion
 
-    #region 산소
+    // #region 산소
 
-    /// <summary>
-    /// 산소 소모
-    /// </summary>
-    /// <param name="amount">소모량</param>
-    public void ConsumeOxygen(float amount)
-    {
-        CurrentOxygen = Mathf.Max(0f, CurrentOxygen - amount);
-        if (CurrentOxygen == 0f)
-        {
-            Debug.Log("=== Game Over ===");
-            GameManager.instance.GameOver(EEndingType.MonsterDeath); // 임시로 괴물한테 죽음 엔딩으로 해놓음
-        }
-    }
+    // /// <summary>
+    // /// 산소 소모
+    // /// </summary>
+    // /// <param name="amount">소모량</param>
+    // public void ConsumeOxygen(float amount)
+    // {
+    //     CurrentOxygen = Mathf.Max(0f, CurrentOxygen - amount);
+    //     if (CurrentOxygen == 0f)
+    //     {
+    //         Debug.Log("=== Game Over ===");
+    //         GameManager.instance.GameOver(EEndingType.MonsterDeath); // 임시로 괴물한테 죽음 엔딩으로 해놓음
+    //     }
+    // }
 
-    /// <summary>
-    /// 산소 충전
-    /// </summary>
-    /// <param name="amount">충전량</param>
-    public void RechargeOxygen(float amount)
-    {
-        CurrentOxygen = Mathf.Min(MaxOxygen, CurrentOxygen + amount);
-    }
+    // /// <summary>
+    // /// 산소 충전
+    // /// </summary>
+    // /// <param name="amount">충전량</param>
+    // public void RechargeOxygen(float amount)
+    // {
+    //     CurrentOxygen = Mathf.Min(_underwaterPlayerStat.MaxOxygen, CurrentOxygen + amount);
+    // }
 
-    #endregion
+    // #endregion
+
+    // #region 체온
+    // /// <summary>
+    // /// 체온 업데이트
+    // /// <para> - 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X </para>
+    // /// <para> - 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소 </para>
+    // /// </summary>
+    // public void UpdateTemperature()
+    // {
+    //     float temperatureLossPerSec = MaxTemperature / SurvivalTime; // 체온 감소율 계산
+
+    //     // 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X
+    //     if (DeepSeaInventoryManager.Instance.HasThermalProtector && DeepSeaInventoryManager.Instance.IsThermalProtectorActive)
+    //     {
+    //         // 열 보호 장치 지속 시간 감소
+    //         thermalProtectorDuration -= Time.deltaTime;
+    //         if (thermalProtectorDuration <= 0f)
+    //         {
+    //             DeepSeaInventoryManager.Instance.IsThermalProtectorActive = false;
+    //             Debug.Log("열 보호 장치 지속 시간 종료 - 체온 감소 시작");
+    //         }
+    //     }
+    //     else // 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소
+    //     {
+    //         CurrentTemperature -= temperatureLossPerSec * Time.deltaTime;
+    //         if (CurrentTemperature <= 0f)
+    //         {
+    //             CurrentTemperature = 0f;
+    //             Debug.Log("체온 0도 도달 - 저체온증으로 사망");
+    //             // GameManager.instance.GameOver(EEndingType.Hypothermia); // 저체온증으로 사망
+    //         }
+    //     }
+    // }
+    // #endregion
 
     #region 입력
 
@@ -345,13 +379,13 @@ public class DeepSeaPlayerMove : PlayerMoveBase
             return;
         }
 
-        if (CurrentOxygen < dashOxygenCost)
+        if (_underwaterPlayerStat.CurrentOxygen < dashOxygenCost)
         {
             Debug.Log("회피에 필요한 산소가 부족합니다! 회피 실패!");
             return;
         }
 
-        ConsumeOxygen(dashOxygenCost);
+        _underwaterPlayerStat.ConsumeOxygen(dashOxygenCost);
         StartCoroutine(DashCoroutine());
     }
 
@@ -506,7 +540,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
         _moveDir2D = _moveDir2D.normalized;
 
         // 현재 가속 이동 중인지 여부 갱신
-        IsSprinting = _isSprintPressed && CurrentOxygen > 0f && _moveDir3D.sqrMagnitude > 0.01f;
+        IsSprinting = _isSprintPressed && _underwaterPlayerStat.CurrentOxygen > 0f && _moveDir3D.sqrMagnitude > 0.01f;
 
         // 이동 속도 정하기 - 회피 속도 / 일반 속도
         Vector3 targetVelocity;
@@ -678,7 +712,7 @@ public class DeepSeaPlayerMove : PlayerMoveBase
         if (GameManager.instance.IsAbilityActive) // 능력 사용 게임일 때
             PlayerManager.Instance.playerStat.Damage(amount); // HP 대미지
         else // 아니고 일반 게임일 때
-            ConsumeOxygen(amount); // 산소 대미지
+            _underwaterPlayerStat.ConsumeOxygen(amount); // 산소 대미지
 
         // 대미지 볼륨 효과
         DOTween.To(() => damagedVolume.weight, x => damagedVolume.weight = x, 1f, 0.5f)
@@ -722,40 +756,6 @@ public class DeepSeaPlayerMove : PlayerMoveBase
     {
         CurrentSpeedMultiplier = value;
     }
-
-    #region 체온
-    /// <summary>
-    /// 체온 업데이트
-    /// <para> - 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X </para>
-    /// <para> - 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소 </para>
-    /// </summary>
-    private void UpdateTemperature()
-    {
-        float temperatureLossPerSec = MaxTemperature / SurvivalTime; // 체온 감소율 계산
-
-        // 열 보호 장치가 장착되어 있고, 사용 중이라면 90초동안 체온 감소 X
-        if (DeepSeaInventoryManager.Instance.HasThermalProtector && DeepSeaInventoryManager.Instance.IsThermalProtectorActive)
-        {
-            // 열 보호 장치 지속 시간 감소
-            thermalProtectorDuration -= Time.deltaTime;
-            if (thermalProtectorDuration <= 0f)
-            {
-                DeepSeaInventoryManager.Instance.IsThermalProtectorActive = false;
-                Debug.Log("열 보호 장치 지속 시간 종료 - 체온 감소 시작");
-            }
-        }
-        else // 열 보호 장치가 장착되지 않았거나, 사용 중이 아니라면 체온 감소
-        {
-            CurrentTemperature -= temperatureLossPerSec * Time.deltaTime;
-            if (CurrentTemperature <= 0f)
-            {
-                CurrentTemperature = 0f;
-                Debug.Log("체온 0도 도달 - 저체온증으로 사망");
-                // GameManager.instance.GameOver(EEndingType.Hypothermia); // 저체온증으로 사망
-            }
-        }
-    }
-    #endregion
 
     #region 연출용 함수들
 
