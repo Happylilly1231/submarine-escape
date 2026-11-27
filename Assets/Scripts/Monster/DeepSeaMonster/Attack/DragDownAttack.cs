@@ -79,7 +79,7 @@ public class DragDownAttack : DeepSeaMonsterAttackBase
     public override void OnSpawned()
     {
         monster.transform.rotation = monster.playerGrabPos.rotation;
-        monster.audioSource.PlayOneShot(monster.spawnSound);
+        monster.audioSource.PlayOneShot(monster.dragDownAttackCloseSound);
     }
 
     public override void OnReachedToTarget()

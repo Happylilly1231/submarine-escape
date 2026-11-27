@@ -527,6 +527,7 @@ public class PlayerInteractor : MonoBehaviour
 
         // 기존 텍스트에서 변경이 됐을 때만 UI 갱신
         string newText = furniture.GetInteractText();
+        Debug.Log(furniture + " / " + interactorText.text + " / " + newText);
         if (interactorText.text != newText)
         {
             interactorText.text = newText;

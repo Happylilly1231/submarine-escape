@@ -175,7 +175,8 @@ public class AbilityUI : MonoBehaviour
     public void HideAbilityInfoUI()
     {
         abilityInfoUI.SetActive(false);
-        SubmarineInGameManager.instance.StatUI.SetActive(true); // 스탯 UI 켜기
+        SubmarineInGameManager.instance.SetActiveInGameUI(true); // 인게임 UI 켜기
+        SubmarineInGameManager.instance.InventoryManager.CloseInventory(); // 인벤토리는 닫기
         SetShowAbilityUI(true); // 능력 UI 켜기
         FocusManager.Instance.PopFocusState();
     }

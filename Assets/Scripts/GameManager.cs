@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
 
             // SetAbilityActive(true); // 테스트용
+
         }
         else
         {

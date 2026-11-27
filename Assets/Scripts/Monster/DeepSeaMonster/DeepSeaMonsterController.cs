@@ -69,6 +69,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
     public AudioSource heartBeatAudioSource;
     public AudioSource finalPatternAudioSource;
     public AudioClip spawnSound;
+    public AudioClip dragDownAttackCloseSound;
     public AudioClip moveSound;
     public AudioClip shockwaveSound;
     public AudioClip bigAttackSound;
@@ -146,13 +147,19 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
         monsterGeo.SetActive(true); // 외관 활성화
         _rb.isKinematic = false;
 
+        // 능력 사용 게임이라면 -> 어뢰 발사 여부와 상관 없이 일단 대미지 반으로 감소
+        if (GameManager.instance.IsAbilityActive)
+        {
+            CurrentDamageScale *= 0.5f;
+        }
+
         // // 어뢰 맞은 횟수 설정 (로드)
         // SetTorpedoHitCountAndApplyEffect(3);
 
-        // // 최종 패턴 테스트용
-        // Weaken();
-        // Weaken();
-        // Weaken();
+        // 최종 패턴 테스트용
+        Weaken();
+        Weaken();
+        Weaken();
 
         // 스폰 상태
         _fsm.ChangeState(new StealthMoveState());
@@ -276,7 +283,7 @@ public class DeepSeaMonsterController : MonoBehaviour, IStateMachineOwner<DeepSe
 
         if (TorpedoHitCount >= 1)
         {
-            CurrentDamageScale = 0.5f; // 대미지 1/2배
+            CurrentDamageScale *= 0.5f; // 대미지 1/2배
         }
 
         if (TorpedoHitCount >= 2)

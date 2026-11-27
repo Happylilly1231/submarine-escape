@@ -89,7 +89,6 @@ public class SubmarineInGameManager : MonoBehaviour
 
     // UI
     [SerializeField] private GameObject statUI;
-    public GameObject StatUI => statUI;
     [SerializeField] private GameObject inventoryUI;
     [SerializeField] private GameObject interactorUI;
     public GameObject InteractorUI => interactorUI;

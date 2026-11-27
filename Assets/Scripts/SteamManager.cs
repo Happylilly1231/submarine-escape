@@ -38,7 +38,7 @@ public class SteamManager : MonoBehaviour
         // 초기화 - 스팀 클라이언트 연결
         InitializeSteam();
 
-        ResetAchievement(SteamAchievementID.ACH_ESCAPE_CREW_ROOM); // 선원실 탈출 도전 과제 초기화
+        // ResetAchievement(SteamAchievementID.ACH_ESCAPE_CREW_ROOM); // 선원실 탈출 도전 과제 초기화 (테스트용)
     }
 
     /// <summary>

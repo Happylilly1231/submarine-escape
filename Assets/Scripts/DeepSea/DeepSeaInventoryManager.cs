@@ -41,6 +41,18 @@ public class DeepSeaInventoryManager : MonoBehaviour
             Instance = this;
 
             PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
+
+            // // 테스트용
+            // playerItemStates = new PlayerItemStates
+            // {
+            //     IsDivingsuitEquipped = true,
+            //     HasThermalProtector = true,
+            //     HasOxygenCapsule = true,
+            //     HasMonsterGasBomb = true,
+            //     HasSleepingGas = true
+            // };
+            // DeepSeaBridge.Instance.SetPlayerItemStates(playerItemStates);
+
             ApplyData(playerItemStates);
 
             // 능력 사용 게임일 때 -> 아래 설정 필요 없음
