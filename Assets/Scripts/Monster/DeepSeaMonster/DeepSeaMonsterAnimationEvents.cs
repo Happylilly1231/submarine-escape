@@ -28,11 +28,11 @@ public class DeepSeaMonsterAnimationEvents : MonoBehaviour
         }
     }
 
-    // public void OnAttack()
-    // {
-    //     if (_controller != null && _controller.enabled)
-    //     {
-    //         _controller.OnAttack();
-    //     }
-    // }
+    public void OnAttack()
+    {
+        if (_controller != null && _controller.enabled)
+        {
+            _controller.OnAttack();
+        }
+    }
 }

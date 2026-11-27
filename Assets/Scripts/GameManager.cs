@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     // 정지
     private bool _isPausing = false; // 정지 중 여부
     public bool IsPausing { get => _isPausing; set => _isPausing = value; }
+    public event Action OnBeforePause; // 정지 직전 이벤트
 
     private bool _isClear = false; // 클리어 여부 변수
     public bool IsClear => _isClear;
@@ -81,6 +82,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void Pause()
     {
+        OnBeforePause?.Invoke();
+
         Debug.Log("정지");
         _isPausing = true; // 정지 중으로 설정
 
