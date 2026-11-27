@@ -33,6 +33,7 @@ public class IntroSequencer : MonoBehaviour
         if (GameManager.instance.IsAbilityActive) // 히든 능력 사용 시에 -> 인트로 아예 스킵
         {
             _animator.SetLayerWeight(1, 0f); // 인트로 레이어 끄기
+            FindAnyObjectByType<AbilityIntroSequence>().PlayAbilityIntroSequence(); // 능력 사용 게임 인트로 연출 재생
             enabled = false; // 컴포넌트 비활성화
             Debug.Log("능력이 활성화되어 있으므로 -> 인트로 스킵");
             return;

@@ -163,6 +163,8 @@ public class PlayerMove : PlayerMoveBase
                 CalculateGravity(); // 중력 연산
                 _controller.Move(Vector3.up * _ySpeed * Time.deltaTime); // y 이동만 처리
                 animator.SetBool("isGrounded", _controller.isGrounded); // 바닥에 닿아있는지 여부 애니메이터에 넘기기(모든 y 계산이 다 끝난 뒤에 실행)
+                if (audioSource.isPlaying)
+                    audioSource.Stop(); // 소리 정지
             }
             return;
         }
@@ -241,8 +243,8 @@ public class PlayerMove : PlayerMoveBase
                 // audioSource.PlayOneShot(jumpLandingSound);
                 AudioClip currentJumpLandingSound = PlayerManager.Instance.CheckMonsterTransformation() ? monsterJumpLandingSound : jumpLandingSound;
                 AudioManager.Instance.PlayGlobalOneShot(currentJumpLandingSound);
-                if (PlayerManager.Instance.CheckMonsterTransformation())
-                    StartCoroutine(_playerStatus.StunEffect()); // 스턴 효과
+                // if (PlayerManager.Instance.CheckMonsterTransformation())
+                //     StartCoroutine(_playerStatus.StunEffect()); // 스턴 효과
                 _isJumping = false;
             }
 

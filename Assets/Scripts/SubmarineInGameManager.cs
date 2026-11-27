@@ -343,13 +343,14 @@ public class SubmarineInGameManager : MonoBehaviour
     /// <param name="isActive">활성화 여부</param>
     public void SetActiveInGameUI(bool isActive)
     {
+        Debug.Log("인게임 UI 활성화 여부: " + isActive);
         // 활성화 여부 설정
         inventoryUI.SetActive(isActive); // 인벤토리 UI 
         statUI.SetActive(isActive); // 스탯 UI
         interactorUI.SetActive(isActive); // 상호작용 UI
         if (GameManager.instance.IsAbilityActive)
         {
-            PlayerManager.Instance.playerAbility.abilityUI.SetActive(isActive);
+            PlayerManager.Instance.playerAbility.abilityUI.SetShowAbilityUI(isActive);
         }
     }
 }

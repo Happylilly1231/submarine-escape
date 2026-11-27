@@ -9,7 +9,7 @@ public class ScenePortal : Door
     [SerializeField] private string sceneName; // 이동할 씬 이름
     [SerializeField] private Transform viewPoint; // 카메라 이동 위치
 
-    public override void OpenDoor(float angle)
+    public override void OpenDoor(float angle, bool isRotate = true)
     {
         if (sceneName == "SubmarineScene") SavePointManager.Instance.IsLoadGameMode = false;
 

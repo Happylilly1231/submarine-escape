@@ -437,7 +437,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02144e95076b94d498c9a44c93b25911, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hitBox: {fileID: 0}
+  underwaterPlayerMove: {fileID: 0}
+  underwaterInput: {fileID: 0}
+  underwaterPlayerStat: {fileID: 0}
+  underwaterCameraController: {fileID: 0}
+  shockwaveTrigger: {fileID: 0}
+  dragDownUI: {fileID: 0}
+  leftTimeImage: {fileID: 0}
+  spaceCountText: {fileID: 0}
+  targetSpaceCountText: {fileID: 0}
+  monsterLight: {fileID: 0}
+  energyGunController: {fileID: 0}
+  topBlackScreen: {fileID: 0}
+  bottomBlackScreen: {fileID: 0}
+  finalPatternVolume: {fileID: 0}
+  shockwaveDuration: 1
   deepSeaCameraController: {fileID: 0}
   playerTransform: {fileID: 0}
   deepSeaPlayerMove: {fileID: 0}
@@ -447,9 +461,16 @@ MonoBehaviour:
     m_Bits: 0
   monsterGeo: {fileID: 0}
   animator: {fileID: 0}
-  IsFSMPause: 0
+  helicopterRotor: {fileID: 0}
   audioSource: {fileID: 0}
+  heartBeatAudioSource: {fileID: 0}
+  finalPatternAudioSource: {fileID: 0}
   spawnSound: {fileID: 0}
+  moveSound: {fileID: 0}
+  shockwaveSound: {fileID: 0}
+  bigAttackSound: {fileID: 0}
+  behindPlayerSound: {fileID: 0}
+  IsFSMPause: 0
 --- !u!4 &9408147
 Transform:
   m_ObjectHideFlags: 0
@@ -104809,7 +104830,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 21912f412459e004e88ecc266ef35c09, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: b07d3cafef8f51043b6454395f35d1d0, type: 2}
   m_BuildHeightMesh: 0
 --- !u!1001 &1400129562
 PrefabInstance:
@@ -120189,6 +120210,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81968a57092f7d7409a37bb6812b9249, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  abilityUI: {fileID: 1452661433}
   monsterAbilityVolume: {fileID: 1051418545}
   monsterVolumeColorAdjustments: {fileID: 0}
   playerGeo: {fileID: 401988492}
@@ -120199,21 +120221,11 @@ MonoBehaviour:
   monsterAttackCameraPos: {fileID: 1288218957}
   playerAnimator: {fileID: 1662923096}
   monsterAnimator: {fileID: 1876680224}
-  abilityUI: {fileID: 1452661433}
-  chargingUI: {fileID: 1649774855}
-  chargingGaugeImage: {fileID: 461222141}
-  chargingActionText: {fileID: 1756937703}
   explosionParticle: {fileID: 63915951}
   monsterTransform: {fileID: 1940778736}
+  shockwaveTrigger: {fileID: 0}
   destroySound: {fileID: 8300000, guid: 6a847776cf43e004786b109fcf845d71, type: 3}
-  attackCoolDownText: {fileID: 287979789}
-  attackIconImage: {fileID: 453476894}
-  transformLockUI: {fileID: 1008861086}
-  transformUI: {fileID: 1448344844}
-  monsterImage: {fileID: 461861017}
-  humanImage: {fileID: 1858699979}
-  attackUnavailableImage: {fileID: 103488149}
-  transformUnavailableImage: {fileID: 1523111312}
+  vignetteImg: {fileID: 0}
 --- !u!1 &1664318600
 GameObject:
   m_ObjectHideFlags: 0

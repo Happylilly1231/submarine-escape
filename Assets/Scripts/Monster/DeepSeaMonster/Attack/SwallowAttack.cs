@@ -19,7 +19,7 @@ public class SwallowAttack : DeepSeaMonsterAttackBase
     public override void OnSpawned()
     {
         FocusManager.Instance.PushFocusState(GameFocusState.DeepSeaSwallow);
-        Camera.main.transform.DORotateQuaternion(monster.PlayerTransform.rotation, 0.2f).SetEase(Ease.OutExpo); // 정면 보기
+        Camera.main.transform.DORotateQuaternion(monster.PlayerTransform.rotation, 0.2f).SetEase(Ease.OutExpo).SetUpdate(true); // 정면 보기
 
         // 모두 약화 시 -> 입에 약점 2개 랜덤으로 생성
         if (monster.IsWeakenFully)

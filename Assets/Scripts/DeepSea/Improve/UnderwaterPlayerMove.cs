@@ -13,7 +13,7 @@ public class UnderwaterPlayerMove : PlayerMoveBase
     [SerializeField] private DeepSeaAreaController deepSeaAreaController;
 
     [Header("오디오")]
-    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioSource suitMotorAudioSource;
     [SerializeField] private AudioClip suitMotorSound;
 
     [Header("산소")]
@@ -103,10 +103,6 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         {
             if (!_underwaterPlayerStat.IsSurvivalUpdateStopped) // 체온, 산소 업데이트 중단 상태가 아닐 때만
             {
-                if (!_underwaterInput.IsStopping)
-                {
-                    AudioManager.Instance.PlaySoundSafe(audioSource, suitMotorSound);
-                }
                 _underwaterPlayerStat.ConsumeBaseOxgen(); // 기본적으로 초당 산소 소모
                 _underwaterPlayerStat.UpdateTemperature(); // 체온 저하
             }
@@ -115,6 +111,15 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         {
             // 정신력 업데이트
             PlayerManager.Instance.playerStat.UpdateSanityInDeapSea(_underwaterPlayerStat.SurvivalTime);
+        }
+
+        if (!_underwaterInput.IsStopping && !suitMotorAudioSource.isPlaying)
+        {
+            suitMotorAudioSource.Play();
+        }
+        else if (_underwaterInput.IsStopping && suitMotorAudioSource.isPlaying)
+        {
+            suitMotorAudioSource.Stop();
         }
 
         // 생존 경고 상태 전달
@@ -162,7 +167,7 @@ public class UnderwaterPlayerMove : PlayerMoveBase
         }
         else
         {
-            if (audioSource.isPlaying) audioSource.Stop();
+            if (suitMotorAudioSource.isPlaying) suitMotorAudioSource.Stop();
 
             UnsubscriveInputEvents();
         }

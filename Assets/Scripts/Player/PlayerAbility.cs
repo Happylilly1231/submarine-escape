@@ -14,8 +14,29 @@ using UnityEngine.UI;
 /// </summary>
 public class PlayerAbility : MonoBehaviour
 {
+    [Header("참조")]
+    public AbilityUI abilityUI; // 능력 UI
     [SerializeField] private Volume monsterAbilityVolume; // 괴물일 때 활성화할 볼륨
     public ColorAdjustments monsterVolumeColorAdjustments;
+
+    [Header("변신")]
+    [SerializeField] private GameObject playerGeo; // 플레이어 외형
+    public GameObject monsterGeo; // 괴물 외형
+    [SerializeField] private GameObject monsterModel; // 괴물 모델
+    [SerializeField] private Transform playerCameraPos; // 플레이어 카메라 위치
+    [SerializeField] private Transform monsterCameraPos; // 괴물 카메라 위치
+    [SerializeField] private Transform monsterAttackCameraPos; // 괴물 공격 카메라 위치
+    [SerializeField] private Animator playerAnimator; // 플레이어 애니메이터
+    [SerializeField] private Animator monsterAnimator; // 괴물 애니메이터
+
+    [Header("차징")]
+    [SerializeField] private ParticleSystem explosionParticle; // 폭발 파티클
+    public ParticleSystem ExplosionParticle => explosionParticle;
+    [SerializeField] private Transform monsterTransform; // 괴물 트랜스폼
+    [SerializeField] private ShockwaveTrigger shockwaveTrigger; // 충격파 (심해 전용)
+
+    [Header("오디오")]
+    [SerializeField] private AudioClip destroySound;
 
     public bool IsTransformed { get; private set; } = false; // 현재 괴물로 변신했는지 여부
     // public bool CanTransform { get; set; } = false; // 현재 변신 가능 여부
@@ -28,47 +49,13 @@ public class PlayerAbility : MonoBehaviour
     private PlayerMoveBase _playerMoveBase;
     private CharacterController _playerCC; // 플레이어 캐틱터 컨트롤러 (잠수함씬 전용)
 
-    [Header("변신")]
-    [SerializeField] private GameObject playerGeo; // 플레이어 외형
-    public GameObject monsterGeo; // 괴물 외형
-    [SerializeField] private GameObject monsterModel; // 괴물 모델
-    [SerializeField] private Transform playerCameraPos; // 플레이어 카메라 위치
-    [SerializeField] private Transform monsterCameraPos; // 괴물 카메라 위치
-    [SerializeField] private Transform monsterAttackCameraPos; // 괴물 공격 카메라 위치
-    [SerializeField] private Animator playerAnimator; // 플레이어 애니메이터
-    [SerializeField] private Animator monsterAnimator; // 괴물 애니메이터
-
-    [Header("참조")]
-    public GameObject abilityUI; // 능력 UI
-    [SerializeField] private GameObject chargingUI; // 차징 UI
-    [SerializeField] private Image chargingGaugeImage; // 차징 게이지 이미지
-    [SerializeField] private TextMeshProUGUI chargingActionText; // 차징 액션 텍스트
-    [SerializeField] private ParticleSystem explosionParticle; // 폭발 파티클
-    public ParticleSystem ExplosionParticle => explosionParticle;
-    [SerializeField] private Transform monsterTransform; // 괴물 트랜스폼
-    [SerializeField] private ShockwaveTrigger shockwaveTrigger; // 충격파 (심해 전용)
-
-    [Header("오디오")]
-    [SerializeField] private AudioClip destroySound;
-
-    [Header("우하단 UI")]
-    [SerializeField] private TextMeshProUGUI attackCoolDownText;
-    [SerializeField] private GameObject attackIconImage;
-    [SerializeField] private GameObject transformLockUI;
-    [SerializeField] private GameObject transformUI;
-    [SerializeField] private GameObject monsterImage;
-    [SerializeField] private GameObject humanImage;
-    [SerializeField] private GameObject attackUnavailableImage;
-    [SerializeField] private GameObject transformUnavailableImage;
-
-
     private GameObject currentDestroyObj = null; // 현재 파괴할 오브젝트
     private string currentDestroyObjName = ""; // 현재 파괴할 오브젝트 이름
     private float chargingTime = 5f; // 풀차징하는데 걸리는 시간
     private bool _isCharging = false; // 차징 중 여부
     public bool IsUsingAttackAbility { get; private set; } = false; // 공격 능력 사용 중 여부
     private Coroutine currentChargingCoroutine = null; // 현재 차징 코루틴
-    private float attackDistance = 2f; // 공격 거리
+    private float attackDistance = 2.4f; // 공격 거리
     private InnerMonsterController _innerMonsterController;
     private DeepSeaMonsterController _deepSeaMonsterController;
 
@@ -81,8 +68,18 @@ public class PlayerAbility : MonoBehaviour
     // 쿨타임
     private float _attackCoolDown = 5f; // 쿨타임 시간
     private float _nextCanAttackTime = 0f; // 다음 공격이 가능한 시간
+    public float RemainingAttackCooldown => Mathf.Max(0f, _nextCanAttackTime - Time.time); // 현재 쿨타임 남은 시간
 
-    private FinalPatternManager finalPatternManager;
+    // 공격 가능 여부
+    public bool IsAttackAvailable => IsTransformed // 변신 상태
+                                    && !IsUsingAttackAbility // 공격 능력 사용 중 아님
+                                    && Time.time >= _nextCanAttackTime; // 쿨타임 지났을 때
+
+    // 변신 가능 여부
+    public bool IsTransformAvailable => CanTransform // 변신 가능
+                                        && FocusManager.Instance.CurrentFocusState == GameFocusState.None; // 일반 포커스 상태일 때
+
+    #region 생명주기
 
     private void Awake()
     {
@@ -90,32 +87,21 @@ public class PlayerAbility : MonoBehaviour
         _playerCC = GetComponent<CharacterController>();
         _innerMonsterController = monsterTransform.GetComponent<InnerMonsterController>();
         _deepSeaMonsterController = monsterTransform.GetComponent<DeepSeaMonsterController>();
-        finalPatternManager = FindAnyObjectByType<FinalPatternManager>();
     }
 
     private void Start()
     {
-        if (attackCoolDownText == null)
-        {
-            Debug.Log("우하단 UI 연결 안됨!!!");
-            return;
-        }
-        attackUnavailableImage.SetActive(true);
-        transformUnavailableImage.SetActive(true);
-
         monsterModel.SetActive(GameManager.instance.IsAbilityActive); // 괴물 모델 활성화 여부 설정
 
-        monsterAbilityVolume.profile.TryGet(out monsterVolumeColorAdjustments);
-
-        abilityUI.SetActive(false);
-
         // 현재 능력 사용 여부에 따라 이 컴포넌트 활성화 여부 결정
-        enabled = GameManager.instance.IsAbilityActive;
+        enabled = GameManager.instance.IsAbilityActive; // 능력 사용하지 않으면 이 컴포넌트 비활성화
         if (!GameManager.instance.IsAbilityActive)
         {
             PlayerManager.Instance.playerStat.SetMonsterStatUI(false); // 기본 스탯 UI로 변경
-            return;
+            return; // 아래 로직 실행 x
         }
+
+        monsterAbilityVolume.profile.TryGet(out monsterVolumeColorAdjustments);
 
         _mainCamera = Camera.main;
 
@@ -138,71 +124,11 @@ public class PlayerAbility : MonoBehaviour
         else // 심해씬
         {
             PlayerManager.Instance.playerStat.StopSanityInstability(); // 정신 안정 상태로 시작 (최대 수치에서)
+
+            // 공격 잘 맞도록 수치 변경
             chargingTime = 0.3f; // 심해에서는 손전등도 있고 심해 물에 닿아있다보니까 공격력 높아진 걸로 간주해서 차징 시간 줄임
-            attackDistance = 10f;
+            attackDistance = 10f; // 공격 거리 증가
         }
-    }
-
-    private void Update()
-    {
-        UpdateDownRightUI(); // 우하단 UI 업데이트
-    }
-
-    /// <summary>
-    /// 우하단 UI 업데이트
-    /// </summary>
-    public void UpdateDownRightUI()
-    {
-        if (attackCoolDownText == null)
-        {
-            return;
-        }
-
-        // 공격 쿨타임 업데이트
-        float remainingTime = _nextCanAttackTime - Time.time; // 남은 쿨타임 계산
-        if (remainingTime > 0f)
-        {
-            if (!attackCoolDownText.gameObject.activeSelf)
-            {
-                attackCoolDownText.gameObject.SetActive(true);
-                attackIconImage.SetActive(false);
-            }
-            attackCoolDownText.text = $"{remainingTime:F0}s";
-        }
-        else
-        {
-            if (attackCoolDownText.gameObject.activeSelf)
-            {
-                attackCoolDownText.gameObject.SetActive(false);
-                attackIconImage.SetActive(true);
-            }
-        }
-
-        // 공격 가능 여부에 따른 UI 업데이트
-        if (!IsTransformed || IsUsingAttackAbility || (finalPatternManager != null && finalPatternManager.IsPatternRunning) || Time.time < _nextCanAttackTime) // 불가능
-        {
-            if (!attackUnavailableImage.activeSelf) attackUnavailableImage.SetActive(true);
-        }
-        else
-        {
-            if (attackUnavailableImage.activeSelf) attackUnavailableImage.SetActive(false);
-        }
-
-        // 변신 가능 여부에 따른 UI 업데이트
-        if (!CanTransform || FocusManager.Instance.CurrentFocusState != GameFocusState.None) // 불가능
-        {
-            if (!transformUnavailableImage.activeSelf) transformUnavailableImage.SetActive(true);
-        }
-        else
-        {
-            if (transformUnavailableImage.activeSelf) transformUnavailableImage.SetActive(false);
-        }
-    }
-
-    public void UnlockTransformUI()
-    {
-        transformLockUI.SetActive(false);
-        transformUI.SetActive(true);
     }
 
     private void OnEnable()
@@ -229,7 +155,9 @@ public class PlayerAbility : MonoBehaviour
         }
     }
 
-    #region 입력 이벤트 함수
+    #endregion
+
+    #region 입력 이벤트
 
     /// <summary>
     /// 변신 키 입력 시 -> 현재 형태 전환
@@ -248,9 +176,7 @@ public class PlayerAbility : MonoBehaviour
     /// <param name="context"></param>
     public void OnAttackStarted(InputAction.CallbackContext context)
     {
-        if (!IsTransformed) return; // 변신해있지 않을 때 -> 불가능
-        if (IsUsingAttackAbility) return; // 공격 능력 사용 중 -> 불가능
-        if (finalPatternManager != null && finalPatternManager.IsPatternRunning) return; // 심해 최종 패턴 진행 중 -> 불가능
+        if (!IsAttackAvailable) return;
 
         if (Time.time < _nextCanAttackTime)
         {
@@ -273,6 +199,8 @@ public class PlayerAbility : MonoBehaviour
     }
 
     #endregion
+
+    #region 변신
 
     /// <summary>
     /// 변신 금지 상태 추가 (회피 시작, 정신 불안정 시작 등)
@@ -299,11 +227,7 @@ public class PlayerAbility : MonoBehaviour
         Debug.Log("[능력] 괴물로 변신");
         IsTransformed = true;
 
-        if (humanImage != null)
-        {
-            humanImage.SetActive(true);
-            monsterImage.SetActive(false);
-        }
+        abilityUI.ChangeTransformIconUI(true);
 
         // 괴물 능력 볼륨 활성화
         if (isImmediately)
@@ -343,11 +267,7 @@ public class PlayerAbility : MonoBehaviour
         Debug.Log("[능력] 사람으로 돌아옴");
         IsTransformed = false;
 
-        if (monsterImage != null)
-        {
-            monsterImage.SetActive(true);
-            humanImage.SetActive(false);
-        }
+        abilityUI.ChangeTransformIconUI(false);
 
         // 괴물 능력 볼륨 비활성화
         DOTween.To(() => monsterAbilityVolume.weight, x => monsterAbilityVolume.weight = x, 0f, 0.5f);
@@ -420,15 +340,9 @@ public class PlayerAbility : MonoBehaviour
             TransformToMonster();
     }
 
-    /// <summary>
-    /// 파괴 시전
-    /// </summary>
-    /// <param name="destroyObj">파괴할 오브젝트</param>
-    public void TryDestroy(GameObject destroyObj, string destroyObjName)
-    {
-        currentDestroyObj = destroyObj;
-        currentDestroyObjName = destroyObjName;
-    }
+    #endregion
+
+    #region 차징
 
     /// <summary>
     /// 차징 시작
@@ -443,12 +357,11 @@ public class PlayerAbility : MonoBehaviour
             abilityInteractable.InteractWithAbility();
         }
 
-        IsUsingAttackAbility = true;
+        IsUsingAttackAbility = true; // 공격 능력 사용 중으로 설정
         AddTransformLock();
         _isCharging = true;
-        // monsterGeo.SetActive(false); // 괴물 외형 비활성화
-        chargingUI.SetActive(true);
-        chargingGaugeImage.fillAmount = 0f;
+        abilityUI.SetShowChargingUI(true);
+        abilityUI.UpdateChargingGaugeUI(0f);
 
         PlayerManager.Instance.playerMoveBase.SetMoveable(false); // 플레이어 이동 정지
         PlayerManager.Instance.playerCameraControllerBase.SetInputEnabled(false); // 플레이어 카메라 인풋 금지 (= 회전 금지)
@@ -460,15 +373,15 @@ public class PlayerAbility : MonoBehaviour
         }
 
         if (currentDestroyObj == null)
-            chargingActionText.text = "공격 차징 중";
+            abilityUI.UpdateChargingActionText("공격 차징 중");
         else
-            chargingActionText.text = $"[ {currentDestroyObjName} ] 파괴 차징 중";
+            abilityUI.UpdateChargingActionText($"[ {currentDestroyObjName} ] 파괴 차징 중");
 
-        // 1. 기존 FOV 연출이 있다면 종료하고 초기화
+        // 기존 FOV 연출이 있다면 종료하고 초기화
         _fovTween?.Kill();
         _mainCamera.fieldOfView = _normalFOV;
 
-        // 2. 차징 시간(chargingTime) 동안 시야각을 최대치까지 서서히 넓힘
+        // 차징 시간(chargingTime) 동안 시야각을 최대치까지 서서히 넓힘
         _fovTween = DOTween.To(() => _mainCamera.fieldOfView, x => _mainCamera.fieldOfView = x, _maxChargingFOV, chargingTime)
             .SetEase(Ease.InQuad); // 뒤로 갈수록 가속도가 붙어 넓어지는 느낌 제공
 
@@ -482,14 +395,14 @@ public class PlayerAbility : MonoBehaviour
     private IEnumerator ChargingCoroutine()
     {
         float timer = 0f;
-        chargingGaugeImage.fillAmount = 0f;
+        abilityUI.UpdateChargingGaugeUI(0f);
 
         while (timer <= chargingTime)
         {
             timer += Time.deltaTime;
             float progress = Mathf.Clamp01(timer / chargingTime);
 
-            chargingGaugeImage.fillAmount = Mathf.Clamp01(timer / chargingTime);
+            abilityUI.UpdateChargingGaugeUI(Mathf.Clamp01(timer / chargingTime));
 
             if (timer > 1f)
             {
@@ -506,9 +419,9 @@ public class PlayerAbility : MonoBehaviour
 
         _isCharging = false;
         currentChargingCoroutine = null;
-        chargingUI.SetActive(false);
+        abilityUI.SetShowChargingUI(false);
 
-        // 3. 풀차징 완료 후 쾅! 할 때 시야각을 원상 복구 (아주 빠르게 쾅 당겨짐)
+        // 풀차징 완료 후 쾅! 할 때 시야각을 원상 복구 (아주 빠르게 쾅 당겨짐)
         _fovTween?.Kill();
         _fovTween = DOTween.To(() => _mainCamera.fieldOfView, x => _mainCamera.fieldOfView = x, _normalFOV, _restoreDuration)
             .SetEase(Ease.OutBack); // 쿵 하는 충격량을 주며 복구되도록 OutBack 이즈 적용
@@ -530,7 +443,6 @@ public class PlayerAbility : MonoBehaviour
         _isCharging = false;
         IsUsingAttackAbility = false;
         RemoveTransformLock();
-        // monsterGeo.SetActive(true); // 괴물 외형 활성화
 
         currentDestroyObj = null;
         currentDestroyObjName = "";
@@ -538,11 +450,11 @@ public class PlayerAbility : MonoBehaviour
         PlayerManager.Instance.playerMoveBase.SetMoveable(true); // 플레이어 이동 가능
         PlayerManager.Instance.playerCameraControllerBase.SetInputEnabled(true); // 플레이어 카메라 인풋 가능 (= 회전 가능)
 
-        chargingUI.SetActive(false);
+        abilityUI.SetShowChargingUI(false);
         if (PlayerManager.Instance.playerInteractor != null)
             PlayerManager.Instance.playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 활성화
 
-        // 4. 차징 중 취소/실패 시에도 시야각을 부드럽게 원래대로 복구 (툭 끊기지 않게)
+        // 차징 중 취소/실패 시에도 시야각을 부드럽게 원래대로 복구 (툭 끊기지 않게)
         _fovTween?.Kill();
         _fovTween = DOTween.To(() => _mainCamera.fieldOfView, x => _mainCamera.fieldOfView = x, _normalFOV, _restoreDuration)
             .SetEase(Ease.OutCubic);
@@ -559,6 +471,10 @@ public class PlayerAbility : MonoBehaviour
         chargingTime = isTurnOn ? 1f : 2f;
     }
 
+    #endregion
+
+    #region 공격
+
     /// <summary>
     /// 공격 시도
     /// </summary>
@@ -567,13 +483,17 @@ public class PlayerAbility : MonoBehaviour
         StartCoroutine(TryAttackCoroutine());
     }
 
+    /// <summary>
+    /// 공격 시도 코루틴
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator TryAttackCoroutine()
     {
-        // 카메라 위치 설정
+        // 카메라 위치를 공격 시 카메라 위치로 설정 (좀 더 앞)
         PlayerManager.Instance.playerCameraControllerBase.SetCameraPos(monsterAttackCameraPos);
 
+        // 잠수함 내부 -> 카메라 아래 보도록 회전 (타격감을 위해)
         PlayerCameraController playerCameraController = PlayerManager.Instance.playerCameraController;
-
         float originalXRotation = 0f;
         float originalPlayerYAngle = 0f;
         if (playerCameraController != null)
@@ -584,52 +504,67 @@ public class PlayerAbility : MonoBehaviour
             playerCameraController.RotateToTargetPos(lookDownPos, 1f, Ease.OutQuart);
         }
 
+        // 공격 애니메이션 실행
         _playerMoveBase.animator.SetLayerWeight(1, 1f);
         _playerMoveBase.animator.Play("Destroy", 1, 0.25f);
 
+        // 일정 시간 대기
         yield return new WaitForSeconds(0.25f);
 
-        // 카메라 위치 설정
+        // 카메라 위치 원래대로 되돌림
         PlayerManager.Instance.playerCameraControllerBase.SetCameraPos(monsterCameraPos);
 
-        explosionParticle.Play(); // 폭발 파티클 한번 재생
+        // 폭발 파티클 & 소리 재생
+        explosionParticle.Play();
         AudioManager.Instance.PlayGlobalOneShot(destroySound);
+
+        // 애니메이션 레이어 되돌리기
         _playerMoveBase.animator.SetLayerWeight(1, 0f);
 
+        // 현재 파괴 오브젝트가 있으면 -> 파괴 / 없으면 -> 공격 시도
         if (currentDestroyObj != null)
         {
-            DestroyTargetObj();
+            DestroyTargetObj(); // 목표 오브젝트 파괴
         }
         else
         {
+            // 공격 시도
+
+            // 괴물과의 거리 계산
             float distanceToMonster = Vector3.Distance(_mainCamera.transform.position, monsterTransform.position);
             Debug.Log("distanceToMonster: " + distanceToMonster);
+
+            // 괴물이 공격 거리 내에 있으면
             if (distanceToMonster <= attackDistance)
             {
-                // 플레이어 정면 기준 시야각 체크
+                // 플레이어 정면 기준 시야각 계산
                 Vector3 dirToMonster = (monsterTransform.position - _mainCamera.transform.position).normalized;
                 float angleToMonster = Vector3.Angle(_mainCamera.transform.forward, dirToMonster);
 
-                // 플레이어 정면 기준 좌우 60도 이내에 있어야 공격 가능
+                // 플레이어 정면 기준 좌우 60도 이내에 있으면 -> 공격
                 if (angleToMonster <= 60f)
                     AttackMonster();
             }
-            else
+            else // 공격 거리 내에 없으면 -> 심해라면 충격파 반사 시도
             {
+                // 할당된 충격파가 있고, 해당 충격파가 활성화되어있는 경우
                 if (shockwaveTrigger != null && shockwaveTrigger.gameObject.activeSelf)
                 {
+                    // 충격파 거리 계산
                     float ditanceToShockwave = Vector3.Distance(_mainCamera.transform.position, shockwaveTrigger.transform.position);
-                    Debug.Log(ditanceToShockwave);
+                    Debug.Log("ditanceToShockwave: " + ditanceToShockwave);
 
-                    if (ditanceToShockwave <= attackDistance) // 충격파 반사
+                    // 충격파가 공격 거리 내에 있으면
+                    if (ditanceToShockwave <= attackDistance)
                     {
-                        // 플레이어 정면 기준 시야각 체크
+                        // 플레이어 정면 기준 시야각 계산
                         Vector3 dirToShockwave = (shockwaveTrigger.transform.position - _mainCamera.transform.position).normalized;
                         float angleToShockwave = Vector3.Angle(_mainCamera.transform.forward, dirToShockwave);
 
-                        // 플레이어 정면 기준 좌우 60도 이내에 있어야 반사 가능
+                        // 플레이어 정면 기준 좌우 60도 이내에 있으면 -> 충격파 반사
                         if (angleToShockwave <= 60f)
                         {
+                            // 최종 패턴 중 -> 괴물 죽이기 / 일반 -> 괴물 약화
                             if (_deepSeaMonsterController.IsExecutingFinalPattern)
                                 shockwaveTrigger.ReflectShockwave(monsterTransform, 1f, _deepSeaMonsterController.Die);
                             else
@@ -641,29 +576,21 @@ public class PlayerAbility : MonoBehaviour
             }
         }
 
+        // 고개 들도록 카메라 회전 
         yield return new WaitForSeconds(1f);
         if (playerCameraController != null) playerCameraController.RotateToYAngle(originalPlayerYAngle, 1f, originalXRotation, Ease.InQuad);
         yield return new WaitForSeconds(1f);
 
-        IsUsingAttackAbility = false;
-        RemoveTransformLock();
-        // monsterGeo.SetActive(true); // 괴물 외형 활성화
-
+        // 초기화
+        IsUsingAttackAbility = false; // 공격 능력 사용 중 아님으로 설정
+        RemoveTransformLock(); // 변신 금지 해제
         PlayerManager.Instance.playerMoveBase.SetMoveable(true); // 플레이어 이동 가능
-        PlayerManager.Instance.playerCameraControllerBase.SetInputEnabled(true); // 플레이어 카메라 인풋 가능 (= 회전 가능)
-
+        PlayerManager.Instance.playerCameraControllerBase.SetInputEnabled(true); // 플레이어 카메라 조작 가능
         if (PlayerManager.Instance.playerInteractor != null)
             PlayerManager.Instance.playerInteractor.SetActiveInteractorUI(true); // 상호작용 UI 활성화
 
-        _nextCanAttackTime = Time.time + _attackCoolDown; // 다음 공격 가능 시간 업데이트
-    }
-
-    private void DestroyTargetObj()
-    {
-        Debug.Log("[능력] " + currentDestroyObj + " 파괴!");
-        currentDestroyObj.SetActive(false);
-        currentDestroyObj = null;
-        currentDestroyObjName = "";
+        // 다음 공격 가능 시간 업데이트
+        _nextCanAttackTime = Time.time + _attackCoolDown;
     }
 
     /// <summary>
@@ -676,12 +603,37 @@ public class PlayerAbility : MonoBehaviour
             _innerMonsterController.TakeDamage(20f);
         else if (_deepSeaMonsterController != null)
         {
-            // _deepSeaMonsterController.TakeDamage(20f);
             if (_deepSeaMonsterController.IsExecutingFinalPattern)
                 _deepSeaMonsterController.Die();
             else
                 _deepSeaMonsterController.Weaken();
         }
-
     }
+
+    #endregion
+
+    #region 파괴
+
+    /// <summary>
+    /// 파괴 시전
+    /// </summary>
+    /// <param name="destroyObj">파괴할 오브젝트</param>
+    public void TryDestroy(GameObject destroyObj, string destroyObjName)
+    {
+        currentDestroyObj = destroyObj;
+        currentDestroyObjName = destroyObjName;
+    }
+
+    /// <summary>
+    /// 목표 오브젝트 파괴
+    /// </summary>
+    private void DestroyTargetObj()
+    {
+        Debug.Log("[능력] " + currentDestroyObj + " 파괴!");
+        currentDestroyObj.SetActive(false);
+        currentDestroyObj = null;
+        currentDestroyObjName = "";
+    }
+
+    #endregion
 }

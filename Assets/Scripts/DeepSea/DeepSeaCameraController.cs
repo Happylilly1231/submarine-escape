@@ -51,8 +51,8 @@ public class DeepSeaCameraController : PlayerCameraControllerBase
         // 괴물일 때는 45도 이상 위로 올려다보면 괴물 외형 비활성화 (카메라에 머리 보이지 않게 하기 위해서)
         if (GameManager.instance.IsAbilityActive)
             PlayerManager.Instance.playerAbility.monsterGeo.SetActive(transform.forward.y < 0.7f);
-
-        DeepSeaInventoryManager.Instance.UpdatePlayerHandTarget();
+        else // 괴물이 아닐 때만(능력 사용 안 할 때) -> 손 리그 타겟 업데이트
+            DeepSeaInventoryManager.Instance.UpdatePlayerHandTarget();
     }
 
     // /// <summary>

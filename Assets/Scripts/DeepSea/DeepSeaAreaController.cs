@@ -205,20 +205,20 @@ public class DeepSeaAreaController : MonoBehaviour
         if (zone == SeaZone.Surface)
         {
             // 개선된 조작 비활성화 -> 예전 조작 활성화
-            UnderwaterPlayerMove underwaterPlayerMove = FindAnyObjectByType<UnderwaterPlayerMove>();
-            underwaterPlayerMove.enabled = false;
-            UnderwaterCameraController underwaterCameraController = FindAnyObjectByType<UnderwaterCameraController>();
-            underwaterCameraController.enabled = false;
-            if (PlayerManager.Instance.playerMoveBase is DeepSeaPlayerMove deepSeaPlayerMove)
+            if (PlayerManager.Instance.playerMoveBase is UnderwaterPlayerMove underwaterPlayerMove)
             {
-                deepSeaPlayerMove.enabled = true;
-                PlayerManager.Instance.playerMoveBase = deepSeaPlayerMove;
+                underwaterPlayerMove.enabled = false;
             }
-            if (PlayerManager.Instance.playerCameraControllerBase is DeepSeaCameraController deepSeaCameraController)
+            if (PlayerManager.Instance.playerCameraControllerBase is UnderwaterCameraController underwaterCameraController)
             {
-                deepSeaCameraController.enabled = true;
-                PlayerManager.Instance.playerCameraControllerBase = deepSeaCameraController;
+                underwaterCameraController.enabled = false;
             }
+            DeepSeaPlayerMove deepSeaPlayerMove = FindAnyObjectByType<DeepSeaPlayerMove>();
+            DeepSeaCameraController deepSeaCameraController = FindAnyObjectByType<DeepSeaCameraController>();
+            deepSeaPlayerMove.enabled = true;
+            PlayerManager.Instance.playerMoveBase = deepSeaPlayerMove;
+            deepSeaCameraController.enabled = true;
+            PlayerManager.Instance.playerCameraControllerBase = deepSeaCameraController;
             Debug.Log("개선된 조작 비활성화 -> 예전 조작 활성화");
 
             if (floatingParticles != null)
