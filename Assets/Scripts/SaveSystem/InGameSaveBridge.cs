@@ -12,6 +12,8 @@ public class InGameSaveBridge : MonoBehaviour
     [SerializeField] private InventoryManager inventoryManager;
     [SerializeField] private PlayerMutation playerMutation;
 
+    [SerializeField] private GameObject insideMonster;
+
     [Header("Puzzle References")]
     [SerializeField] private KeyPadController crewKeyPadController;
     [SerializeField] private PowerSwitch powerSwitch;
@@ -33,7 +35,7 @@ public class InGameSaveBridge : MonoBehaviour
         if (SavePointManager.Instance != null)
         {
             // 세이브 시스템에 현재 씬 오브젝트 주소들 먼저 컴포넌트 단위로 등록
-            SavePointManager.Instance.RegisterInGameReferences(player, playerStat, inventorySlots, inventoryManager, playerMutation, objectiveManager);
+            SavePointManager.Instance.RegisterInGameReferences(player, playerStat, inventorySlots, inventoryManager, playerMutation, objectiveManager, insideMonster);
 
             yield return null;
             // 세이브 로드를 통해 들어온 경우에만 세이브 환경을 적용
