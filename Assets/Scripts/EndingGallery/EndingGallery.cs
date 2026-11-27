@@ -9,12 +9,30 @@ using UnityEngine.UI;
 
 public enum EEndingType
 {
-    MonsterDeath,    // 괴물에게 죽음
-    SubmarineExplode, // 잠수함 폭발
-    FallingDeath,     // 낙사
-    KeypadExplosion, // 키패드 폭발 대미지로 죽음
-    Mutation,    // 괴물화
-    Hypothermia,   // 저체온증으로 죽음
+    /// === 잠수함 엔딩 === ///
+    MonsterDeath,           // 내부 괴물에게 죽음
+    SubmarineExplode,       // 잠수함 폭발
+    FallingDeath,           // 낙사
+    KeypadExplosion,        // 키패드 폭발 대미지로 죽음
+    Mutation,               // 괴물화
+
+    /// === 심해 엔딩 === ///
+    DeepSeaMonsterDeath,    // 심해 괴물에게 죽음
+    Hypoxia,                // 산소부족으로 죽음
+    Hypothermia,            // 저체온증으로 죽음
+    NoRescue,               // 구조 헬기가 없어 결국 저체온증으로 죽음
+
+    /// === 헬기/본부 엔딩 === ///
+    Silenced,               // 기밀 유지를 위해 제거됨
+    GasBombDetonation,      // 가스 폭탄을 터트리고 떠남
+    StunAndEscape,          // 구조요원을 기절시키고 도망침
+
+    /// === 히든 엔딩 === ///
+    KillAndVanish,          // 구조요원을 죽이고 사라짐
+    RevengeAtHQ,            // 복수를 위해 본부로 감
+    DeepSeaMutation,        // 플레이어가 심해 괴물이 됨
+
+
     EscapeSuccess     // 탈출 성공
 }
 

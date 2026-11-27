@@ -17,7 +17,7 @@ public class DeepSeaBridge : MonoBehaviour
 {
     public static DeepSeaBridge Instance { get; private set; }
     public PlayerItemStates PlayerItemStates { get; private set; }
-    public bool HasContactedHQ { get; private set; } = false;
+    public bool HasContactedHQ { get; private set; } = true;
 
     private void Awake()
     {
