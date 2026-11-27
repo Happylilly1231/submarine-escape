@@ -5,15 +5,18 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class EndingChoices : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private HelicopterRescueCutscene rescueCutscene;
+    [SerializeField] private AudioSource rotorAudioSource;
 
     [Header("UI")]
     [SerializeField] private Button[] choiceBtns;
     [SerializeField] private GameObject[] choiceTexts;
+    [SerializeField] private TextMeshProUGUI HQBaseText;
 
     [Header("Sprites")]
     [SerializeField] private Sprite normalSprite;   // 기본 이미지
@@ -141,14 +144,11 @@ public class EndingChoices : MonoBehaviour
         switch (idx)
         {
             case 0: // 아무것도 하지 않는다
-                Debug.Log("선택지 - 아무것도 하지 않는다.");
-                yield return StartCoroutine(rescueCutscene.Fade(1f));
-                SceneManager.LoadScene("HQBaseScene");
-                break;
             case 1: // 타이밍을 기다린다
-                Debug.Log("선택지 - 타이밍을 기다린다.");
-                yield return StartCoroutine(rescueCutscene.Fade(1f));
-                SceneManager.LoadScene("HQBaseScene");
+                if (idx == 0) Debug.Log("선택지 - 아무것도 하지 않는다.");
+                else Debug.Log("선택지 - 타이밍을 기다린다.");
+                HQBaseBridge.Instance?.SetArrivalChoice(idx);
+                yield return StartCoroutine(FadeRotorAndLoadHQBaseScene());
                 break;
             case 2: // 구조 요원을 기절시킨다
                 Debug.Log("선택지 - 구조 요원을 기절시킨다.");
@@ -157,5 +157,39 @@ public class EndingChoices : MonoBehaviour
                 Debug.Log("선택지 - 구조 요원을 죽인다.");
                 break;
         }
+    }
+
+    /// <summary>
+    /// 헬기 로터 사운드 감쇠 후 페이드 아웃 -> HQBaseScene 로드
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator FadeRotorAndLoadHQBaseScene()
+    {
+        float rotorFadeDuration = 2f;
+
+        if (rotorAudioSource != null && rotorAudioSource.isPlaying)
+        {
+            float startVolume = rotorAudioSource.volume;
+            float elapsed = 0f;
+
+            while (elapsed < rotorFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / rotorFadeDuration);
+                float smoothT = t * t;
+                rotorAudioSource.volume = Mathf.Lerp(startVolume, 0f, smoothT);
+                yield return null;
+            }
+
+            rotorAudioSource.volume = 0f;
+            rotorAudioSource.Stop();
+        }
+
+        yield return StartCoroutine(rescueCutscene.Fade(1f));
+        HQBaseText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(1f);
+        rescueCutscene.Fade(0f);
+        SceneManager.LoadScene("HQBaseScene");
     }
 }

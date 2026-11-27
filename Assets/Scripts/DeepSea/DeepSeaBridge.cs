@@ -17,7 +17,7 @@ public class DeepSeaBridge : MonoBehaviour
 {
     public static DeepSeaBridge Instance { get; private set; }
     public PlayerItemStates PlayerItemStates { get; private set; }
-    public bool HasContactedHQ { get; private set; } = false;
+    public bool HasContactedHQ { get; private set; } = true;
 
     private void Awake()
     {
@@ -25,16 +25,6 @@ public class DeepSeaBridge : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            // 테스트용
-            SetPlayerItemStates(new PlayerItemStates()
-            {
-                IsDivingsuitEquipped = true,
-                HasOxygenCapsule = true,
-                HasThermalProtector = true,
-                HasMonsterGasBomb = true,
-                HasSleepingGas = true
-            });
         }
         else
         {

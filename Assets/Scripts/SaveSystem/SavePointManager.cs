@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SavePointManager : MonoBehaviour
 {
@@ -26,6 +27,7 @@ public class SavePointManager : MonoBehaviour
     private InventoryManager inventoryManager;
     private PlayerMutation playerMutation;
     private ObjectiveManager objectiveManager;
+    private GameObject insideMonsterObj;
 
     private void Awake()
     {
@@ -152,7 +154,7 @@ public class SavePointManager : MonoBehaviour
     /// <summary>
     /// 인게임 씬 진입 시 브릿지가 컴포넌트들을 등록
     /// </summary>
-    public void RegisterInGameReferences(GameObject player, PlayerStat stats, InventorySlot[] inventorySlots, InventoryManager inventoryManager, PlayerMutation playerMutation, ObjectiveManager objectiveManager)
+    public void RegisterInGameReferences(GameObject player, PlayerStat stats, InventorySlot[] inventorySlots, InventoryManager inventoryManager, PlayerMutation playerMutation, ObjectiveManager objectiveManager, GameObject insideMonster)
     {
         this.playerObj = player;
         this.playerStat = stats;
@@ -160,6 +162,7 @@ public class SavePointManager : MonoBehaviour
         this.inventoryManager = inventoryManager;
         this.playerMutation = playerMutation;
         this.objectiveManager = objectiveManager;
+        this.insideMonsterObj = insideMonster;
         Debug.Log("[세이브 시스템] 로드/세이브를 위한 인게임 컴포넌트 등록 완료.");
 
         // 예약된 로드가 있다면 업데이트
@@ -210,6 +213,12 @@ public class SavePointManager : MonoBehaviour
         if (playerStat != null && data.playerStats != null)
         {
             playerStat.ApplyLoadedStats(data.playerStats.hp, data.playerStats.stamina);
+        }
+
+        // [내부 괴물 업데이트]
+        if (insideMonsterObj != null)
+        {
+            insideMonsterObj.transform.position = data.insideMonsterPosition.ToVector3();
         }
 
         // [인벤토리 업데이트]
@@ -387,6 +396,9 @@ public class SavePointManager : MonoBehaviour
         if (playerObj != null)
             targetData.playerPosition = new SerializableVector3(playerObj.transform.position);
 
+        if (insideMonsterObj != null)
+            targetData.insideMonsterPosition = new SerializableVector3(insideMonsterObj.transform.position);
+
         if (playerStat != null)
         {
             targetData.playerStats = new PlayerStatsData
@@ -409,7 +421,6 @@ public class SavePointManager : MonoBehaviour
         // [단서 데이터 저장]
         if (PlayerNoteManager.instance != null)
         {
-            // 💡 그냥 넘기지 않고 .Clone()으로 독립된 복사본을 만들어 저장!
             var currentData = PlayerNoteManager.instance.GetCurrentPlayerNoteData();
             if (currentData != null)
             {

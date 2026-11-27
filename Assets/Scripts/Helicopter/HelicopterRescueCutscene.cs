@@ -383,9 +383,9 @@ public class HelicopterRescueCutscene : MonoBehaviour
 
         fadeCanvasGroup.alpha = targetAlpha;
 
-        // 페이드 아웃 완료 후 비활성화
-        if (targetAlpha >= 1f)
-            fadeCanvasGroup.gameObject.SetActive(false);
+        // // 페이드 아웃 완료 후 비활성화
+        // if (targetAlpha >= 1f)
+        //     fadeCanvasGroup.gameObject.SetActive(false);
     }
 
     /// <summary>
