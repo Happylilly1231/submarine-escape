@@ -41,7 +41,7 @@ public class DeepSeaInventoryManager : MonoBehaviour
             Instance = this;
 
             PlayerItemStates playerItemStates = DeepSeaBridge.Instance?.PlayerItemStates;
-            // ApplyData(playerItemStates);
+            ApplyData(playerItemStates);
 
             // 능력 사용 게임일 때 -> 아래 설정 필요 없음
             if (GameManager.instance.IsAbilityActive)
