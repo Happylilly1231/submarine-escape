@@ -113,7 +113,12 @@ public class Door : MonoBehaviour, IInteractable, IAbilityInteractable
         return (distToFront < distToBack) ? -90f : 90f;
     }
 
-    public virtual void OpenDoor(float angle)
+    /// <summary>
+    /// 문 열기
+    /// </summary>
+    /// <param name="angle">문 열 각도 (문 축의 로컬 기준)</param>
+    /// <param name="isRotate">회전 여부 (기본: true, false면 회전 없이 진행, 이때 angle은 그냥 0 넣으면 됨)</param>
+    public virtual void OpenDoor(float angle, bool isRotate = true)
     {
         _isMoving = true;
 
@@ -152,7 +157,9 @@ public class Door : MonoBehaviour, IInteractable, IAbilityInteractable
 
         _occlusionPortal.open = true;
 
-        _doorTween = _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
+        if (isRotate)
+        {
+            _doorTween = _doorAxis.DOLocalRotate(new Vector3(0, angle, 0), _openDuration)
             .SetEase(Ease.InOutQuad)
             .OnComplete(() =>
             {
@@ -161,6 +168,14 @@ public class Door : MonoBehaviour, IInteractable, IAbilityInteractable
                 _doorTween = null;
                 OnDoorOpenStateChanged?.Invoke();
             });
+        }
+        else
+        {
+            isOpened = true;
+            _isMoving = false;
+            _doorTween = null;
+            OnDoorOpenStateChanged?.Invoke();
+        }
     }
 
     public void CloseDoor()

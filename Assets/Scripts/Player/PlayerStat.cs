@@ -55,6 +55,7 @@ public class PlayerStat : MonoBehaviour
     [SerializeField] private AudioClip damageSound;
 
     public event Action OnPlayerDamaged;
+    public event Action OnSanityStabilized; // 정신 안정 이벤트
 
     void Awake()
     {
@@ -316,9 +317,9 @@ public class PlayerStat : MonoBehaviour
     {
         IsSanityUnstable = false; // 정신 안정 상태
         PlayerManager.Instance.playerAbility.RemoveTransformLock(); // 변신 가능으로 설정
-        PlayerManager.Instance.playerAbility.UnlockTransformUI(); // 변신 UI 잠금 해제
         _sanity = _maxSanity; // 정신력 최대 수치로 완전 회복
         UpdateSanitySlider();
+        OnSanityStabilized?.Invoke();
     }
 
     /// <summary>

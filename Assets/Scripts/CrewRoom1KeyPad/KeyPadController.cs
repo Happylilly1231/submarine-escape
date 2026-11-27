@@ -302,6 +302,7 @@ public class KeyPadController : PuzzleController
         else
         {
             ObjectiveManager.Instance.CompleteObjective("EscapeCrewRoom");
+            SteamManager.Instance.UnlockAchievement(SteamAchievementID.ACH_ESCAPE_CREW_ROOM); // 스팀 도전 과제 달성 코드 (아직 테스트용)
             SavePointManager.Instance.UpdateSavePoint(ESavePointType.CrewKeyPad, GameTime.Instance.TimeSinceStart);
         }
 
@@ -334,7 +335,9 @@ public class KeyPadController : PuzzleController
         seq.AppendInterval(0.5f);
         seq.OnComplete(() =>
         {
-            doorPivot.GetChild(0).GetComponent<Door>().isLocked = false; // 문 잠금 해제
+            Door door = doorPivot.GetChild(0).GetComponent<Door>();
+            door.isLocked = false; // 문 잠금 해제
+            door.OpenDoor(0f, true); // 회전 없이 문 열기
             IsActionProcessing = false;
             ExitPuzzle();
         });
@@ -358,7 +361,9 @@ public class KeyPadController : PuzzleController
         outerPanel.gameObject.SetActive(false);
         interPanel.IsCompleted = true;
 
-        doorPivot.GetChild(0).GetComponent<Door>().isLocked = false; // 문 잠금 해제
+        Door door = doorPivot.GetChild(0).GetComponent<Door>();
+        door.isLocked = false; // 문 잠금 해제
+        door.OpenDoor(0f, false); // 회전 없이 문 열기
         doorPivot.localRotation = Quaternion.Euler(0, 70f, 0);
 
         for (int i = 0; i < batterySlots.Length; i++)

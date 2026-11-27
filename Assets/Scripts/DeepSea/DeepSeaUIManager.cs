@@ -217,7 +217,7 @@ public class DeepSeaUIManager : MonoBehaviour
             guideUIAbility.SetActive(false);
             statUI.SetActive(true);
             depthText_Ability.gameObject.SetActive(true);
-            PlayerManager.Instance.playerAbility.abilityUI.SetActive(true);
+            PlayerManager.Instance.playerAbility.abilityUI.SetShowAbilityUI(true);
         }
         else
         {

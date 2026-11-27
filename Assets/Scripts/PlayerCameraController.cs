@@ -120,6 +120,10 @@ public class PlayerCameraController : PlayerCameraControllerBase
 
         Vector3 playerEuler = playerMove.transform.eulerAngles;
         playerMove.transform.rotation = Quaternion.Euler(playerEuler.x, targetYAngle, playerEuler.z);
+
+        // 카메라의 상하 회전 및 위치 즉시 강제 적용
+        transform.position = cameraPos.position;
+        transform.localRotation = Quaternion.Euler(_xRotation, playerMove.transform.eulerAngles.y, 0f);
     }
 
     /// <summary>
